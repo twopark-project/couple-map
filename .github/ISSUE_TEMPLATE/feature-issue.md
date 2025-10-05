@@ -7,15 +7,6 @@ assignees: ''
 
 ---
 
----
-name: 기능 템플릿
-about: 기능 관련 이슈 템플릿
-title: ''
-labels: 'feature'
-assignees: ''
-
----
-
 ## ✨구현 기능
 > 추가하려는 기능에 대해 자세히 적어주세요.
 

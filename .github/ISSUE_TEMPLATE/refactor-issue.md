@@ -7,15 +7,6 @@ assignees: ''
 
 ---
 
----
-name: 리팩토링 템플릿
-about: 코드 리팩토링 및 개선
-title: ''
-labels: 'refactor'
-assignees: ''
-
----
-
 ## ♻️ 리팩토링 대상
 > 어떤 코드를 리팩토링할 건가요?
 
