@@ -7,17 +7,8 @@ on:
     types: [opened, labeled]
 
 jobs:
-  debug-labels:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 라벨 디버깅
-        run: |
-          echo "=== 이벤트 타입: ${{ github.event.action }} ==="
-          echo "=== 라벨 목록 (JSON): ${{ toJson(github.event.issue.labels) }} ==="
-          echo "=== 라벨 이름들: ${{ toJson(github.event.issue.labels.*.name) }} ==="
-          echo "=== feature 포함?: ${{ contains(github.event.issue.labels.*.name, 'feature') }} ==="
-          echo "=== refactor 포함?: ${{ contains(github.event.issue.labels.*.name, 'refactor') }} ==="
   create-branch-and-pr:
+    if: contains(github.event.issue.labels.*.name, '✨feature') || contains(github.event.issue.labels.*.name, '🔧refactor')
     runs-on: ubuntu-latest
     
     steps:
@@ -42,6 +33,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b $BRANCH_NAME
+          # 빈 커밋 생성 -> DRAFT PR을 위해
+          git commit --allow-empty -m "chore: 이슈 #${ISSUE_NUMBER}에 대한 브랜치 생성"
           git push origin $BRANCH_NAME
         id: create-branch
         env:
