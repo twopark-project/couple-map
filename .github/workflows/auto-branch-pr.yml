@@ -45,7 +45,7 @@ jobs:
           script: |
             const fs = require('fs');
             const issueNumber = context.issue.number;
-            const branchName = process.env.BRANCH_NAME;
+            const branchName = ${{ steps.create-branch.outputs.BRANCH_NAME }};
             const issue = context.payload.issue;
             
             // PR 템플릿 읽기
@@ -118,5 +118,3 @@ jobs:
               issue_number: issueNumber,
               body: `🚀 브랜치와 Draft PR이 자동으로 생성되었습니다!\n\n- Branch: \`${branchName}\`\n- PR: #${pr.number}`
             });
-        env:
-          BRANCH_NAME: ${{ steps.create-branch.outputs.BRANCH_NAME }}
