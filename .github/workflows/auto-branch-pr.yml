@@ -7,6 +7,16 @@ on:
     types: [opened, labeled]
 
 jobs:
+  debug-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 라벨 디버깅
+        run: |
+          echo "=== 이벤트 타입: ${{ github.event.action }} ==="
+          echo "=== 라벨 목록 (JSON): ${{ toJson(github.event.issue.labels) }} ==="
+          echo "=== 라벨 이름들: ${{ toJson(github.event.issue.labels.*.name) }} ==="
+          echo "=== feature 포함?: ${{ contains(github.event.issue.labels.*.name, 'feature') }} ==="
+          echo "=== refactor 포함?: ${{ contains(github.event.issue.labels.*.name, 'refactor') }} ==="
   create-branch-and-pr:
     runs-on: ubuntu-latest
     
