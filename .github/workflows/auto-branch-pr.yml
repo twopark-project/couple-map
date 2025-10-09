@@ -2,8 +2,9 @@ name: 이슈 생성시 브랜치 & Draft PR 생성 자동화
 
 on:
   issues:
-   # opened : 이슈 생성시 
-    types: [opened]
+   # opened : 이슈 생성시
+   # labeled : 라벨 추가시
+    types: [opened, labeled]
 
 jobs:
   create-branch-and-pr:
