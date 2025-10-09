@@ -6,7 +6,7 @@ on:
     types: [opened]
 
 jobs:
-  브랜치_PR_자동생성:
+  create-branch-and-pr:
     if: contains(github.event.issue.labels.*.name, 'feature') || contains(github.event.issue.labels.*.name, 'refactor')
     runs-on: ubuntu-latest
     
@@ -53,35 +53,29 @@ jobs:
               prTemplate = fs.readFileSync('.github/pull_request_template.md', 'utf8');
               prTemplate = prTemplate.replace('Closes #', `Closes #${issueNumber}`);
             } catch (error) {
-              prTemplate = `⚠️ **PR 템플릿 파일을 찾을 수 없습니다.**
-
-\`.github/pull_request_template.md\` 파일에서 직접 템플릿을 가져와서 사용해주세요.
-
-## 관련 이슈
-Closes #${issueNumber}`;
+                  prTemplate = '⚠️ **PR 템플릿 파일을 찾을 수 없습니다.**\n\n' +
+                '.github/pull_request_template.md 파일에서 직접 템플릿을 가져와서 사용해주세요.\n\n' +
+                '## 관련 이슈\n' +
+                'Closes #' + issueNumber;
             }
             
             // 안내사항 + 템플릿
-            const prBody = `## ⚠️ 안내사항
-> ⚠️ **작성 완료 후 이 섹션(안내사항)을 삭제해주세요!**
-
-이 PR은 자동으로 생성되었습니다.
-
-**작업 순서:**
-1. 로컬에서 브랜치 체크아웃
-   \`\`\`bash
-   git fetch origin
-   git checkout ${branchName}
-   \`\`\`
-2. 코드 작성 및 커밋
-3. 아래 PR 본문 작성
-4. Reviewer 지정
-5. **이 안내사항 섹션 삭제**
-6. "Ready for review"로 전환
-
----
-
-${prTemplate}`;
+            const prBody = '## ⚠️ 안내사항\n' +
+              '> ⚠️ **작성 완료 후 이 섹션(안내사항)을 삭제해주세요!**\n\n' +
+              '이 PR은 자동으로 생성되었습니다.\n\n' +
+              '**작업 순서:**\n' +
+              '1. 로컬에서 브랜치 체크아웃\n' +
+              '   ```bash\n' +
+              '   git fetch origin\n' +
+              '   git checkout ' + branchName + '\n' +
+              '   ```\n' +
+              '2. 코드 작성 및 커밋\n' +
+              '3. 아래 PR 본문 작성\n' +
+              '4. Reviewer 지정\n' +
+              '5. **이 안내사항 섹션 삭제**\n' +
+              '6. "Ready for review"로 전환\n\n' +
+              '---\n\n' +
+              prTemplate;
             
             // Draft PR 생성
             const { data: pr } = await github.rest.pulls.create({
