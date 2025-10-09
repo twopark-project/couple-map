@@ -45,7 +45,7 @@ jobs:
           script: |
             const fs = require('fs');
             const issueNumber = context.issue.number;
-            const branchName = ${{ steps.create-branch.outputs.BRANCH_NAME }};
+            const branchName = '${{ steps.create-branch.outputs.BRANCH_NAME }}';
             const issue = context.payload.issue;
             
             // PR 템플릿 읽기
