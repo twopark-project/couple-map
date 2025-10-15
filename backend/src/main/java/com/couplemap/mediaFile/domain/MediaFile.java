@@ -33,7 +33,7 @@ public class MediaFile extends BaseEntity {
     private String originalFilename;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "file_type", nullable = false)
+    @Column(name = "media_file_type", nullable = false)
     private MediaFileType mediaFileType;  // IMAGE, VIDEO , AUDIO
 
     @Column(name = "file_size")
