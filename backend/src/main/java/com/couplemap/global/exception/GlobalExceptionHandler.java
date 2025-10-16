@@ -13,7 +13,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException e) {
-        log.error("BaseException: {} - {}", e.getCode().getCode(), e.getMessage(), e);
+        log.error("BaseException: {} - {}", e.getCode().getCodeName(), e.getMessage(), e);
         return ResponseEntity
                 .status(e.getCode().getHttpStatus())
                 .body(ApiResponse.fail(e.getCode()));
