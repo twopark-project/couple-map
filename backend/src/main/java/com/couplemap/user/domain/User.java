@@ -7,8 +7,10 @@ import lombok.*;
 @Entity
 @Getter
 @Table(name = "users")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -39,5 +41,8 @@ public class User extends BaseEntity {
     // OAuth 제공 ID
     @Column(name = "provider_id", nullable = false, length = 200)
     private String providerId;
+
+    @Column(name = "friend_code", nullable = false)
+    private String friendCode;
 
 }
