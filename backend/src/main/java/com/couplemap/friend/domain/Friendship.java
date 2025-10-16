@@ -3,10 +3,14 @@ package com.couplemap.friend.domain;
 import com.couplemap.global.common.BaseEntity;
 import com.couplemap.user.domain.User;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
 @Entity
+@Table(name = "friendships")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor
 public class Friendship extends BaseEntity {
 
     @Id
