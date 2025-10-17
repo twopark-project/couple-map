@@ -34,7 +34,7 @@ public class User extends BaseEntity {
     private String profileImageKey;
 
     @Column(name = "login_type", nullable = false)
-    private String loginType;  // GOOGLE, NAVER
+    private String loginType;  // GOOGLE, NAVER, KAKAO
 
     // OAuth 제공 ID
     @Column(name = "provider_id", nullable = false, length = 200)
