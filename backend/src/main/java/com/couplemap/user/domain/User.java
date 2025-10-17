@@ -6,6 +6,7 @@ import lombok.*;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "users")
 public class User extends BaseEntity {
 
@@ -32,9 +33,8 @@ public class User extends BaseEntity {
     @Column(name = "profile_image_key", length = 200)
     private String profileImageKey;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "login_type", nullable = false)
-    private LoginType loginType;  // GOOGLE, NAVER
+    private String loginType;  // GOOGLE, NAVER
 
     // OAuth 제공 ID
     @Column(name = "provider_id", nullable = false, length = 200)
