@@ -6,7 +6,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@Setter
+@NoArgsConstructor
 @Table(name = "users")
 public class User extends BaseEntity {
 
@@ -40,4 +40,17 @@ public class User extends BaseEntity {
     @Column(name = "provider_id", nullable = false, length = 200)
     private String providerId;
 
+    @Builder
+    public User(String loginType, String providerId, String email, String name, UserRole role) {
+        this.loginType = loginType;
+        this.providerId = providerId;
+        this.email = email;
+        this.name = name;
+        this.role = role;
+    }
+
+    public void updateProfile(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
 }
