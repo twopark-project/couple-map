@@ -60,10 +60,10 @@ public class SecurityConfig {
                         .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .anyRequest().authenticated());
 
-//        STATELESS
-//        http
-//                .sessionManagement((session) -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+//      STATELESS
+      http
+              .sessionManagement((session) -> session
+                      .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
