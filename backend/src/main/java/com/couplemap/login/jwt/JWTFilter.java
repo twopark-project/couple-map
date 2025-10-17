@@ -2,6 +2,7 @@ package com.couplemap.login.jwt;
 
 import com.couplemap.login.dto.CustomOAuth2User;
 import com.couplemap.login.dto.UserDTO;
+import com.couplemap.user.domain.UserRole;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -62,7 +63,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         //토큰에서 username과 role 획득
         String username = jwtUtil.getUsername(token);
-        String role = jwtUtil.getRole(token);
+        UserRole role = jwtUtil.getRole(token);
 
         //userDTO를 생성하여 값 set
         UserDTO userDTO = new UserDTO();

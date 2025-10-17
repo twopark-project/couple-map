@@ -1,5 +1,6 @@
 package com.couplemap.login.jwt;
 
+import com.couplemap.user.domain.UserRole;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -25,9 +26,10 @@ public class JWTUtil {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("username", String.class);
     }
 
-    public String getRole(String token) {
+    public UserRole getRole(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
+        String roleString = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
+        return UserRole.valueOf(roleString);
     }
 
     public Boolean isExpired(String token) {
