@@ -4,12 +4,14 @@ import com.couplemap.login.dto.*;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
@@ -23,7 +25,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        System.out.println(oAuth2User);
+        log.info("OAuth2 user loaded: {}", oAuth2User);
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2Response oAuth2Response = null;

@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Null;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,12 +30,14 @@ public class JWTFilter extends OncePerRequestFilter {
         //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
         String authorization = null;
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
+        if (cookies != null){
+            for (Cookie cookie : cookies) {
 
-            System.out.println(cookie.getName());
-            if (cookie.getName().equals("Authorization")) {
+                System.out.println(cookie.getName());
+                if (cookie.getName().equals("Authorization")) {
 
-                authorization = cookie.getValue();
+                    authorization = cookie.getValue();
+                }
             }
         }
 
