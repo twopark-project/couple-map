@@ -63,7 +63,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             return new CustomOAuth2User(userDTO);
         } else {
-            existData.updateProfile(email,name);
+            existData.updateProfile(name,email);
             userRepository.save(existData);
 
             UserDTO userDTO = new UserDTO();
