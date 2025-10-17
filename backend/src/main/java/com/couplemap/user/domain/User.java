@@ -6,6 +6,7 @@ import lombok.*;
 
 @Entity
 @Getter
+@NoArgsConstructor
 @Table(name = "users")
 public class User extends BaseEntity {
 
@@ -32,12 +33,24 @@ public class User extends BaseEntity {
     @Column(name = "profile_image_key", length = 200)
     private String profileImageKey;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "login_type", nullable = false)
-    private LoginType loginType;  // GOOGLE, NAVER
+    private String loginType;  // GOOGLE, NAVER, KAKAO
 
     // OAuth 제공 ID
     @Column(name = "provider_id", nullable = false, length = 200)
     private String providerId;
 
+    @Builder
+    public User(String loginType, String providerId, String email, String name, UserRole role) {
+        this.loginType = loginType;
+        this.providerId = providerId;
+        this.email = email;
+        this.name = name;
+        this.role = role;
+    }
+
+    public void updateProfile(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
 }

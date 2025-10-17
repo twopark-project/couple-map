@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.5.6"
@@ -27,11 +29,18 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
 	// Spring Data JPA
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
 	// Validation
 	implementation("org.springframework.boot:spring-boot-starter-validation")
+
+	implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+	implementation("io.jsonwebtoken:jjwt-impl:0.12.3")
+	implementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
 	//Lombok
 	compileOnly("org.projectlombok:lombok")
