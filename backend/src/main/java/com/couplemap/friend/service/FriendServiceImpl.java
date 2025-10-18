@@ -13,8 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.couplemap.global.exception.code.FriendErrorCode.FRIEND_ALREADY_EXISTS;
-import static com.couplemap.global.exception.code.FriendErrorCode.FRIEND_REQUEST_NOT_FOUND;
+import static com.couplemap.global.exception.code.FriendErrorCode.*;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 
 @Service
@@ -25,25 +24,15 @@ public class FriendServiceImpl implements FriendService {
     private final UserRepository userRepository;
 
     @Transactional
-    public FriendRequestResponseDto sendFriendRequest(SendFriendRequestDto sendFriendRequestDto) {
+    public FriendRequestResponseDto sendFriendRequest(SendFriendRequestDto sendFriendRequestDto, Long requesterId) {
 
-        long requesterId = sendFriendRequestDto.getRequesterId();
-        String receiverName = sendFriendRequestDto.getReceiverName();
         String code = sendFriendRequestDto.getFriendCode();
 
         User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
-        User receiver = userRepository.findByName(receiverName)
-                .orElseThrow(() -> new UserException(USER_NOT_FOUND));
-
-
-        /*
-        친구 코드를 찾을 수 없는 경우
-         */
-        if (!receiver.getFriendCode().equals(code)) {
-            throw new FriendException(FRIEND_REQUEST_NOT_FOUND);
-        }
+        User receiver = userRepository.findByFriendCode(code)
+                .orElseThrow(() -> new FriendException(INVALID_FRIEND_CODE));
 
         /*
         이미 친구인 경우
@@ -51,6 +40,22 @@ public class FriendServiceImpl implements FriendService {
         if (friendshipRepository.existsFriendship(requester, receiver, FriendshipStatus.ACCEPTED)) {
             throw new FriendException(FRIEND_ALREADY_EXISTS);
         }
+
+        /*
+        이미 친구 요청을 보낸 경우 (아직 상대방에 수락 안함)
+         */
+        if (friendshipRepository.existsFriendship(requester, receiver, FriendshipStatus.PENDING)) {
+            throw new FriendException(FRIEND_PENDING_EXISTS);
+        }
+
+        /*
+        자기 자신에게 친구 요청을 보낸 경우
+         */
+        if (requesterId.equals(receiver.getUserId())) {
+            throw new FriendException(CANNOT_FRIEND_YOURSELF);
+        }
+
+
         Friendship friendship = Friendship.builder()
                 .requester(requester)
                 .receiver(receiver)
