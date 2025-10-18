@@ -4,7 +4,6 @@ import com.couplemap.friend.dto.FriendRequestResponseDto;
 import com.couplemap.friend.dto.SendFriendRequestDto;
 import com.couplemap.global.exception.exceptions.FriendException;
 import com.couplemap.global.exception.exceptions.UserException;
-import com.couplemap.user.domain.LoginType;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.repository.UserRepository;
@@ -37,7 +36,7 @@ class FriendServiceImplTest {
         requester = User.builder()
                 .name("박민규")
                 .email("test1@test.com")
-                .loginType(LoginType.GOOGLE)
+                .loginType("GOOGLE")
                 .role(UserRole.USER)
                 .providerId("GOOGLE_1235")
                 .friendCode("ABC123")
@@ -47,7 +46,7 @@ class FriendServiceImplTest {
         receiver = User.builder()
                 .name("박성빈")
                 .email("test2@test.com")
-                .loginType(LoginType.GOOGLE)
+                .loginType("GOOGLE")
                 .role(UserRole.USER)
                 .providerId("GOOGLE_12345")
                 .friendCode("ABC456")
@@ -59,27 +58,23 @@ class FriendServiceImplTest {
     @DisplayName("친구 요청 성공")
     void sendFriendRequest_Success() {
         SendFriendRequestDto dto = new SendFriendRequestDto(
-                requester.getUserId(),
-                receiver.getName(),
                 receiver.getFriendCode()
         );
 
-        FriendRequestResponseDto result = friendService.sendFriendRequest(dto);
+        FriendRequestResponseDto result = friendService.sendFriendRequest(dto,requester.getUserId());
 
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("박성빈");
     }
 
     @Test
-    @DisplayName("친구 요청 실패 - 요청자를 찾을 수 없음")
+    @DisplayName("친구 요청 실패 - 사용자(요청자)를 찾을 수 없음")
     void sendFriendRequest_RequesterNotFound() {
         SendFriendRequestDto dto = new SendFriendRequestDto(
-                999L,
-                receiver.getName(),
-                receiver.getFriendCode()
+               "ERROR_CODE"
         );
 
-        assertThatThrownBy(() -> friendService.sendFriendRequest(dto))
+        assertThatThrownBy(() -> friendService.sendFriendRequest(dto,(long)3))
                 .isInstanceOf(UserException.class);
     }
 
@@ -87,12 +82,10 @@ class FriendServiceImplTest {
     @DisplayName("친구 요청 실패 - 잘못된 친구 코드")
     void sendFriendRequest_WrongFriendCode() {
         SendFriendRequestDto dto = new SendFriendRequestDto(
-                requester.getUserId(),
-                receiver.getName(),
-                "5456456456"
+                "ERROR_CODE"
         );
 
-        assertThatThrownBy(() -> friendService.sendFriendRequest(dto))
+        assertThatThrownBy(() -> friendService.sendFriendRequest(dto,requester.getUserId()))
                 .isInstanceOf(FriendException.class);
     }
 }
