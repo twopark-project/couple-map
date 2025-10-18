@@ -50,10 +50,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String email = oAuth2Response.getEmail();
         String name = oAuth2Response.getName();
-        String friendCode = codeGenerator.generateCode();
 
         if (existData == null) {
 
+            String friendCode = codeGenerator.generateCode();
             User user = new User(registrationId, providerId, email, name, UserRole.USER, friendCode);
             userRepository.save(user);
             UserDTO userDTO = UserDTO.builder()
