@@ -6,9 +6,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@NoArgsConstructor
 @Table(name = "users")
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
@@ -46,12 +44,13 @@ public class User extends BaseEntity {
     private String friendCode;
 
     @Builder
-    public User(String loginType, String providerId, String email, String name, UserRole role) {
+    public User(String loginType, String providerId, String email, String name, UserRole role, String friendCode) {
         this.loginType = loginType;
         this.providerId = providerId;
         this.email = email;
         this.name = name;
         this.role = role;
+        this.friendCode = friendCode;
     }
 
     public void updateProfile(String name, String email) {
