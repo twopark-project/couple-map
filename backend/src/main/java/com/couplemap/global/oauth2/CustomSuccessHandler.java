@@ -1,11 +1,11 @@
-package com.couplemap.login.oauth2;
+package com.couplemap.global.oauth2;
 
+import com.couplemap.global.jwt.JWTUtil;
 import com.couplemap.login.dto.CustomOAuth2User;
-import com.couplemap.login.jwt.JWTUtil;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Component
+@Slf4j
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
@@ -32,6 +33,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
 
         String username = customUserDetails.getUsername();
+        Long userId = customUserDetails.getUserId();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
@@ -39,20 +41,14 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String role = auth.getAuthority();
 
         long ttl = java.time.Duration.ofHours(60).toMillis();
-        String token = jwtUtil.createJwt(username, role, ttl);
+        String token = jwtUtil.createJwt(username, role, userId, ttl);
 
-        response.addCookie(createCookie("Authorization", token,(int)(ttl/1000)));
+        // 테스트용 JWT 토큰 로그 출력 -> 아직 프론트 개발 후 지우자
+        log.info("========================================");
+        log.info("JWT Token Generated for: " + userId + " " + username);
+        log.info("Token: " + token);
+        log.info("========================================");
+
         response.sendRedirect("http://localhost:8080/my");
-    }
-
-    private Cookie createCookie(String key, String value, int maxAge) {
-
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(maxAge);
-        //cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-
-        return cookie;
     }
 }
