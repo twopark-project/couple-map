@@ -14,7 +14,7 @@ import static com.couplemap.global.exception.code.FriendErrorCode.NOT_MATCH_RECE
 @Entity
 @Table(name = "friendships")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
+@Builder(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
 public class Friendship extends BaseEntity {
 
