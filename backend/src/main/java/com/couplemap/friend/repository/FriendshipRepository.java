@@ -8,8 +8,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
+
+    // 나를 친구로 추가한 사람들
+    @Query("SELECT f.requester FROM Friendship f WHERE f.receiver.userId = :userId and f.status = :status")
+    List<User> findFriendsWhereRequester(@Param("userId") Long userId,
+                                         @Param("status") FriendshipStatus status);
+
+    // 내가 친구로 추가한 사람들
+    @Query("SELECT f.receiver FROM Friendship f WHERE f.requester.userId = :userId and f.status = :status")
+    List<User> findFriendsWhereReceiver(@Param("userId") Long userId,
+                                        @Param("status") FriendshipStatus status);
 
     @Query("SELECT COUNT(f) > 0 FROM Friendship f " +
             "WHERE ((f.requester = :user1 AND f.receiver = :user2) " +

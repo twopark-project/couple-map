@@ -1,17 +1,14 @@
 package com.couplemap.friend.controller;
 
+import com.couplemap.friend.dto.FriendListDto;
 import com.couplemap.friend.dto.FriendRequestResponseDto;
 import com.couplemap.friend.dto.SendFriendRequestDto;
 import com.couplemap.friend.service.FriendService;
 import com.couplemap.global.response.ApiResponse;
-import com.couplemap.login.dto.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/friend")
 @RequiredArgsConstructor
@@ -25,9 +22,46 @@ public class FriendController {
      */
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<FriendRequestResponseDto>> request(@RequestBody SendFriendRequestDto requestDto,
-                                                                         @AuthenticationPrincipal CustomOAuth2User customOAuth2User) {
-        Long requesterId = customOAuth2User.getUserId();
-        FriendRequestResponseDto responseDto = friendService.sendFriendRequest(requestDto, requesterId);
+                                                                         @AuthenticationPrincipal(expression = "userId") Long userId) {
+        FriendRequestResponseDto responseDto = friendService.sendFriendRequest(requestDto, userId);
         return ResponseEntity.ok(ApiResponse.success(responseDto, "친구 요청이 전송되었습니다."));
+    }
+
+    /*
+    친구 목록 확인
+     */
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<FriendListDto>> list(@AuthenticationPrincipal(expression = "userId") Long userId) {
+        FriendListDto listDto = friendService.getFriendList(userId);
+        return ResponseEntity.ok(ApiResponse.success(listDto));
+    }
+
+    /*
+     친구 요청 온 목록 확인 (PENDING)
+     */
+    @GetMapping("/list/pending")
+    public ResponseEntity<ApiResponse<FriendListDto>> pendingList(@AuthenticationPrincipal(expression = "userId") Long userId) {
+        FriendListDto listDto = friendService.getFriendList(userId);
+        return ResponseEntity.ok(ApiResponse.success(listDto));
+    }
+
+    /*
+    친구 요청 거절
+     */
+    @PostMapping("/{friendshipId}/reject")
+    public ResponseEntity<ApiResponse<Void>> reject(@PathVariable Long friendshipId,
+                                                    @AuthenticationPrincipal(expression = "userId") Long userId) {
+        friendService.reject(friendshipId,userId);
+        return ResponseEntity.ok(ApiResponse.success("친구 요청이 거절되었습니다."));
+    }
+
+    /*
+    친구 요청 수락
+     */
+    @PostMapping("/{friendshipId}/accept")
+    public ResponseEntity<ApiResponse<Void>> accept(@PathVariable Long friendshipId,
+                                                    @AuthenticationPrincipal(expression = "userId") Long userId) {
+        friendService.accept(friendshipId,userId);
+        return ResponseEntity.ok(ApiResponse.success("친구 요청이 수락되었습니다."));
     }
 }
