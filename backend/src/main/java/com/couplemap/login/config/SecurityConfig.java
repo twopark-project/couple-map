@@ -1,12 +1,11 @@
 package com.couplemap.login.config;
 
-import com.couplemap.login.jwt.JWTFilter;
-import com.couplemap.login.jwt.JWTUtil;
-import com.couplemap.login.oauth2.CustomSuccessHandler;
-import com.couplemap.login.service.CustomOAuth2UserService;
+import com.couplemap.global.jwt.JWTFilter;
+import com.couplemap.global.jwt.JWTUtil;
+import com.couplemap.global.oauth2.CustomOAuth2UserService;
+import com.couplemap.global.oauth2.CustomSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;

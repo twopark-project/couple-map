@@ -2,14 +2,16 @@ package com.couplemap.user.domain;
 
 import com.couplemap.global.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor
 @Table(name = "users")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -40,13 +42,17 @@ public class User extends BaseEntity {
     @Column(name = "provider_id", nullable = false, length = 200)
     private String providerId;
 
+    @Column(name = "friend_code", nullable = false)
+    private String friendCode;
+
     @Builder
-    public User(String loginType, String providerId, String email, String name, UserRole role) {
+    public User(String loginType, String providerId, String email, String name, UserRole role, String friendCode) {
         this.loginType = loginType;
         this.providerId = providerId;
         this.email = email;
         this.name = name;
         this.role = role;
+        this.friendCode = friendCode;
     }
 
     public void updateProfile(String name, String email) {

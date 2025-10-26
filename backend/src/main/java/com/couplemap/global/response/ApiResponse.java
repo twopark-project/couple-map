@@ -20,14 +20,25 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
+    // 데이터만
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(true, null, null, data);
+    }
+
+    // 메시지만
+    public static <T> ApiResponse<T> success(String message) {
+        return new ApiResponse<>(true, null, message, null);
+    }
+
+    // 데이터 + 메시지
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return new ApiResponse<>(true, null, message, data);
     }
 
     public static <T> ApiResponse<T> fail(ErrorCode errorCode) {
         return new ApiResponse<>(
                 false,
-                errorCode.getCode(),
+                errorCode.getCodeName(),
                 errorCode.getMessage(),
                 null
         );

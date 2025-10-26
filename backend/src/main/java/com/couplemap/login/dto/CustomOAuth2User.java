@@ -1,5 +1,6 @@
 package com.couplemap.login.dto;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -7,12 +8,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+@RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
     private final UserDTO userDTO;
 
-    public CustomOAuth2User(UserDTO userDTO) {
-        this.userDTO = userDTO;
-    }
 
     @Override
     public Map<String, Object> getAttributes() {
@@ -33,8 +32,10 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
-        return userDTO.getName();
+        return userDTO.getOauthId();
     }
+
+    public Long getUserId() { return userDTO.getUserId();}
 
     public String getUsername(){
         return userDTO.getUsername();
