@@ -14,12 +14,18 @@ import java.util.List;
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
     // 나를 친구로 추가한 사람들
-    @Query("SELECT f.requester FROM Friendship f WHERE f.receiver.userId = :userId and f.status = :status")
+    @Query("SELECT f.requester " +
+            "FROM Friendship f " +
+            "WHERE f.receiver.userId = :userId " +
+            "AND f.status = :status")
     List<User> findFriendsWhereRequester(@Param("userId") Long userId,
                                          @Param("status") FriendshipStatus status);
 
     // 내가 친구로 추가한 사람들
-    @Query("SELECT f.receiver FROM Friendship f WHERE f.requester.userId = :userId and f.status = :status")
+    @Query("SELECT f.receiver " +
+            "FROM Friendship f " +
+            "WHERE f.requester.userId = :userId " +
+            "AND f.status = :status")
     List<User> findFriendsWhereReceiver(@Param("userId") Long userId,
                                         @Param("status") FriendshipStatus status);
 
