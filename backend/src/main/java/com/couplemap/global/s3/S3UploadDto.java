@@ -8,6 +8,6 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class S3UploadDto {
-    private String url;
-    private String key;
+    private final String url;
+    private final String key;
 }

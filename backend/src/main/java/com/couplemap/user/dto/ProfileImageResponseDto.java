@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ProfileImageResponse {
-    private String imageUrl;
+public class ProfileImageResponseDto {
+    private final String imageUrl;
 }
