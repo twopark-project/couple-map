@@ -96,7 +96,7 @@ class S3ServiceImplTest {
         );
 
         assertThrows(S3Exception.class,
-                () -> s3ServiceImpl.uploadImageFile(emptyFile));
+                () -> s3ServiceImpl.checkNull(emptyFile));
     }
 
     @Test
@@ -108,7 +108,7 @@ class S3ServiceImplTest {
         );
 
         S3Exception exception = assertThrows(S3Exception.class,
-                () -> s3ServiceImpl.uploadImageFile(bigFile));
+                () -> s3ServiceImpl.checkSize(bigFile));
 
         assertThat(exception.getMessage()).isEqualTo("파일 크기는 5MB를 초과할 수 없습니다.");
     }
@@ -121,7 +121,7 @@ class S3ServiceImplTest {
         );
 
         S3Exception exception = assertThrows(S3Exception.class,
-                () -> s3ServiceImpl.uploadImageFile(invalidFile));
+                () -> s3ServiceImpl.checkContentType(invalidFile));
 
         assertThat(exception.getMessage()).isEqualTo("JPG, JPEG, PNG 파일만 업로드 가능합니다.");
     }
@@ -134,7 +134,7 @@ class S3ServiceImplTest {
         );
 
         S3Exception exception = assertThrows(S3Exception.class,
-                () -> s3ServiceImpl.uploadImageFile(noExtFile));
+                () -> s3ServiceImpl.checkFileExtension(noExtFile));
 
         assertThat(exception.getMessage()).isEqualTo("올바른 파일명이 아닙니다.");
     }
@@ -147,7 +147,7 @@ class S3ServiceImplTest {
         );
 
         S3Exception exception = assertThrows(S3Exception.class,
-                () -> s3ServiceImpl.uploadImageFile(invalidExtFile));
+                () -> s3ServiceImpl.checkFileExtension(invalidExtFile));
 
         assertThat(exception.getMessage()).isEqualTo("JPG, JPEG, PNG 파일만 업로드 가능합니다.");
     }
