@@ -22,7 +22,7 @@ public class UserController {
     @PostMapping("/profile-image")
     public ResponseEntity<ApiResponse<ProfileImageResponse>> uploadProfileImage(
             @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
 
         ProfileImageResponse response = userService.updateProfileImage(userId, file);
 
@@ -34,7 +34,7 @@ public class UserController {
      */
     @DeleteMapping("/profile-image")
     public ResponseEntity<ApiResponse<Void>> deleteProfileImage(
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
         userService.deleteProfileImage(userId);
         return ResponseEntity.ok(ApiResponse.success("프로필 사진이 삭제되었습니다."));
     }
