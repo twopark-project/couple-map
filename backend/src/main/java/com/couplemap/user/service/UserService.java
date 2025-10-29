@@ -1,9 +1,9 @@
 package com.couplemap.user.service;
 
-import com.couplemap.user.dto.ProfileImageResponse;
+import com.couplemap.user.dto.ProfileImageResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
-    ProfileImageResponse updateProfileImage(Long userId, MultipartFile file);
+    ProfileImageResponseDto updateProfileImage(Long userId, MultipartFile file);
     void deleteProfileImage(Long userId);
 }

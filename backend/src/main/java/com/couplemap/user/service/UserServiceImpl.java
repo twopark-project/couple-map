@@ -4,7 +4,7 @@ import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
 import com.couplemap.user.domain.User;
-import com.couplemap.user.dto.ProfileImageResponse;
+import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
     private final S3Service s3Service;
 
     @Transactional
-    public ProfileImageResponse updateProfileImage(Long userId, MultipartFile file) {
+    public ProfileImageResponseDto updateProfileImage(Long userId, MultipartFile file) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
         user.updateProfileImage(uploadResult);
 
-        return ProfileImageResponse.builder()
+        return ProfileImageResponseDto.builder()
                 .imageUrl(user.getProfileImageUrl())
                 .build();
     }

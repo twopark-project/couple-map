@@ -1,7 +1,7 @@
 package com.couplemap.user.controller;
 
 import com.couplemap.global.response.ApiResponse;
-import com.couplemap.user.dto.ProfileImageResponse;
+import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +20,11 @@ public class UserController {
     프로필 이미지 업로드/수정
      */
     @PostMapping("/profile-image")
-    public ResponseEntity<ApiResponse<ProfileImageResponse>> uploadProfileImage(
+    public ResponseEntity<ApiResponse<ProfileImageResponseDto>> uploadProfileImage(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal(expression = "userId") Long userId) {
 
-        ProfileImageResponse response = userService.updateProfileImage(userId, file);
+        ProfileImageResponseDto response = userService.updateProfileImage(userId, file);
 
         return ResponseEntity.ok(ApiResponse.success(response, "프로필 사진 등록이 완료되었습니다."));
     }

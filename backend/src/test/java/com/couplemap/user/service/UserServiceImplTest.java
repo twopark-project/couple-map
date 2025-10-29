@@ -3,7 +3,7 @@ package com.couplemap.user.service;
 import com.couplemap.global.s3.S3ServiceImpl;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
-import com.couplemap.user.dto.ProfileImageResponse;
+import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,7 +92,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("프로필 이미지 업로드 성공 - 실제 S3 업로드 및 DB 저장 확인")
     void updateProfileImage_Success() {
-        ProfileImageResponse response = userService.updateProfileImage(testUser.getUserId(), testFile1);
+        ProfileImageResponseDto response = userService.updateProfileImage(testUser.getUserId(), testFile1);
 
         assertThat(response.getImageUrl()).isNotNull();
         assertThat(response.getImageUrl()).contains("s3");
@@ -110,13 +110,13 @@ class UserServiceImplTest {
     @Test
     @DisplayName("프로필 이미지 업데이트 - 기존 이미지 교체 및 DB 업데이트 확인")
     void updateProfileImage_Replace() {
-        ProfileImageResponse firstResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
+        ProfileImageResponseDto firstResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
         String firstUrl = firstResponse.getImageUrl();
         String firstKey = userRepository.findById(testUser.getUserId()).orElseThrow().getProfileImageKey();
 
         System.out.println("첫 번째 이미지 URL: " + firstUrl);
 
-        ProfileImageResponse secondResponse = userService.updateProfileImage(testUser.getUserId(), testFile2);
+        ProfileImageResponseDto secondResponse = userService.updateProfileImage(testUser.getUserId(), testFile2);
 
         // 응답 검증 (URL이 달라야 함)
         assertThat(secondResponse.getImageUrl()).isNotNull();
@@ -135,7 +135,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("프로필 이미지 삭제 성공 - S3 및 DB에서 삭제 확인")
     void deleteProfileImage_Success() {
-        ProfileImageResponse uploadResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
+        ProfileImageResponseDto uploadResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
         String uploadedKey = userRepository.findById(testUser.getUserId()).orElseThrow().getProfileImageKey();
 
         System.out.println("업로드된 이미지 Key: " + uploadedKey);
@@ -167,7 +167,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("프로필 이미지 삭제 후 재업로드 가능 확인")
     void deleteAndReuploadProfileImage() {
-        ProfileImageResponse firstResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
+        ProfileImageResponseDto firstResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
         String firstKey = userRepository.findById(testUser.getUserId()).orElseThrow().getProfileImageKey();
 
         System.out.println("첫 번째 이미지 업로드: " + firstKey);
@@ -178,7 +178,7 @@ class UserServiceImplTest {
         assertThat(deletedUser.getProfileImageKey()).isNull();
 
         // 다시 업로드
-        ProfileImageResponse secondResponse = userService.updateProfileImage(testUser.getUserId(), testFile2);
+        ProfileImageResponseDto secondResponse = userService.updateProfileImage(testUser.getUserId(), testFile2);
         String secondKey = userRepository.findById(testUser.getUserId()).orElseThrow().getProfileImageKey();
 
         assertThat(secondResponse.getImageUrl()).isNotNull();
