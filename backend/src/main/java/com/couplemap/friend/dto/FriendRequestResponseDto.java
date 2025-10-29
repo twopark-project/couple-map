@@ -1,11 +1,9 @@
 package com.couplemap.friend.dto;
 
 import com.couplemap.friend.domain.Friendship;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
 @Builder
 public class FriendRequestResponseDto {
