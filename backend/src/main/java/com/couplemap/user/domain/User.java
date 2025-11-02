@@ -1,6 +1,7 @@
 package com.couplemap.user.domain;
 
 import com.couplemap.global.common.BaseEntity;
+import com.couplemap.global.s3.S3UploadDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -55,8 +56,18 @@ public class User extends BaseEntity {
         this.friendCode = friendCode;
     }
 
+    public void updateProfileImage(S3UploadDto uploadDto) {
+        this.profileImageUrl = uploadDto.getUrl();
+        this.profileImageKey = uploadDto.getKey();
+    }
+
     public void updateProfile(String name, String email) {
         this.name = name;
         this.email = email;
+    }
+
+    public void deleteProfileImage() {
+        this.profileImageUrl = null;
+        this.profileImageKey = null;
     }
 }

@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
-
 plugins {
 	java
 	id("org.springframework.boot") version "3.5.6"
@@ -34,6 +32,12 @@ dependencies {
 
 	// Spring Data JPA
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	// AWS
+	implementation (platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.4.0"))
+
+	// S3
+	implementation ("io.awspring.cloud:spring-cloud-aws-starter-s3")
 
 	// Validation
 	implementation("org.springframework.boot:spring-boot-starter-validation")
