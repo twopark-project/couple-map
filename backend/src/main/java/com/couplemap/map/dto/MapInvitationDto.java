@@ -6,10 +6,11 @@ import lombok.Getter;
 public class MapInvitationDto {
     private final Long mapMemberId;
     private final String mapName;
-    //TODO: 초대한 사람 이름 추가하면 좋을 듯
+    private final String inviterName;
 
-    public MapInvitationDto(Long mapMemberId, String mapName) {
+    public MapInvitationDto(Long mapMemberId, String mapName, String inviterName) {
         this.mapMemberId = mapMemberId;
         this.mapName = mapName;
+        this.inviterName = inviterName;
     }
 }

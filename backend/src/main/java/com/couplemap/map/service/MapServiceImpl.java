@@ -58,8 +58,8 @@ public class MapServiceImpl implements MapService {
 
     @Transactional
     @Override
-    public void inviteFriend(Long mapId, InviteFriendRequest request, User user) {
-        MapMember invitingMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, user.getUserId())
+    public void inviteFriend(Long mapId, InviteFriendRequest request, User inviter) {
+        MapMember invitingMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, inviter.getUserId())
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
         if (invitingMember.getMapMemberRole() != MapMemberRole.OWNER && invitingMember.getMapMemberRole() != MapMemberRole.EDITOR) {
@@ -74,7 +74,7 @@ public class MapServiceImpl implements MapService {
         });
 
         Map map = invitingMember.getMap();
-        MapMember newMember = MapMember.from(map, friendToInvite, MapMemberRole.PENDING);
+        MapMember newMember = MapMember.from(map, friendToInvite, inviter, MapMemberRole.PENDING);
         mapMemberRepository.save(newMember);
     }
 
@@ -117,7 +117,8 @@ public class MapServiceImpl implements MapService {
         return mapMemberRepository.findAllByUserAndMapMemberRole(user, MapMemberRole.PENDING).stream()
                 .map(mapMember -> new MapInvitationDto(
                         mapMember.getMapMemberId(),
-                        mapMember.getMap().getMapName()
+                        mapMember.getMap().getMapName(),
+                        mapMember.getInviter().getName()
                 ))
                 .collect(Collectors.toList());
     }

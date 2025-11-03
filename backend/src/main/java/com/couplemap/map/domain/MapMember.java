@@ -27,14 +27,19 @@ public class MapMember extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inviter_id")
+    private User inviter;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "map_member_role", nullable = false, length = 20)
     private MapMemberRole mapMemberRole;
 
     @Builder
-    private MapMember(Map map, User user, MapMemberRole mapMemberRole) {
+    private MapMember(Map map, User user, User inviter, MapMemberRole mapMemberRole) {
         this.map = map;
         this.user = user;
+        this.inviter = inviter;
         this.mapMemberRole = mapMemberRole;
     }
 
@@ -42,6 +47,15 @@ public class MapMember extends BaseEntity {
         return MapMember.builder()
                 .map(map)
                 .user(user)
+                .mapMemberRole(role)
+                .build();
+    }
+
+    public static MapMember from(Map map, User user, User inviter, MapMemberRole role) {
+        return MapMember.builder()
+                .map(map)
+                .user(user)
+                .inviter(inviter)
                 .mapMemberRole(role)
                 .build();
     }
