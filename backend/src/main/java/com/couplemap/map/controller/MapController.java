@@ -2,6 +2,8 @@ package com.couplemap.map.controller;
 
 import com.couplemap.global.response.ApiResponse;
 import com.couplemap.map.dto.CreateMapRequest;
+import com.couplemap.map.dto.InviteFriendRequest;
+import com.couplemap.map.dto.MapInvitationDto;
 import com.couplemap.map.dto.MapListDto;
 import com.couplemap.map.service.MapService;
 import com.couplemap.user.domain.User;
@@ -31,5 +33,31 @@ public class MapController {
     public ResponseEntity<ApiResponse<List<MapListDto>>> getMapList(@AuthenticationPrincipal User user) {
         List<MapListDto> mapList = mapService.getMapList(user);
         return ResponseEntity.ok(ApiResponse.success(mapList, "지도 목록 조회가 완료되었습니다."));
+    }
+
+    @PostMapping("/{mapId}/invite")
+    public ResponseEntity<ApiResponse<Void>> inviteFriend(@PathVariable Long mapId,
+                                                        @RequestBody InviteFriendRequest request,
+                                                        @AuthenticationPrincipal User user) {
+        mapService.inviteFriend(mapId, request, user);
+        return ResponseEntity.ok(ApiResponse.success("지도에 친구를 초대했습니다."));
+    }
+
+    @PostMapping("/member/{mapMemberId}/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptInvitation(@PathVariable Long mapMemberId, @AuthenticationPrincipal User user) {
+        mapService.acceptInvitation(mapMemberId, user);
+        return ResponseEntity.ok(ApiResponse.success("초대를 수락했습니다."));
+    }
+
+    @PostMapping("/member/{mapMemberId}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectInvitation(@PathVariable Long mapMemberId, @AuthenticationPrincipal User user) {
+        mapService.rejectInvitation(mapMemberId, user);
+        return ResponseEntity.ok(ApiResponse.success("초대를 거절했습니다."));
+    }
+
+    @GetMapping("/invitations")
+    public ResponseEntity<ApiResponse<List<MapInvitationDto>>> getInvitationList(@AuthenticationPrincipal User user) {
+        List<MapInvitationDto> invitationList = mapService.getInvitationList(user);
+        return ResponseEntity.ok(ApiResponse.success(invitationList, "받은 초대 목록 조회가 완료되었습니다."));
     }
 }

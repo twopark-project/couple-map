@@ -32,11 +32,29 @@ public class MapMember extends BaseEntity {
     private MapMemberRole mapMemberRole;
 
     @Builder
+    private MapMember(Map map, User user, MapMemberRole mapMemberRole) {
+        this.map = map;
+        this.user = user;
+        this.mapMemberRole = mapMemberRole;
+    }
+
     public static MapMember from(Map map, User user, MapMemberRole role) {
         return MapMember.builder()
                 .map(map)
                 .user(user)
-                .role(role)
+                .mapMemberRole(role)
                 .build();
+    }
+
+    public void accept() {
+        this.mapMemberRole = MapMemberRole.EDITOR;
+    }
+
+    public boolean isPending() {
+        return this.mapMemberRole == MapMemberRole.PENDING;
+    }
+
+    public boolean isInvitedUser(User user) {
+        return this.user.equals(user);
     }
 }
