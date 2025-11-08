@@ -1,23 +1,22 @@
 package com.couplemap.map.service;
 
-import com.couplemap.map.dto.CreateMapRequest;
-import com.couplemap.map.dto.InviteFriendRequest;
+import com.couplemap.map.dto.CreateMapRequestDto;
+import com.couplemap.map.dto.InviteFriendRequestDto;
 import com.couplemap.map.dto.MapInvitationDto;
 import com.couplemap.map.dto.MapListDto;
-import com.couplemap.user.domain.User;
 
 import java.util.List;
 
 public interface MapService {
-    Long createMap(CreateMapRequest request, User user);
+    Long createMap(CreateMapRequestDto request, Long userId);
 
-    List<MapListDto> getMapList(User user);
+    List<MapListDto> getMapList(Long userId);
 
-    void inviteFriend(Long mapId, InviteFriendRequest request, User user);
+    void inviteFriend(Long mapId, InviteFriendRequestDto request, Long userId);
 
-    void acceptInvitation(Long mapMemberId, User user);
+    void acceptInvitation(Long mapMemberId, Long userId);
 
-    void rejectInvitation(Long mapMemberId, User user);
+    void rejectInvitation(Long mapMemberId, Long userId);
 
-    List<MapInvitationDto> getInvitationList(User user);
+    List<MapInvitationDto> getInvitationList(Long userId);
 }
