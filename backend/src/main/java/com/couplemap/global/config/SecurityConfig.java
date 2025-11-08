@@ -1,9 +1,9 @@
-package com.couplemap.login.config;
+package com.couplemap.global.config;
 
-import com.couplemap.global.jwt.JWTFilter;
-import com.couplemap.global.jwt.JWTUtil;
 import com.couplemap.global.oauth2.CustomOAuth2UserService;
 import com.couplemap.global.oauth2.CustomSuccessHandler;
+import com.couplemap.jwt.util.JWTFilter;
+import com.couplemap.jwt.JWTUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -56,11 +56,11 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/","/login", "/api/auth/refresh", "/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .anyRequest().authenticated());
 
-//      STATELESS
-      http
+        //STATELESS
+        http
               .sessionManagement((session) -> session
                       .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
