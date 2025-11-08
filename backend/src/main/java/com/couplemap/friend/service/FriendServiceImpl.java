@@ -1,7 +1,7 @@
 package com.couplemap.friend.service;
 
 import com.couplemap.friend.domain.Friendship;
-import com.couplemap.friend.dto.FriendListDto;
+import com.couplemap.friend.dto.FriendListResponseDto;
 import com.couplemap.friend.dto.FriendRequestResponseDto;
 import com.couplemap.friend.dto.SendFriendRequestDto;
 import com.couplemap.friend.repository.FriendshipRepository;
@@ -48,13 +48,13 @@ public class FriendServiceImpl implements FriendService {
         return FriendRequestResponseDto.from(friendship);
     }
 
-    @Transactional
-    public FriendListDto getFriendList(Long userId) {
+    @Transactional(readOnly = true)
+    public FriendListResponseDto getFriendList(Long userId) {
         List<User> friendList = new ArrayList<>();
         friendList.addAll(friendshipRepository.findFriendsWhereReceiver(userId, ACCEPTED));
         friendList.addAll(friendshipRepository.findFriendsWhereRequester(userId, ACCEPTED));
 
-        return FriendListDto.from(friendList);
+        return FriendListResponseDto.from(friendList);
     }
 
     @Transactional

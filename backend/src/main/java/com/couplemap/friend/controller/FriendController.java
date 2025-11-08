@@ -1,6 +1,6 @@
 package com.couplemap.friend.controller;
 
-import com.couplemap.friend.dto.FriendListDto;
+import com.couplemap.friend.dto.FriendListResponseDto;
 import com.couplemap.friend.dto.FriendRequestResponseDto;
 import com.couplemap.friend.dto.SendFriendRequestDto;
 import com.couplemap.friend.service.FriendService;
@@ -31,8 +31,8 @@ public class FriendController {
     친구 목록 확인
      */
     @GetMapping("/list")
-    public ResponseEntity<ApiResponse<FriendListDto>> list(@AuthenticationPrincipal(expression = "userId") Long userId) {
-        FriendListDto listDto = friendService.getFriendList(userId);
+    public ResponseEntity<ApiResponse<FriendListResponseDto>> list(@AuthenticationPrincipal(expression = "userId") Long userId) {
+        FriendListResponseDto listDto = friendService.getFriendList(userId);
         return ResponseEntity.ok(ApiResponse.success(listDto));
     }
 
@@ -40,8 +40,8 @@ public class FriendController {
      친구 요청 온 목록 확인 (PENDING)
      */
     @GetMapping("/list/pending")
-    public ResponseEntity<ApiResponse<FriendListDto>> pendingList(@AuthenticationPrincipal(expression = "userId") Long userId) {
-        FriendListDto listDto = friendService.getFriendList(userId);
+    public ResponseEntity<ApiResponse<FriendListResponseDto>> pendingList(@AuthenticationPrincipal(expression = "userId") Long userId) {
+        FriendListResponseDto listDto = friendService.getFriendList(userId);
         return ResponseEntity.ok(ApiResponse.success(listDto));
     }
 
