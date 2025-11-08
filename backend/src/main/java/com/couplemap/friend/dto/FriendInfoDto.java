@@ -7,10 +7,11 @@ import lombok.Getter;
 @Getter
 @Builder
 public class FriendInfoDto {
-    private Long id;
-    private String name;
-    private String email;
-    private String imageUrl;
+
+    private final Long id;
+    private final String name;
+    private final String email;
+    private final String imageUrl;
 
     public static FriendInfoDto from(User user) {
         return FriendInfoDto.builder()
