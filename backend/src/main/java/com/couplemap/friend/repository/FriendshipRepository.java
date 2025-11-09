@@ -18,7 +18,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             "FROM Friendship f " +
             "WHERE f.receiver.userId = :userId " +
             "AND f.status = :status")
-    List<User> findFriendsWhereRequester(@Param("userId") Long userId,
+    List<User> findFriendsWhereReceiver(@Param("userId") Long userId,
                                          @Param("status") FriendshipStatus status);
 
     // 내가 친구로 추가한 사람들
@@ -26,7 +26,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             "FROM Friendship f " +
             "WHERE f.requester.userId = :userId " +
             "AND f.status = :status")
-    List<User> findFriendsWhereReceiver(@Param("userId") Long userId,
+    List<User> findFriendsWhereRequester(@Param("userId") Long userId,
                                         @Param("status") FriendshipStatus status);
 
     @Query("SELECT COUNT(f) > 0 FROM Friendship f " +

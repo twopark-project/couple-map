@@ -1,6 +1,7 @@
 package com.couplemap.friend.controller;
 
 import com.couplemap.friend.dto.FriendListResponseDto;
+import com.couplemap.friend.dto.FriendPendingListResponseDto;
 import com.couplemap.friend.dto.FriendRequestResponseDto;
 import com.couplemap.friend.dto.SendFriendRequestDto;
 import com.couplemap.friend.service.FriendService;
@@ -40,8 +41,8 @@ public class FriendController {
      친구 요청 온 목록 확인 (PENDING)
      */
     @GetMapping("/list/pending")
-    public ResponseEntity<ApiResponse<FriendListResponseDto>> pendingList(@AuthenticationPrincipal(expression = "userId") Long userId) {
-        FriendListResponseDto listDto = friendService.getFriendList(userId);
+    public ResponseEntity<ApiResponse<FriendPendingListResponseDto>> pendingList(@AuthenticationPrincipal(expression = "userId") Long userId) {
+        FriendPendingListResponseDto listDto = friendService.getFriendPendingList(userId);
         return ResponseEntity.ok(ApiResponse.success(listDto));
     }
 
