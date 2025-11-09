@@ -22,7 +22,7 @@ public class RefreshToken {
         return RefreshToken.builder()
                 .id(String.valueOf(userId))
                 .refreshToken(refreshToken)
-                .expiration(expiration)
+                .expiration(expiration/1000)
                 .build();
     }
 
