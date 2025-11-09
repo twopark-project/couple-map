@@ -79,10 +79,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
      * 로그아웃
      */
     @Transactional
-    public void logout(String authHeader) {
-
-        String accessToken = tokenExtractor.extractToken(authHeader);
-        Long userId = jwtUtil.getUserId(accessToken);
+    public void logout(Long userId) {
 
         refreshTokenRepository.deleteById(String.valueOf(userId));
 
