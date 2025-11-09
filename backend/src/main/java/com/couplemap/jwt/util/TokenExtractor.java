@@ -12,6 +12,11 @@ public class TokenExtractor {
     private static final String BEARER_PREFIX = "Bearer ";
 
     public String extractToken(String authHeader) {
+
+        if (authHeader == null || authHeader.isBlank()) {
+            throw new JwtException(JWT_TOKEN_NOT_FOUND);
+        }
+
         if (!authHeader.startsWith(BEARER_PREFIX)) {
             throw new JwtException(JWT_INVALID_FORMAT);
         }
