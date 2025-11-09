@@ -1,4 +1,4 @@
-package com.couplemap.jwt;
+package com.couplemap.jwt.util;
 
 import com.couplemap.global.exception.exceptions.JwtException;
 import com.couplemap.user.domain.UserRole;

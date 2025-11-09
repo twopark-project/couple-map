@@ -1,6 +1,5 @@
     package com.couplemap.jwt.util;
 
-    import com.couplemap.jwt.JWTUtil;
     import com.couplemap.login.dto.CustomOAuth2User;
     import com.couplemap.login.dto.UserDTO;
     import com.couplemap.user.domain.UserRole;

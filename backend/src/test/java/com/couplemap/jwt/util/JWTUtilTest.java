@@ -1,6 +1,5 @@
 package com.couplemap.jwt.util;
 
-import com.couplemap.jwt.JWTUtil;
 import com.couplemap.user.domain.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

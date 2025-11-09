@@ -3,7 +3,7 @@ package com.couplemap.global.config;
 import com.couplemap.global.oauth2.CustomOAuth2UserService;
 import com.couplemap.global.oauth2.CustomSuccessHandler;
 import com.couplemap.jwt.util.JWTFilter;
-import com.couplemap.jwt.JWTUtil;
+import com.couplemap.jwt.util.JWTUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

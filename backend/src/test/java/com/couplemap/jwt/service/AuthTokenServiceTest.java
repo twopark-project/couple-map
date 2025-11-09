@@ -1,7 +1,7 @@
 package com.couplemap.jwt.service;
 
 import com.couplemap.global.exception.exceptions.JwtException;
-import com.couplemap.jwt.JWTUtil;
+import com.couplemap.jwt.util.JWTUtil;
 import com.couplemap.jwt.dto.TokenResponseDto;
 import com.couplemap.jwt.entity.RefreshToken;
 import com.couplemap.jwt.repository.RefreshTokenRepository;
