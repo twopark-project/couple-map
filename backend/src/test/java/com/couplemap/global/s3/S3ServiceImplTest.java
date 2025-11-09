@@ -60,7 +60,6 @@ class S3ServiceImplTest {
         assertThat(result.getKey()).endsWith(".png");
 
         uploadedKeys.add(result.getKey());
-        System.out.println("업로드된 파일 URL: " + result.getUrl());
     }
 
     @Test
@@ -74,7 +73,6 @@ class S3ServiceImplTest {
         S3UploadDto uploaded = s3ServiceImpl.uploadImageFile(file);
 
         assertDoesNotThrow(() -> s3ServiceImpl.deleteFile(uploaded.getKey()));
-        System.out.println("삭제 성공: " + uploaded.getKey());
     }
 
 
