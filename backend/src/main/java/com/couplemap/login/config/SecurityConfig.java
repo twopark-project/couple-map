@@ -1,7 +1,7 @@
-package com.couplemap.global.config;
+package com.couplemap.login.config;
 
-import com.couplemap.global.oauth2.CustomOAuth2UserService;
-import com.couplemap.global.oauth2.CustomSuccessHandler;
+import com.couplemap.login.oauth2.CustomOAuth2UserService;
+import com.couplemap.login.oauth2.CustomSuccessHandler;
 import com.couplemap.jwt.util.JWTFilter;
 import com.couplemap.jwt.util.JWTUtil;
 import org.springframework.context.annotation.Bean;
