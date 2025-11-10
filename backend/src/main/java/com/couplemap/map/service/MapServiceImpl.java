@@ -52,6 +52,7 @@ public class MapServiceImpl implements MapService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUser(user).stream()
+                .filter(mapMember -> mapMember.getMapMemberRole() != MapMemberRole.PENDING)
                 .map(mapMember -> new MapListDto(
                         mapMember.getMap().getMapId(),
                         mapMember.getMap().getMapName(),
