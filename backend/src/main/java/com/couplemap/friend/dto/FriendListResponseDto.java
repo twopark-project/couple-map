@@ -9,14 +9,14 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class FriendListDto {
-    private List<FriendInfoDto> friendList;
+public class FriendListResponseDto {
+    private final List<FriendInfoDto> friendList;
 
-    public static FriendListDto from(List<User> users) {
+    public static FriendListResponseDto from(List<User> users) {
         List<FriendInfoDto> friendInfoList = new ArrayList<>();
         for (User user : users) {
             friendInfoList.add(FriendInfoDto.from(user));
         }
-        return new FriendListDto(friendInfoList);
+        return new FriendListResponseDto(friendInfoList);
     }
 }

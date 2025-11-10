@@ -71,9 +71,7 @@ class UserServiceImplTest {
         for (String key : uploadedKeys) {
             try {
                 s3ServiceImpl.deleteFile(key);
-                System.out.println("S3 파일 정리 완료: " + key);
             } catch (Exception e) {
-                System.out.println("S3 파일 정리 실패: " + key);
             }
         }
         uploadedKeys.clear();
@@ -82,9 +80,7 @@ class UserServiceImplTest {
         if (testUser != null) {
             try {
                 userRepository.delete(testUser);
-                System.out.println("유저 정리 완료: " + testUser.getUserId());
             } catch (Exception e) {
-                System.out.println("유저 정리 실패: " + testUser.getUserId());
             }
         }
     }
@@ -104,7 +100,6 @@ class UserServiceImplTest {
         assertThat(updatedUser.getProfileImageKey()).startsWith("profile/");
 
         uploadedKeys.add(updatedUser.getProfileImageKey());
-        System.out.println("업로드된 이미지 URL: " + response.getImageUrl());
     }
 
     @Test
@@ -113,8 +108,6 @@ class UserServiceImplTest {
         ProfileImageResponseDto firstResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
         String firstUrl = firstResponse.getImageUrl();
         String firstKey = userRepository.findById(testUser.getUserId()).orElseThrow().getProfileImageKey();
-
-        System.out.println("첫 번째 이미지 URL: " + firstUrl);
 
         ProfileImageResponseDto secondResponse = userService.updateProfileImage(testUser.getUserId(), testFile2);
 
@@ -128,8 +121,6 @@ class UserServiceImplTest {
         assertThat(updatedUser.getProfileImageUrl()).isNotEqualTo(firstUrl);
 
         uploadedKeys.add(updatedUser.getProfileImageKey());
-        System.out.println("두 번째 이미지 URL: " + secondResponse.getImageUrl());
-        System.out.println("기존 이미지는 자동 삭제됨: " + firstKey);
     }
 
     @Test
@@ -146,7 +137,6 @@ class UserServiceImplTest {
         assertThat(updatedUser.getProfileImageUrl()).isNull();
         assertThat(updatedUser.getProfileImageKey()).isNull();
 
-        System.out.println("프로필 이미지 삭제 완료");
     }
 
     @Test
@@ -161,7 +151,6 @@ class UserServiceImplTest {
         assertThat(updatedUser.getProfileImageUrl()).isNull();
         assertThat(updatedUser.getProfileImageKey()).isNull();
 
-        System.out.println("이미지가 없는 경우에도 정상 처리됨");
     }
 
     @Test
@@ -170,7 +159,6 @@ class UserServiceImplTest {
         ProfileImageResponseDto firstResponse = userService.updateProfileImage(testUser.getUserId(), testFile1);
         String firstKey = userRepository.findById(testUser.getUserId()).orElseThrow().getProfileImageKey();
 
-        System.out.println("첫 번째 이미지 업로드: " + firstKey);
 
         userService.deleteProfileImage(testUser.getUserId());
 
@@ -186,7 +174,5 @@ class UserServiceImplTest {
         assertThat(secondKey).isNotEqualTo(firstKey);
 
         uploadedKeys.add(secondKey);
-        System.out.println("두 번째 이미지 업로드: " + secondKey);
-        System.out.println("삭제 후 재업로드 성공");
     }
 }

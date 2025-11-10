@@ -39,6 +39,9 @@ dependencies {
 	// S3
 	implementation ("io.awspring.cloud:spring-cloud-aws-starter-s3")
 
+	// Redis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
 	// Validation
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 

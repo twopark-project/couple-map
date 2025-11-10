@@ -6,16 +6,13 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class FriendInfoDto {
-
-    private final Long id;
+public class FriendPendingInfoDto {
     private final String name;
     private final String email;
     private final String imageUrl;
 
-    public static FriendInfoDto from(User user) {
-        return FriendInfoDto.builder()
-                .id(user.getUserId())
+    public static  FriendPendingInfoDto from(User user) {
+        return FriendPendingInfoDto.builder()
                 .name(user.getName())
                 .email(user.getEmail())
                 .imageUrl(user.getProfileImageUrl())

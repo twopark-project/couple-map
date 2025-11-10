@@ -1,13 +1,14 @@
-package com.couplemap.login.config;
+package com.couplemap.global.config;
 
-import com.couplemap.global.jwt.JWTFilter;
-import com.couplemap.global.jwt.JWTUtil;
 import com.couplemap.global.oauth2.CustomOAuth2UserService;
 import com.couplemap.global.oauth2.CustomSuccessHandler;
+import com.couplemap.jwt.util.JWTFilter;
+import com.couplemap.jwt.util.JWTUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -24,6 +25,12 @@ public class SecurityConfig {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers("/api/auth/refresh");
     }
 
     @Bean
@@ -59,8 +66,8 @@ public class SecurityConfig {
                         .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .anyRequest().authenticated());
 
-//      STATELESS
-      http
+        //STATELESS
+        http
               .sessionManagement((session) -> session
                       .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
