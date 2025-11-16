@@ -7,6 +7,11 @@
 
 #include <iostream>
 
+/**
+ * @brief Allocates and attaches a native Windows console to the current process and routes standard output streams to it.
+ *
+ * If a console is successfully created and attached, the function connects the process's stdout/stderr and synchronizes C++ iostreams with the console output. If a console cannot be allocated, the process's existing I/O state is left unchanged.
+ */
 void CreateAndAttachConsole() {
   if (::AllocConsole()) {
     FILE *unused;
@@ -21,6 +26,13 @@ void CreateAndAttachConsole() {
   }
 }
 
+/**
+ * @brief Retrieve command line arguments converted to UTF-8.
+ *
+ * Obtains the process command line from the Windows API, converts each argument (except the binary name) from UTF-16 to UTF-8, and returns them as a vector of std::string.
+ *
+ * @return std::vector<std::string> A vector of command line arguments encoded in UTF-8, excluding the program binary name. Returns an empty vector if the Windows API call fails.
+ */
 std::vector<std::string> GetCommandLineArguments() {
   // Convert the UTF-16 command line arguments to UTF-8 for the Engine to use.
   int argc;
@@ -41,6 +53,12 @@ std::vector<std::string> GetCommandLineArguments() {
   return command_line_arguments;
 }
 
+/**
+ * @brief Convert a null-terminated UTF-16 (wide) string to a UTF-8 encoded string.
+ *
+ * @param utf16_string Pointer to a null-terminated UTF-16 wide string. May be `nullptr`.
+ * @return std::string The UTF-8 encoded result. Returns an empty string if `utf16_string` is `nullptr` or if the conversion fails.
+ */
 std::string Utf8FromUtf16(const wchar_t* utf16_string) {
   if (utf16_string == nullptr) {
     return std::string();

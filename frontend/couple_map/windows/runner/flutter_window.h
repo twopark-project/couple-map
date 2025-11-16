@@ -8,7 +8,42 @@
 
 #include "win32_window.h"
 
-// A window that does nothing but host a Flutter view.
+/**
+ * A Win32 window that hosts a Flutter view.
+ *
+ * The window's sole purpose is to create, own, and forward Windows events to a
+ * FlutterViewController for embedding Flutter content in a native Win32 window.
+ */
+
+/**
+ * Creates a new FlutterWindow hosting a Flutter view running the given Dart project.
+ *
+ * @param project The Dart project configuration to run inside the hosted Flutter view.
+ */
+ 
+/**
+ * Destroys the FlutterWindow and releases any owned Flutter resources.
+ */
+
+/**
+ * Perform initialization when the native window is created.
+ *
+ * @returns `true` if initialization succeeded and the window is ready to show, `false` otherwise.
+ */
+
+/**
+ * Perform cleanup when the native window is destroyed.
+ */
+
+/**
+ * Handle Windows messages sent to this window.
+ *
+ * @param window The HWND that received the message.
+ * @param message The message identifier (WM_...).
+ * @param wparam Additional message information (word-sized).
+ * @param lparam Additional message information (long-sized).
+ * @returns The result of message processing as an LRESULT; value semantics depend on the processed message.
+ */
 class FlutterWindow : public Win32Window {
  public:
   // Creates a new FlutterWindow hosting a Flutter view running |project|.

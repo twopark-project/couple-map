@@ -15,12 +15,29 @@ struct _MyApplication {
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 // Called when first Flutter frame received.
+/**
+ * @brief Shows the window containing the given Flutter view when the view's first frame is rendered.
+ *
+ * Displays the view's top-level GTK widget so the application window becomes visible once Flutter has produced its initial frame.
+ *
+ * @param view The FlView whose toplevel widget will be shown.
+ */
 static void first_frame_cb(MyApplication* self, FlView *view)
 {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
-// Implements GApplication::activate.
+/**
+ * @brief Activate the application by creating and configuring its main window and embedding the Flutter view.
+ *
+ * Creates a new top-level window for the application, chooses a header bar or traditional title bar
+ * based on the windowing environment, sets the default window size and title, constructs an
+ * FlDartProject with the stored Dart entrypoint arguments, creates an FlView with a black
+ * background, and attaches the view to the window. The window is shown when the Flutter view
+ * emits its first frame; Flutter plugins are registered and the view is given focus.
+ *
+ * @param application The GApplication instance to activate (expected to be a MyApplication).
+ */
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
   GtkWindow* window =
@@ -76,7 +93,19 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
-// Implements GApplication::local_command_line.
+/**
+ * @brief Handles the application's command-line invocation, stores Dart entrypoint arguments, registers and activates the application.
+ *
+ * Strips the program name from the provided argument vector and saves the remaining arguments
+ * into the application's `dart_entrypoint_arguments`. Attempts to register the GApplication;
+ * on failure sets `*exit_status` to 1 and logs a warning. On success activates the application
+ * and sets `*exit_status` to 0.
+ *
+ * @param application The GApplication instance.
+ * @param arguments Pointer to the argument vector; the first element (binary name) is removed and the remainder is stored.
+ * @param exit_status Output location for the process exit status (0 on success, 1 on registration failure).
+ * @return gboolean `TRUE` indicating the command line was handled.
+ */
 static gboolean my_application_local_command_line(GApplication* application, gchar*** arguments, int* exit_status) {
   MyApplication* self = MY_APPLICATION(application);
   // Strip out the first argument as it is the binary name.
@@ -95,7 +124,14 @@ static gboolean my_application_local_command_line(GApplication* application, gch
   return TRUE;
 }
 
-// Implements GApplication::startup.
+/**
+ * @brief Perform application-specific startup initialization.
+ *
+ * Chains any required startup actions to the parent GApplication startup
+ * implementation.
+ *
+ * @param application The GApplication instance being started.
+ */
 static void my_application_startup(GApplication* application) {
   //MyApplication* self = MY_APPLICATION(object);
 
@@ -104,7 +140,12 @@ static void my_application_startup(GApplication* application) {
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
 }
 
-// Implements GApplication::shutdown.
+/**
+ * @brief Perform application shutdown tasks and chain to the parent implementation.
+ *
+ * Runs any MyApplication-specific shutdown actions, then invokes the parent
+ * GApplication::shutdown implementation to complete shutdown processing.
+ */
 static void my_application_shutdown(GApplication* application) {
   //MyApplication* self = MY_APPLICATION(object);
 
@@ -113,13 +154,28 @@ static void my_application_shutdown(GApplication* application) {
   G_APPLICATION_CLASS(my_application_parent_class)->shutdown(application);
 }
 
-// Implements GObject::dispose.
+/**
+ * @brief Release resources owned by a MyApplication instance before finalization.
+ *
+ * Frees the stored `dart_entrypoint_arguments` array and delegates to the parent
+ * class's `dispose` implementation.
+ *
+ * @param object The GObject instance being disposed (a `MyApplication`).
+ */
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
+/**
+ * @brief Initializes the MyApplicationClass by overriding its GApplication and GObject virtual methods.
+ *
+ * Sets the class handlers used for application activation, command-line handling, startup, shutdown,
+ * and instance disposal.
+ *
+ * @param klass The MyApplicationClass being initialized.
+ */
 static void my_application_class_init(MyApplicationClass* klass) {
   G_APPLICATION_CLASS(klass)->activate = my_application_activate;
   G_APPLICATION_CLASS(klass)->local_command_line = my_application_local_command_line;
@@ -128,8 +184,25 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
+/**
+ * @brief Instance initializer for MyApplication.
+ *
+ * Performs per-instance initialization for a MyApplication object.
+ *
+ * @param self The MyApplication instance being initialized.
+ */
 static void my_application_init(MyApplication* self) {}
 
+/**
+ * @brief Create a new MyApplication instance configured for desktop integration.
+ *
+ * Creates and returns a MyApplication initialized with the application ID
+ * and non-unique application flags. Also sets the process program name to
+ * APPLICATION_ID to improve integration with desktop environments and .desktop files.
+ *
+ * @return MyApplication* Newly allocated MyApplication with "application-id" set to
+ *         APPLICATION_ID and "flags" set to G_APPLICATION_NON_UNIQUE.
+ */
 MyApplication* my_application_new() {
   // Set the program name to the application ID, which helps various systems
   // like GTK and desktop environments map this running application to its
