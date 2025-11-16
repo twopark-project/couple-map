@@ -17,13 +17,15 @@ public class SwaggerConfig {
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("Bearer")
                 .bearerFormat("JWT")
-                .name("Bearer Authentication");
+                .name("Bearer Authentication")
+                .description("API 요청 시 사용하는 Access Token");
 
         SecurityScheme refreshTokenScheme = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("Bearer")
                 .bearerFormat("JWT")
-                .name("Refresh Token (Bearer)");
+                .name("Refresh Token (Bearer)")
+                .description("토큰 재발급 시 사용하는 Refresh Token");
 
         return new OpenAPI()
                 .info(new Info()
