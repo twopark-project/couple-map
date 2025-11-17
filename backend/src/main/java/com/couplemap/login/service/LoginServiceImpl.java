@@ -1,5 +1,7 @@
 package com.couplemap.login.service;
 
+import com.couplemap.global.exception.code.LoginErrorCode;
+import com.couplemap.global.exception.exceptions.LoginException;
 import com.couplemap.global.util.FriendCodeGenerator;
 import com.couplemap.jwt.dto.TokenResponseDto;
 import com.couplemap.jwt.service.AuthTokenService;
@@ -11,6 +13,7 @@ import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,10 +21,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LoginServiceImpl implements LoginService {
@@ -47,9 +52,6 @@ public class LoginServiceImpl implements LoginService {
 
         // 2. 사용자 정보 바탕으로 OAuth2Response 객체 생성
         OAuth2Response oAuth2Response = getOAuth2Response(provider, userAttributes);
-        if (oAuth2Response == null) {
-            throw new IllegalArgumentException("지원하지 않는 소셜 로그인입니다.");
-        }
 
         // 3. 사용자 확인 및 생성
         User user = getUser(oAuth2Response, provider);
@@ -67,16 +69,22 @@ public class LoginServiceImpl implements LoginService {
         } else if ("google".equalsIgnoreCase(provider)) {
             userInfoUri = googleUserInfoUri;
         } else {
-            throw new IllegalArgumentException("지원하지 않는 소셜 로그인입니다.");
+            throw new LoginException(LoginErrorCode.UNSUPPORTED_SOCIAL_LOGIN);
         }
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(headers);
-        ResponseEntity<Map> response = restTemplate.exchange(userInfoUri, HttpMethod.GET, request, Map.class);
 
-        return response.getBody();
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(userInfoUri, HttpMethod.GET, request, Map.class);
+            log.info("Social User Attributes: {}", response.getBody());
+            return response.getBody();
+        } catch (HttpClientErrorException e) {
+            log.error("Social login failed: {}", e.getMessage());
+            throw new LoginException(LoginErrorCode.INVALID_ACCESS_TOKEN);
+        }
     }
 
     private OAuth2Response getOAuth2Response(String provider, Map<String, Object> userAttributes) {
