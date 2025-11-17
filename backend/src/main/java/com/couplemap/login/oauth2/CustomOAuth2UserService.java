@@ -1,4 +1,4 @@
-package com.couplemap.global.oauth2;
+package com.couplemap.login.oauth2;
 
 import com.couplemap.global.util.FriendCodeGenerator;
 import com.couplemap.login.dto.*;
