@@ -15,7 +15,7 @@ public class LoginController {
 
     private final LoginService loginService;
 
-    @PostMapping("/oauth2/{provider}")
+    @PostMapping("/social/{provider}")
     public ResponseEntity<ApiResponse<TokenResponseDto>> socialLogin(
             @PathVariable String provider,
             @RequestBody SocialLoginRequestDto request) {
