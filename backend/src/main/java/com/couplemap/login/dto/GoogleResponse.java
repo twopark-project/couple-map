@@ -17,11 +17,11 @@ public class GoogleResponse implements OAuth2Response {
 
     @Override
     public String getProviderId() {
-        Object sub = attribute.get("sub");
-        if (sub == null) {
-            throw new IllegalStateException("Google response missing required 'sub' field");
+        Object id = attribute.get("id");
+        if (id == null) {
+            throw new IllegalStateException("Google response missing required 'id' field");
         }
-        return sub.toString();
+        return id.toString();
     }
 
     @Override
