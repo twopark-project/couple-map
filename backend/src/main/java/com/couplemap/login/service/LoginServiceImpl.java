@@ -97,7 +97,7 @@ public class LoginServiceImpl implements LoginService {
         if (existData == null) {
             String friendCode = codeGenerator.generateCode();
             User newUser = User.builder()
-                    .loginType(provider)
+                    .loginType(oAuth2Response.getProvider())
                     .providerId(providerId)
                     .email(oAuth2Response.getEmail())
                     .name(oAuth2Response.getName())
