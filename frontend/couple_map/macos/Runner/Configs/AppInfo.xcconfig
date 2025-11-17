@@ -8,7 +8,7 @@
 PRODUCT_NAME = couple_map
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.coupleMap
+PRODUCT_BUNDLE_IDENTIFIER = com.twoPark.coupleMap
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 twoPark. All rights reserved.

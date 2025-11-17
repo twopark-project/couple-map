@@ -1,4 +1,4 @@
-package com.example.couple_map
+package com.twoPark.couple_map
 
 import io.flutter.embedding.android.FlutterActivity
 
