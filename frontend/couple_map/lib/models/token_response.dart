@@ -10,8 +10,12 @@ class TokenResponse {
   });
 
   factory TokenResponse.fromJson(Map<String, dynamic> json) {
+    final accessToken = json['accessToken'];
+    if (accessToken  == null || accessToken is! String) {
+      throw FormatException('accessToken이 필수값이거나 잘못된 형식입니다.');
+    }
     return TokenResponse(
-      accessToken: json['accessToken'] as String,
+      accessToken: accessToken,
       refreshToken: json['refreshToken'] as String?,
       expiresIn: json['expiresIn'] as int?,
     );
