@@ -27,11 +27,15 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final TokenResponse token = await _kakaoLoginService.login();
       await _saveToken(token);
+      if (!context.mounted) return;
       _showSuccessDialog('카카오 로그인 성공!');
     } catch (e) {
+       if (!context.mounted) return;
       _showErrorDialog(e.toString());
     } finally {
-      setState(() => _isLoading = false);
+      if (context.mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -41,12 +45,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final TokenResponse token = await _googleLoginService.login();
-      await _saveToken(token);
+      if (!context.mounted) return;
       _showSuccessDialog('구글 로그인 성공!');
     } catch (e) {
+      if (!context.mounted) return;
       _showErrorDialog(e.toString());
     } finally {
-      setState(() => _isLoading = false);
+      if (context.mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -57,11 +64,15 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final TokenResponse token = await _naverLoginService.login();
       await _saveToken(token);
+      if (!context.mounted) return;
       _showSuccessDialog('네이버 로그인 성공!');
     } catch (e) {
+      if (!context.mounted) return;
       _showErrorDialog(e.toString());
     } finally {
-      setState(() => _isLoading = false);
+      if (context.mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
