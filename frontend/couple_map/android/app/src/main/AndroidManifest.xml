@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 인터넷 권한 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:label="couple_map"
         android:name="${applicationName}"
@@ -25,6 +28,38 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- 카카오 로그인 -->
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="oauth"
+                    android:scheme="kakao${KAKAO_NATIVE_APP_KEY}" />
+            </intent-filter>
+        </activity>
+
+        <!-- 네이버 로그인 -->
+        <activity
+            android:name="com.naver.nid.NaverIdLoginActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false" />
+
+        <!-- 네이버 SDK 설정 (local.properties에서 읽음) -->
+        <meta-data
+            android:name="com.naver.sdk.clientId"
+            android:value="${NAVER_CLIENT_ID}" />
+        <meta-data
+            android:name="com.naver.sdk.clientSecret"
+            android:value="${NAVER_CLIENT_SECRET}" />
+        <meta-data
+            android:name="com.naver.sdk.clientName"
+            android:value="${NAVER_CLIENT_NAME}" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
