@@ -17,52 +17,41 @@ class ApiService {
           ),
         );
 
-  // 카카오 로그인 토큰을 백엔드로 전송
+  // 공통 로그인 메서드
+  Future<TokenResponse> _loginWithProvider(
+    String endpoint,
+    String accessToken,
+  ) async {
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: {'accessToken': accessToken},
+      );
+      
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('응답 데이터가 없습니다.');
+      }
+      
+      return TokenResponse.fromJson(data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // 카카오 로그인
   Future<TokenResponse> loginWithKakao(String accessToken) async {
-    try {
-      final response = await _dio.post(
-        ApiConfig.kakaoLoginUrl,
-        data: {
-          'accessToken': accessToken,
-        },
-      );
-
-      return TokenResponse.fromJson(response.data['data']);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+    return _loginWithProvider(ApiConfig.kakaoLoginUrl, accessToken);
   }
 
-  // 구글 로그인 토큰을 백엔드로 전송
+  // 구글 로그인
   Future<TokenResponse> loginWithGoogle(String accessToken) async {
-    try {
-      final response = await _dio.post(
-        ApiConfig.googleLoginUrl,
-        data: {
-          'accessToken': accessToken,
-        },
-      );
-
-      return TokenResponse.fromJson(response.data['data']);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+    return _loginWithProvider(ApiConfig.googleLoginUrl, accessToken);
   }
 
-  // 네이버 로그인 토큰을 백엔드로 전송
+  // 네이버 로그인
   Future<TokenResponse> loginWithNaver(String accessToken) async {
-    try {
-      final response = await _dio.post(
-        ApiConfig.naverLoginUrl,
-        data: {
-          'accessToken': accessToken,
-        },
-      );
-
-      return TokenResponse.fromJson(response.data['data']);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+    return _loginWithProvider(ApiConfig.naverLoginUrl, accessToken);
   }
 
   String _handleError(DioException e) {
