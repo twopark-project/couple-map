@@ -30,6 +30,13 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
+                .requestMatchers("/api/auth/refresh")
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                );
                 .requestMatchers("/api/auth/refresh");
     }
 
@@ -63,6 +70,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**", "/api/login/social/**").permitAll()
                         .anyRequest().authenticated());
 

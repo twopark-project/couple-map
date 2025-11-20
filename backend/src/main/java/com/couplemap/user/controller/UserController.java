@@ -3,12 +3,16 @@ package com.couplemap.user.controller;
 import com.couplemap.global.response.ApiResponse;
 import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+
+@Tag(name = "User", description = "사용자 관리 API")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -16,9 +20,7 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-    프로필 이미지 업로드/수정
-     */
+    @Operation(summary = "프로필 이미지 업로드/수정")
     @PostMapping("/profile-image")
     public ResponseEntity<ApiResponse<ProfileImageResponseDto>> uploadProfileImage(
             @RequestParam("file") MultipartFile file,
@@ -29,9 +31,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(response, "프로필 사진 등록이 완료되었습니다."));
     }
 
-    /**
-     프로필 이미지 삭제
-     */
+    @Operation(summary = "프로필 이미지 삭제")
     @DeleteMapping("/profile-image")
     public ResponseEntity<ApiResponse<Void>> deleteProfileImage(
             @AuthenticationPrincipal(expression = "userId") Long userId) {
