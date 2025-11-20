@@ -1,4 +1,4 @@
-package com.couplemap.global.config;
+package com.couplemap.login.config;
 
 import com.couplemap.global.oauth2.CustomOAuth2UserService;
 import com.couplemap.global.oauth2.CustomSuccessHandler;
