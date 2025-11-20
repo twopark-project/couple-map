@@ -1,7 +1,7 @@
 package com.couplemap.login.config;
 
-import com.couplemap.global.oauth2.CustomOAuth2UserService;
-import com.couplemap.global.oauth2.CustomSuccessHandler;
+import com.couplemap.login.oauth2.CustomOAuth2UserService;
+import com.couplemap.login.oauth2.CustomSuccessHandler;
 import com.couplemap.jwt.util.JWTFilter;
 import com.couplemap.jwt.util.JWTUtil;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +37,7 @@ public class SecurityConfig {
                         "/swagger-resources/**",
                         "/webjars/**"
                 );
+                .requestMatchers("/api/auth/refresh");
     }
 
     @Bean
@@ -70,6 +71,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**", "/api/login/social/**").permitAll()
                         .anyRequest().authenticated());
 
         //STATELESS

@@ -1,4 +1,4 @@
-package com.couplemap.global.oauth2;
+package com.couplemap.login.oauth2;
 
 import com.couplemap.jwt.dto.TokenResponseDto;
 import com.couplemap.jwt.service.AuthTokenService;
