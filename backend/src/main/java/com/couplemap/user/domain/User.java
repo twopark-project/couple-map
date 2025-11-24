@@ -28,8 +28,8 @@ public class User extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    // 사용자가 설정하는 닉네임 (회원가입 후 입력)
-    @Column(name = "nickname", length = 10)
+    // 닉네임 (회원가입 후 입력)
+    @Column(name = "nickname", length = 10, unique = true)
     private String nickname;
 
     // 프로필 이미지 등록용 (AWS S3)
