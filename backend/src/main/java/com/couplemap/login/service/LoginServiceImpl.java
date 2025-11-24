@@ -3,7 +3,7 @@ package com.couplemap.login.service;
 import com.couplemap.global.exception.code.LoginErrorCode;
 import com.couplemap.global.exception.exceptions.LoginException;
 import com.couplemap.global.util.FriendCodeGenerator;
-import com.couplemap.jwt.dto.TokenResponseDto;
+import com.couplemap.jwt.dto.LoginTokenResponseDto;
 import com.couplemap.jwt.service.AuthTokenService;
 import com.couplemap.login.dto.GoogleResponse;
 import com.couplemap.login.dto.KakaoResponse;
@@ -46,7 +46,7 @@ public class LoginServiceImpl implements LoginService {
     private String googleUserInfoUri;
 
     @Override
-    public TokenResponseDto socialLogin(String provider, String accessToken) {
+    public LoginTokenResponseDto socialLogin(String provider, String accessToken) {
         // 1. 사용자 정보 요청
         Map<String, Object> userAttributes = getUserAttributes(provider, accessToken);
 
@@ -56,8 +56,9 @@ public class LoginServiceImpl implements LoginService {
         // 3. 사용자 확인 및 생성
         User user = getUser(oAuth2Response, provider);
 
-        // 4. 토큰 생성
-        return authTokenService.generateTokens(user.getUserId(), user.getName(), user.getRole().name());
+        // 4. 토큰 생성 (닉네임 설정 여부 포함)
+        boolean isNicknameSet = user.hasNickname();
+        return authTokenService.generateTokens(user.getUserId(), user.getName(), user.getRole().name(), isNicknameSet);
     }
 
     private Map<String, Object> getUserAttributes(String provider, String accessToken) {
