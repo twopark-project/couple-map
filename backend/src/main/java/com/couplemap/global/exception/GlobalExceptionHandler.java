@@ -1,5 +1,6 @@
 package com.couplemap.global.exception;
 
+import com.couplemap.global.exception.code.DtoErrorCode;
 import com.couplemap.global.exception.code.UserErrorCode;
 import com.couplemap.global.exception.exceptions.BaseException;
 import com.couplemap.global.response.ApiResponse;
@@ -39,8 +40,8 @@ public class GlobalExceptionHandler {
         });
 
         return ResponseEntity
-                .status(UserErrorCode.INVALID_NICKNAME_FORMAT.getHttpStatus())
-                .body(ApiResponse.fail(UserErrorCode.INVALID_NICKNAME_FORMAT, errors));
+                .status(DtoErrorCode.INVALID_INPUT_VALUE.getHttpStatus())
+                .body(ApiResponse.fail(DtoErrorCode.INVALID_INPUT_VALUE, errors));
     }
 
 }
