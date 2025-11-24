@@ -27,7 +27,7 @@ public class LoginController {
     public ResponseEntity<ApiResponse<LoginTokenResponseDto>> socialLogin(
             @PathVariable String provider,
             @RequestBody SocialLoginRequestDto request) {
-        LoginTokenResponseDto signUptokenResponseDto = loginService.socialLogin(provider, request.getAccessToken());
-        return ResponseEntity.ok(ApiResponse.success(signUptokenResponseDto, "소셜 로그인이 완료되었습니다."));
+        LoginTokenResponseDto logintokenResponseDto = loginService.socialLogin(provider, request.getAccessToken());
+        return ResponseEntity.ok(ApiResponse.success(logintokenResponseDto, "소셜 로그인이 완료되었습니다."));
     }
 }
