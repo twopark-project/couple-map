@@ -1,7 +1,6 @@
 package com.couplemap.user.dto;
 
 import com.couplemap.user.domain.User;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
