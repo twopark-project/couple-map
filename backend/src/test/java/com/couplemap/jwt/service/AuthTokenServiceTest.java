@@ -1,6 +1,7 @@
 package com.couplemap.jwt.service;
 
 import com.couplemap.global.exception.exceptions.JwtException;
+import com.couplemap.jwt.dto.LoginTokenResponseDto;
 import com.couplemap.jwt.util.JWTUtil;
 import com.couplemap.jwt.dto.TokenResponseDto;
 import com.couplemap.jwt.entity.RefreshToken;
@@ -62,6 +63,8 @@ class AuthTokenServiceTest {
     @Test
     @DisplayName("토큰 생성 성공")
     void generateTokens_Success() {
+        boolean isNicknameSet = false;
+
         // given
         given(jwtUtil.createJwt("access", username, role, userId, ACCESS_TOKEN_EXPIRATION))
                 .willReturn(accessToken);
@@ -69,13 +72,14 @@ class AuthTokenServiceTest {
                 .willReturn(refreshToken);
 
         // when
-        TokenResponseDto result = authTokenService.generateTokens(userId, username, role);
+        LoginTokenResponseDto result = authTokenService.generateTokens(userId, username, role, isNicknameSet);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getAccessToken()).isEqualTo(accessToken);
         assertThat(result.getRefreshToken()).isEqualTo(refreshToken);
         assertThat(result.getExpiresIn()).isEqualTo(ACCESS_TOKEN_EXPIRATION / 1000);
+        assertThat(result.isNicknameSet()).isEqualTo(isNicknameSet);
         
         then(refreshTokenRepository).should().save(any(RefreshToken.class));
     }
