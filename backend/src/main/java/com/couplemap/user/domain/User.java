@@ -28,6 +28,10 @@ public class User extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
+    // 닉네임 (회원가입 후 입력)
+    @Column(name = "nickname", length = 10, unique = true)
+    private String nickname;
+
     // 프로필 이미지 등록용 (AWS S3)
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
@@ -69,5 +73,13 @@ public class User extends BaseEntity {
     public void deleteProfileImage() {
         this.profileImageUrl = null;
         this.profileImageKey = null;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public boolean hasNickname() {
+        return this.nickname != null && !this.nickname.isBlank();
     }
 }

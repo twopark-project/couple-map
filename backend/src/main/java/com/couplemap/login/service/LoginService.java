@@ -1,7 +1,7 @@
 package com.couplemap.login.service;
 
-import com.couplemap.jwt.dto.TokenResponseDto;
+import com.couplemap.jwt.dto.LoginTokenResponseDto;
 
 public interface LoginService {
-    TokenResponseDto socialLogin(String provider, String accessToken);
+    LoginTokenResponseDto socialLogin(String provider, String accessToken);
 }

@@ -1,6 +1,7 @@
 package com.couplemap.jwt.service;
 
 import com.couplemap.global.exception.exceptions.JwtException;
+import com.couplemap.jwt.dto.LoginTokenResponseDto;
 import com.couplemap.jwt.util.JWTUtil;
 import com.couplemap.jwt.dto.TokenResponseDto;
 import com.couplemap.jwt.entity.RefreshToken;
@@ -33,7 +34,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
      * 토큰 생성 및 저장 (최초 로그인 시)
      */
     @Transactional
-    public TokenResponseDto generateTokens(Long userId, String username, String role) {
+    public LoginTokenResponseDto generateTokens(Long userId, String username, String role, boolean isNicknameSet) {
 
         String accessToken = jwtUtil.createJwt("access", username, role, userId, ACCESS_TOKEN_EXPIRATION);
         String refreshToken = jwtUtil.createJwt("refresh", username, role, userId, REFRESH_TOKEN_EXPIRATION);
@@ -43,10 +44,11 @@ public class AuthTokenServiceImpl implements AuthTokenService {
 
         log.info("[userId : {}] 토큰 생성 완료 - accessToken: {}, refreshToken: {}", userId, accessToken, refreshToken);
 
-        return TokenResponseDto.builder()
+        return LoginTokenResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .expiresIn(ACCESS_TOKEN_EXPIRATION / 1000)
+                .isNicknameSet(isNicknameSet)
                 .build();
     }
 
