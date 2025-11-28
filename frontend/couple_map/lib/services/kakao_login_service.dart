@@ -1,12 +1,12 @@
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'api_service.dart';
-import '../models/token_response.dart';
+import '../models/auth/login_token_response.dart';
 
 class KakaoLoginService {
   final ApiService _apiService = ApiService();
 
   // 카카오 로그인
-  Future<TokenResponse> login() async {
+  Future<LoginTokenResponse> login() async {
     try {
       // 카카오톡 설치 여부 확인
       bool installed = await isKakaoTalkInstalled();
