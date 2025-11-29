@@ -21,7 +21,7 @@
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="couple_map">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -31,8 +31,29 @@
 
   <title>couple_map</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- =================================================================== -->
+  <!-- ▼▼▼ 1. Google Platform Library (웹 로그인을 위해 추가) ▼▼▼ -->
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <!-- =================================================================== -->
+
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+
+<!-- =================================================================== -->
+<!-- ▼▼▼ 2. Kakao & Naver SDK (flutter_bootstrap.js 보다 위에 위치해야 함) ▼▼▼ -->
+
+<!-- Kakao SDK -->
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js"
+        integrity="sha384-kDljxUXHaJ9xAb2AzRd59Kx1/D+22h1y15failrKaHQiNgv4pBfY2Q0tN5DqJAJN"
+        crossorigin="anonymous"></script>
+
+<!-- Naver SDK -->
+<script type="text/javascript" src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8"></script>
+
+<!-- =================================================================== -->
+
+
+<script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
