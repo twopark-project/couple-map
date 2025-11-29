@@ -1,6 +1,6 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'api_service.dart';
-import '../models/token_response.dart';
+import '../models/auth/login_token_response.dart';
 
 class GoogleLoginService {
   final ApiService _apiService = ApiService();
@@ -12,7 +12,7 @@ class GoogleLoginService {
   );
 
   // 구글 로그인
-  Future<TokenResponse> login() async {
+  Future<LoginTokenResponse> login() async {
     try {
       // 구글 로그인 수행
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();

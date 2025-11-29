@@ -3,13 +3,13 @@ import 'package:flutter_naver_login/interface/types/naver_token.dart';
 import 'package:flutter_naver_login/interface/types/naver_login_result.dart';
 import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'api_service.dart';
-import '../models/token_response.dart';
+import '../models/auth/login_token_response.dart';
 
 class NaverLoginService {
   final ApiService _apiService = ApiService();
 
   // 네이버 로그인
-  Future<TokenResponse> login() async {
+  Future<LoginTokenResponse> login() async {
     try {
       // 네이버 로그인 수행
       final NaverLoginResult result = await FlutterNaverLogin.logIn();

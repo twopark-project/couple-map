@@ -41,6 +41,7 @@ class FriendServiceImplTest {
                 .providerId("GOOGLE_1235")
                 .friendCode("ABC123")
                 .build();
+        requester.updateNickname("박민규");
         requester = userRepository.save(requester);
 
         receiver = User.builder()
@@ -51,6 +52,7 @@ class FriendServiceImplTest {
                 .providerId("GOOGLE_12345")
                 .friendCode("ABC456")
                 .build();
+        receiver.updateNickname("박성빈");
         receiver = userRepository.save(receiver);
     }
 
@@ -64,7 +66,7 @@ class FriendServiceImplTest {
         FriendRequestResponseDto result = friendService.sendFriendRequest(dto,requester.getUserId());
 
         assertThat(result).isNotNull();
-        assertThat(result.getName()).isEqualTo("박성빈");
+        assertThat(result.getNickname()).isEqualTo("박성빈");
     }
 
     @Test
