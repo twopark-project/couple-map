@@ -60,6 +60,12 @@ jobs:
                 '## 관련 이슈\n' +
                 'Closes #' + issueNumber;
             }
+
+            // 이슈 본문에서 작업목록만 추출
+            const issueBody = issue.body || '';
+            const checklistRegex = /## ✔️ 작업목록[\s\S]*?(?=##|$)/;
+            const checklistMatch = issueBody.match(checklistRegex);
+            const checklist = checklistMatch ? checklistMatch[0] : '작업목록이 없습니다.';
             
             // 안내사항 + 템플릿
             const prBody = '## ⚠️ 안내사항\n' +
@@ -76,6 +82,9 @@ jobs:
               '4. Reviewer 지정\n' +
               '5. **이 안내사항 섹션 삭제**\n' +
               '6. "Ready for review"로 전환\n\n' +
+              '---\n\n' +
+              '## 📋 이슈 작업목록 (참고 후 삭제)\n\n' +
+              checklist + '\n\n' +
               '---\n\n' +
               prTemplate;
             

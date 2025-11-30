@@ -4,6 +4,8 @@ import com.couplemap.global.s3.S3ServiceImpl;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.dto.ProfileImageResponseDto;
+import com.couplemap.user.dto.NicknameResponseDto;
+import com.couplemap.user.dto.UserInfoResponseDto;
 import com.couplemap.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -174,5 +176,82 @@ class UserServiceImplTest {
         assertThat(secondKey).isNotEqualTo(firstKey);
 
         uploadedKeys.add(secondKey);
+    }
+
+    @Test
+    @DisplayName("닉네임 설정 성공 - DB 저장 확인")
+    void setNickname_Success() {
+        // given
+        String nickname = "커플맵유저";
+        
+        // 초기 상태 확인 (닉네임 없음)
+        User beforeUser = userRepository.findById(testUser.getUserId()).orElseThrow();
+        assertThat(beforeUser.getNickname()).isNull();
+        assertThat(beforeUser.hasNickname()).isFalse();
+        
+        // when
+        NicknameResponseDto response = userService.setNickname(testUser.getUserId(), nickname);
+        
+        // then
+        assertThat(response.getNickname()).isEqualTo(nickname);
+        
+        User updatedUser = userRepository.findById(testUser.getUserId()).orElseThrow();
+        assertThat(updatedUser.getNickname()).isEqualTo(nickname);
+        assertThat(updatedUser.hasNickname()).isTrue();
+    }
+
+    @Test
+    @DisplayName("닉네임 변경 성공 - 기존 닉네임에서 새로운 닉네임으로 업데이트")
+    void updateNickname_Success() {
+        // given
+        String firstNickname = "첫번째닉네임";
+        String secondNickname = "두번째닉네임";
+        
+        // 첫 번째 닉네임 설정
+        userService.setNickname(testUser.getUserId(), firstNickname);
+        User userWithFirstNickname = userRepository.findById(testUser.getUserId()).orElseThrow();
+        assertThat(userWithFirstNickname.getNickname()).isEqualTo(firstNickname);
+        
+        // when - 두 번째 닉네임으로 변경
+        NicknameResponseDto response = userService.setNickname(testUser.getUserId(), secondNickname);
+        
+        // then
+        assertThat(response.getNickname()).isEqualTo(secondNickname);
+        
+        User updatedUser = userRepository.findById(testUser.getUserId()).orElseThrow();
+        assertThat(updatedUser.getNickname()).isEqualTo(secondNickname);
+        assertThat(updatedUser.getNickname()).isNotEqualTo(firstNickname);
+    }
+
+    @Test
+    @DisplayName("사용자 정보 조회 성공 - 닉네임 포함")
+    void getUserInfo_WithNickname() {
+        // given
+        String nickname = "테스트닉네임";
+        userService.setNickname(testUser.getUserId(), nickname);
+        
+        // when
+        UserInfoResponseDto response = userService.getUserInfo(testUser.getUserId());
+        
+        // then
+        assertThat(response.getUserId()).isEqualTo(testUser.getUserId());
+        assertThat(response.getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getName()).isEqualTo("테스트유저");
+        assertThat(response.getNickname()).isEqualTo(nickname);
+        assertThat(response.getFriendCode()).isEqualTo("TEST1234");
+    }
+
+    @Test
+    @DisplayName("사용자 정보 조회 성공 - 닉네임 없는 경우")
+    void getUserInfo_WithoutNickname() {
+        // when
+        UserInfoResponseDto response = userService.getUserInfo(testUser.getUserId());
+        
+        // then
+        assertThat(response.getUserId()).isEqualTo(testUser.getUserId());
+        assertThat(response.getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getName()).isEqualTo("테스트유저");
+        assertThat(response.getNickname()).isNull();
+        assertThat(response.getFriendCode()).isEqualTo("TEST1234");
     }
 }

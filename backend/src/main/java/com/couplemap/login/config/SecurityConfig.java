@@ -1,7 +1,5 @@
-package com.couplemap.global.config;
+package com.couplemap.login.config;
 
-import com.couplemap.global.oauth2.CustomOAuth2UserService;
-import com.couplemap.global.oauth2.CustomSuccessHandler;
 import com.couplemap.jwt.util.JWTFilter;
 import com.couplemap.jwt.util.JWTUtil;
 import org.springframework.context.annotation.Bean;
@@ -17,20 +15,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil) {
-        this.customOAuth2UserService = customOAuth2UserService;
-        this.customSuccessHandler = customSuccessHandler;
+    public SecurityConfig(JWTUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
-                .requestMatchers("/api/auth/refresh");
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                );
     }
 
     @Bean
@@ -51,19 +50,10 @@ public class SecurityConfig {
         http
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
-
-        //oauth2
-        http
-                .oauth2Login((oauth2) -> oauth2
-                        .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
-                                .userService(customOAuth2UserService))
-                        .successHandler(customSuccessHandler)
-                );
-
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/","/login", "/oauth2/**", "/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/", "/api/login/social/**", "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated());
 
         //STATELESS

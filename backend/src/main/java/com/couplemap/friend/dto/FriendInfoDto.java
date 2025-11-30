@@ -9,14 +9,14 @@ import lombok.Getter;
 public class FriendInfoDto {
 
     private final Long id;
-    private final String name;
+    private final String nickname;
     private final String email;
     private final String imageUrl;
 
     public static FriendInfoDto from(User user) {
         return FriendInfoDto.builder()
                 .id(user.getUserId())
-                .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .imageUrl(user.getProfileImageUrl())
                 .build();

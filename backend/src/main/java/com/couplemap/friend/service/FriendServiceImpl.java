@@ -60,8 +60,8 @@ public class FriendServiceImpl implements FriendService {
 
     @Transactional(readOnly = true)
     public FriendPendingListResponseDto getFriendPendingList(Long userId) {
-        List<User> friendList = new ArrayList<>();
-        friendList.addAll(friendshipRepository.findFriendsWhereReceiver(userId, PENDING));
+        List<Friendship> friendList = new ArrayList<>();
+        friendList.addAll(friendshipRepository.findFriendshipsWhereReceiver(userId, PENDING));
         return FriendPendingListResponseDto.from(friendList);
     }
 
