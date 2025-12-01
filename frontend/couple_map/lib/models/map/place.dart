@@ -18,8 +18,8 @@ class Place {
       placeName: json['place_name'] ?? '',
       addressName: json['address_name'] ?? '',
       categoryName: json['category_name'] ?? '',
-      x: json['x'] ?? '',
-      y: json['y'] ?? '',
+      x: json['x']?.toString() ?? '37.5665',
+      y: json['y']?.toString() ?? '126.9780',
     );
   }
 }
