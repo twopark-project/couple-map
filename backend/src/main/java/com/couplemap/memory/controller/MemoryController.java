@@ -2,6 +2,7 @@ package com.couplemap.memory.controller;
 
 import com.couplemap.global.response.ApiResponse;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
+import com.couplemap.memory.dto.MemoryListResponseDto;
 import com.couplemap.memory.service.MemoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -29,5 +30,13 @@ public class MemoryController {
         Long memoryId = memoryService.createMemory(mapId, request, files, userId);
         return ResponseEntity.created(URI.create("/api/maps/" + mapId + "/memories/" + memoryId))
                 .body(ApiResponse.success(memoryId, "추억이 성공적으로 생성되었습니다."));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<MemoryListResponseDto>>> getMemoryList(
+            @PathVariable Long mapId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        List<MemoryListResponseDto> memoryList = memoryService.getMemoryList(mapId, userId);
+        return ResponseEntity.ok(ApiResponse.success(memoryList, "추억 목록 조회가 완료되었습니다."));
     }
 }

@@ -14,6 +14,7 @@ import com.couplemap.mediaFile.domain.MediaFileType;
 import com.couplemap.mediaFile.repository.MediaFileRepository;
 import com.couplemap.memory.domain.Memory;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
+import com.couplemap.memory.dto.MemoryListResponseDto;
 import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.repository.UserRepository;
@@ -23,8 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static com.couplemap.global.exception.code.MapErrorCode.MAP_NOT_FOUND;
 import static com.couplemap.global.exception.code.MapErrorCode.NO_INVITE_PERMISSION;
@@ -75,6 +76,21 @@ public class MemoryServiceImpl implements MemoryService {
         }
 
         return newMemory.getMemoryId();
+    }
+
+    @Override
+    public List<MemoryListResponseDto> getMemoryList(Long mapId, Long userId) {
+        // 1. 권한 검증
+        mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
+                .orElseThrow(() -> new MapException(NO_INVITE_PERMISSION)); // TODO: 더 적절한 에러 코드로 변경 필요
+
+        // 2. 해당 지도의 모든 Memory 조회
+        List<Memory> memories = memoryRepository.findAllByMap_MapId(mapId);
+
+        // 3. DTO로 변환
+        return memories.stream()
+                .map(MemoryListResponseDto::new)
+                .collect(Collectors.toList());
     }
 
     private MediaFileType getMediaFileType(MultipartFile file) {
