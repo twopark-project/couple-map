@@ -6,6 +6,7 @@ import com.couplemap.memory.dto.MemoryListResponseDto;
 import com.couplemap.memory.service.MemoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class MemoryController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Long>> createMemory(
             @PathVariable Long mapId,
-            @RequestPart("request") CreateMemoryRequestDto request,
+            @Valid @RequestPart("request") CreateMemoryRequestDto request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         Long memoryId = memoryService.createMemory(mapId, request, files, userId);
