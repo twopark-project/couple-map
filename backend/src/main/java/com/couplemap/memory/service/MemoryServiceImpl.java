@@ -1,6 +1,8 @@
 package com.couplemap.memory.service;
 
+import com.couplemap.global.exception.code.S3ErrorCode;
 import com.couplemap.global.exception.exceptions.MapException;
+import com.couplemap.global.exception.exceptions.S3Exception;
 import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
@@ -96,7 +98,7 @@ public class MemoryServiceImpl implements MemoryService {
     private MediaFileType getMediaFileType(MultipartFile file) {
         String contentType = file.getContentType();
         if (contentType == null) {
-            throw new IllegalArgumentException("파일의 타입을 알 수 없습니다.");
+            throw new S3Exception(S3ErrorCode.INVALID_FILE_TYPE);
         }
 
         if (contentType.startsWith("image/")) {
@@ -106,7 +108,7 @@ public class MemoryServiceImpl implements MemoryService {
         } else if (contentType.startsWith("audio/")) {
             return MediaFileType.AUDIO;
         } else {
-            throw new IllegalArgumentException("지원하지 않는 파일 타입입니다: " + contentType);
+            throw new S3Exception(S3ErrorCode.INVALID_FILE_TYPE);
         }
     }
 }
