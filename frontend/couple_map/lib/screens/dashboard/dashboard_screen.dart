@@ -7,6 +7,7 @@ import '../../models/map/map_list.dart';
 import '../../models/friend/friend_info.dart';
 import '../../models/friend/friend_pending_info.dart';
 import '../login/login_screen.dart';
+import '../map/map_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -380,19 +381,14 @@ class _DashboardScreenState extends State<DashboardScreen>
         );
 
         await _loadData();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                '지도가 생성되었습니다',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              backgroundColor: const Color(0xFF3182F6),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.all(16),
+
+        // 생성된 지도로 이동 (가장 최근에 생성된 지도가 첫 번째)
+        if (mounted && _mapList.isNotEmpty) {
+          final newMap = _mapList.first;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MapDetailScreen(mapInfo: newMap),
             ),
           );
         }
@@ -897,7 +893,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                     ),
                   ),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MapDetailScreen(mapInfo: map),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

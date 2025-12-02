@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 import 'screens/login/login_screen.dart';
 
 Future<void> main() async {
@@ -13,6 +14,11 @@ Future<void> main() async {
   KakaoSdk.init(
     nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY'] ?? '',
     javaScriptAppKey: dotenv.env['KAKAO_JAVASCRIPT_APP_KEY'] ?? '',
+  );
+
+  // 카카오맵 초기화  (.env에서 키 읽음)
+  AuthRepository.initialize(
+    appKey: dotenv.env['KAKAO_JAVASCRIPT_APP_KEY'] ?? '',
   );
 
   // 네이버 SDK는 Android/iOS 네이티브 설정으로 초기화됨 (strings.xml)
