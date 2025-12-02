@@ -25,7 +25,7 @@ public class MemoryController {
     public ResponseEntity<ApiResponse<Long>> createMemory(
             @PathVariable Long mapId,
             @RequestPart("request") CreateMemoryRequestDto request,
-            @RequestPart("files") List<MultipartFile> files,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         Long memoryId = memoryService.createMemory(mapId, request, files, userId);
         return ResponseEntity.created(URI.create("/api/maps/" + mapId + "/memories/" + memoryId))
