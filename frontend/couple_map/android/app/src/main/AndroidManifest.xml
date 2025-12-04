@@ -2,6 +2,15 @@
     <!-- 인터넷 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 사진/미디어 권한 (Android 13 이상) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- 사진/미디어 권한 (Android 12 이하) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
     <application
         android:label="couple_map"
         android:name="${applicationName}"
