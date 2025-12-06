@@ -365,8 +365,18 @@ class _MapDetailScreenState extends State<MapDetailScreen> {
                           // 사진 추가 버튼
                           InkWell(
                             onTap: () async {
-                              final hasPermission = await _requestPermissions();
-                              if (!hasPermission) return;
+                              final hasPermission = await _requestPhotoPermission();
+                              if (!hasPermission) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('사진 접근 권한이 필요합니다'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
 
                               final images = await _imagePicker.pickMultiImage();
                               if (images.isNotEmpty) {
@@ -468,8 +478,18 @@ class _MapDetailScreenState extends State<MapDetailScreen> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
-                          final hasPermission = await _requestPermissions();
-                          if (!hasPermission) return;
+                          final hasPermission = await _requestVideoPermission();
+                          if (!hasPermission) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('비디오 접근 권한이 필요합니다'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
 
                           final result = await FilePicker.platform.pickFiles(
                             type: FileType.video,
@@ -559,8 +579,18 @@ class _MapDetailScreenState extends State<MapDetailScreen> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
-                          final hasPermission = await _requestPermissions();
-                          if (!hasPermission) return;
+                          final hasPermission = await _requestAudioPermission();
+                          if (!hasPermission) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('오디오 접근 권한이 필요합니다'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
 
                           final result = await FilePicker.platform.pickFiles(
                             type: FileType.audio,
@@ -717,42 +747,77 @@ class _MapDetailScreenState extends State<MapDetailScreen> {
     contentController.dispose();
   }
 
-  // 권한 요청 (이미지 선택 시)
-  Future<bool> _requestPermissions() async {
-    if (Platform.isAndroid) {
-      final status = await Permission.photos.status;
-      if (status.isDenied || status.isPermanentlyDenied) {
-        final result = await Permission.photos.request();
-        if (result.isDenied || result.isPermanentlyDenied) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('사진 접근 권한이 필요합니다'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          return false;
-        }
+  // 이미지 권한 확인 및 요청
+  Future<bool> _requestPhotoPermission() async {
+    try {
+      var status = await Permission.photos.status;
+      // 이미 권한이 있으면 바로 리턴
+      if (status.isGranted || status.isLimited) {
+        return true;
       }
-    } else if (Platform.isIOS) {
-      final status = await Permission.photos.status;
-      if (status.isDenied || status.isPermanentlyDenied) {
-        final result = await Permission.photos.request();
-        if (result.isDenied || result.isPermanentlyDenied) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('사진 접근 권한이 필요합니다'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          return false;
-        }
-      }
+      // 권한이 없으면 요청
+      status = await Permission.photos.request();
+      return status.isGranted || status.isLimited;
+    } catch (e) {
+      debugPrint('이미지 권한 요청 실패: $e');
+      return false;
     }
-    return true;
+  }
+
+  // 비디오 권한 확인 및 요청
+  Future<bool> _requestVideoPermission() async {
+    try {
+      if (Platform.isAndroid) {
+        var status = await Permission.videos.status;
+        // 이미 권한이 있으면 바로 리턴
+        if (status.isGranted || status.isLimited) {
+          return true;
+        }
+        // 권한이 없으면 요청
+        status = await Permission.videos.request();
+        return status.isGranted || status.isLimited;
+      } else if (Platform.isIOS) {
+        // iOS는 photos 권한으로 통합
+        var status = await Permission.photos.status;
+        if (status.isGranted || status.isLimited) {
+          return true;
+        }
+        status = await Permission.photos.request();
+        return status.isGranted || status.isLimited;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('비디오 권한 요청 실패: $e');
+      return false;
+    }
+  }
+
+  // 오디오 권한 확인 및 요청
+  Future<bool> _requestAudioPermission() async {
+    try {
+      if (Platform.isAndroid) {
+        var status = await Permission.audio.status;
+        // 이미 권한이 있으면 바로 리턴
+        if (status.isGranted || status.isLimited) {
+          return true;
+        }
+        // 권한이 없으면 요청
+        status = await Permission.audio.request();
+        return status.isGranted || status.isLimited;
+      } else if (Platform.isIOS) {
+        // iOS는 photos 권한으로 통합
+        var status = await Permission.photos.status;
+        if (status.isGranted || status.isLimited) {
+          return true;
+        }
+        status = await Permission.photos.request();
+        return status.isGranted || status.isLimited;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('오디오 권한 요청 실패: $e');
+      return false;
+    }
   }
 
   // 추억 생성
