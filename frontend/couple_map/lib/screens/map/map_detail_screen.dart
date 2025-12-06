@@ -942,7 +942,7 @@ class _MapDetailScreenState extends State<MapDetailScreen> {
 
     // 클러스터 중심으로 이동하고 줌인
     mapController?.setCenter(latLng);
-    mapController?.setLevel(zoomLevel - 2); // 2단계 줌인
+    mapController?.setLevel((zoomLevel - 2).clamp(1, 14)); // 최소 1, 최대 14
   }
 
   // 추억 목록 보기 Bottom Sheet
