@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 import '../../services/api_service.dart';
 import '../dashboard/dashboard_screen.dart';
 
@@ -40,6 +42,20 @@ class _NicknameScreenState extends State<NicknameScreen> {
     return null;
   }
 
+  Future<void> _requestPermissions() async {
+    if (Platform.isAndroid) {
+      // Android 13 이상에서는 photos 권한 사용
+      if (await Permission.photos.isDenied) {
+        await Permission.photos.request();
+      }
+    } else if (Platform.isIOS) {
+      // iOS에서는 photos 권한 사용
+      if (await Permission.photos.isDenied) {
+        await Permission.photos.request();
+      }
+    }
+  }
+
   Future<void> _setNickname() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -54,6 +70,9 @@ class _NicknameScreenState extends State<NicknameScreen> {
         widget.accessToken,
         _nicknameController.text.trim(),
       );
+
+      // 닉네임 설정 후 권한 요청
+      await _requestPermissions();
 
       if (mounted) {
         Navigator.of(context).pushReplacement(

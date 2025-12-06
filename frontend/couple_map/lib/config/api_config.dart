@@ -35,4 +35,8 @@ class ApiConfig {
 
   // 인증 관련 엔드포인트
   static const String logoutUrl = '/api/auth/logout';
+
+  // 추억 관련 엔드포인트
+  static String getMemoryListUrl(int mapId) => '/api/maps/$mapId/memories';
+  static String createMemoryUrl(int mapId) => '/api/maps/$mapId/memories';
 }
