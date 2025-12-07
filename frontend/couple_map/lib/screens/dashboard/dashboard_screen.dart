@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 import '../../services/api_service.dart';
 import '../../models/auth/user_info.dart';
 import '../../models/map/map_list.dart';
@@ -35,6 +37,30 @@ class _DashboardScreenState extends State<DashboardScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadData();
+    // 대시보드 진입 시 미디어 권한 미리 요청 (거부해도 진행 가능)
+    _requestMediaPermissions();
+  }
+
+  // 미디어 접근 권한 미리 요청 (선택사항)
+  Future<void> _requestMediaPermissions() async {
+    try {
+      if (Platform.isAndroid) {
+        // Android 13+에서는 세분화된 권한 요청
+        await [
+          Permission.photos,   // 이미지
+          Permission.videos,   // 비디오
+          Permission.audio,    // 오디오
+        ].request();
+        // 거부해도 앱은 계속 진행됨
+      } else if (Platform.isIOS) {
+        // iOS는 photos 권한으로 통합
+        await Permission.photos.request();
+        // 거부해도 앱은 계속 진행됨
+      }
+    } catch (e) {
+      debugPrint('권한 요청 실패 (무시됨): $e');
+      // 에러가 나도 앱은 계속 진행
+    }
   }
 
   @override

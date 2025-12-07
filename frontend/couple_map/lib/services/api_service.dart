@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../config/api_config.dart';
 import '../models/auth/login_token_response.dart';
@@ -9,6 +10,9 @@ import '../models/friend/friend_info.dart';
 import '../models/friend/friend_pending_info.dart';
 import '../models/map/create_map_request.dart';
 import '../models/friend/send_friend_request.dart';
+import '../models/memory/memory_list.dart';
+import '../models/memory/memory_detail.dart';
+import '../models/memory/create_memory_request.dart';
 
 class ApiService {
   final Dio _dio;
@@ -220,6 +224,85 @@ class ApiService {
         ApiConfig.logoutUrl,
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // 추억 목록 조회
+  Future<List<MemoryList>> getMemoryList(
+    String accessToken,
+    int mapId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        ApiConfig.getMemoryListUrl(mapId),
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      final data = response.data['data'];
+      if (data == null) {
+        return [];
+      }
+
+      if (data is! List) {
+        throw Exception('응답 형식이 올바르지 않습니다. 받은 데이터: $data');
+      }
+
+      return data.map((json) => MemoryList.fromJson(json as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    } catch (e, stackTrace) {
+      print('추억 목록 파싱 에러: $e');
+      print('StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // 추억 생성 (이미지 업로드 포함)
+  Future<int> createMemory(
+    String accessToken,
+    int mapId,
+    CreateMemoryRequest request,
+    List<File>? imageFiles,
+  ) async {
+    try {
+      final formData = FormData();
+
+      // JSON 데이터를 Blob으로 추가
+      formData.files.add(MapEntry(
+        'request',
+        MultipartFile.fromString(
+          request.toJsonString(),
+          contentType: DioMediaType.parse('application/json'),
+        ),
+      ));
+
+      // 이미지 파일 추가
+      if (imageFiles != null && imageFiles.isNotEmpty) {
+        for (var file in imageFiles) {
+          formData.files.add(MapEntry(
+            'files',
+            await MultipartFile.fromFile(
+              file.path,
+              filename: file.path.split('/').last,
+            ),
+          ));
+        }
+      }
+
+      final response = await _dio.post(
+        ApiConfig.createMemoryUrl(mapId),
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('응답 데이터가 없습니다.');
+      }
+
+      return data as int;
     } on DioException catch (e) {
       throw _handleError(e);
     }
