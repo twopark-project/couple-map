@@ -3,6 +3,7 @@ package com.couplemap.memory.controller;
 import com.couplemap.global.response.ApiResponse;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
 import com.couplemap.memory.dto.MemoryListResponseDto;
+import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.memory.service.MemoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,5 +45,27 @@ public class MemoryController {
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         List<MemoryListResponseDto> memoryList = memoryService.getMemoryList(mapId, userId);
         return ResponseEntity.ok(ApiResponse.success(memoryList, "추억 목록 조회가 완료되었습니다."));
+    }
+
+    @Operation(summary = "추억 삭제", description = "추억을 삭제합니다. 작성자만 삭제할 수 있습니다.")
+    @DeleteMapping("/{memoryId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMemory(
+            @PathVariable Long mapId,
+            @PathVariable Long memoryId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        memoryService.deleteMemory(mapId, memoryId, userId);
+        return ResponseEntity.ok(ApiResponse.success("추억이 성공적으로 삭제되었습니다."));
+    }
+
+    @Operation(summary = "추억 수정", description = "추억을 수정합니다. 작성자만 수정할 수 있습니다.")
+    @PutMapping(value = "/{memoryId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Long>> updateMemory(
+            @PathVariable Long mapId,
+            @PathVariable Long memoryId,
+            @Valid @RequestPart("request") UpdateMemoryRequestDto request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        Long updatedMemoryId = memoryService.updateMemory(mapId, memoryId, request, files, userId);
+        return ResponseEntity.ok(ApiResponse.success(updatedMemoryId, "추억이 성공적으로 수정되었습니다."));
     }
 }
