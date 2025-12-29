@@ -28,12 +28,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.couplemap.global.exception.code.MapErrorCode.*;
 import static com.couplemap.global.exception.code.MemoryErrorCode.*;
+import static com.couplemap.global.exception.code.S3ErrorCode.S3_DELETE_FAILED;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 
 @Service
@@ -104,9 +106,15 @@ public class MemoryServiceImpl implements MemoryService {
         validateMemoryOwnership(memory, userId, NO_PERMISSION_TO_DELETE);
 
         // 파일 삭제
-        List<MediaFile> mediaFiles = mediaFileRepository.findByMemoryId(memoryId);
-        mediaFiles.forEach(mediaFile -> s3Service.deleteFile(mediaFile.getFileKey()));
-        mediaFileRepository.deleteAll(mediaFiles);
+        List<MediaFile> filesToDelete = mediaFileRepository.findByMemoryId(memoryId);
+        filesToDelete.forEach(file -> {
+            try {
+                s3Service.deleteFile(file.getFileKey());
+            } catch (Exception e) {
+                throw new S3Exception(S3_DELETE_FAILED);
+            }
+        });
+        mediaFileRepository.deleteAll(filesToDelete);
 
         // Memory 삭제
         memoryRepository.delete(memory);
@@ -126,7 +134,11 @@ public class MemoryServiceImpl implements MemoryService {
             List<MediaFile> filesToDelete = mediaFileRepository.findAllById(request.getDeleteFileIds());
 
             filesToDelete.forEach(file -> {
-                s3Service.deleteFile(file.getFileKey());
+                try {
+                    s3Service.deleteFile(file.getFileKey());
+                } catch (Exception e) {
+                    throw new S3Exception(S3_DELETE_FAILED);
+                }
             });
 
             mediaFileRepository.deleteAll(filesToDelete);
@@ -143,14 +155,16 @@ public class MemoryServiceImpl implements MemoryService {
                 }
             }
 
-            AtomicInteger displayOrder = new AtomicInteger(maxOrder + 1);
+            List<MediaFile> newFiles = new ArrayList<>();
+            int displayOrder = maxOrder + 1;
 
-            files.forEach(file -> {
+            for (MultipartFile file : files) {
                 S3UploadDto s3Dto = s3Service.uploadImageFile(file);
                 MediaFileType fileType = getMediaFileType(file);
-                MediaFile mediaFile = MediaFile.from(memory, s3Dto, file, fileType, displayOrder.getAndIncrement());
-                mediaFileRepository.save(mediaFile);
-            });
+                newFiles.add(MediaFile.from(memory, s3Dto, file, fileType, displayOrder++));
+            }
+
+            mediaFileRepository.saveAll(newFiles);
         }
 
         return memory.getMemoryId();
@@ -181,6 +195,11 @@ public class MemoryServiceImpl implements MemoryService {
         // Memory 조회
         Memory memory = memoryRepository.findById(memoryId)
                 .orElseThrow(() -> new MemoryException(MEMORY_NOT_FOUND));
+
+        // Memory가 해당 Map에 속하는지 검증
+        if (!memory.getMap().getMapId().equals(mapId)) {
+            throw new MemoryException(MEMORY_NOT_FOUND);
+        }
 
         return memory;
     }
