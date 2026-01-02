@@ -58,10 +58,10 @@ public class MemoryServiceImpl implements MemoryService {
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
         MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
-                .orElseThrow(() -> new MapException(NO_INVITE_PERMISSION));
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
         if (mapMember.getMapMemberRole() != MapMemberRole.OWNER && mapMember.getMapMemberRole() != MapMemberRole.EDITOR) {
-            throw new MapException(NO_INVITE_PERMISSION);
+            throw new MapException(NOT_MAP_MEMBER);
         }
 
         Map map = mapRepository.findById(mapId)
@@ -89,7 +89,7 @@ public class MemoryServiceImpl implements MemoryService {
     public List<MemoryListResponseDto> getMemoryList(Long mapId, Long userId) {
         // 1. 권한 검증
         mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
-                .orElseThrow(() -> new MapException(NO_INVITE_PERMISSION));
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
         // 2. 해당 지도의 모든 Memory 조회
         List<Memory> memories = memoryRepository.findAllByMap_MapId(mapId);
