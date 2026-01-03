@@ -77,7 +77,7 @@ class FriendServiceImplTest {
         );
 
         assertThatThrownBy(() -> friendService.sendFriendRequest(dto,(long)3))
-                .isInstanceOf(UserException.class);
+                .isInstanceOf(FriendException.class);
     }
 
     @Test

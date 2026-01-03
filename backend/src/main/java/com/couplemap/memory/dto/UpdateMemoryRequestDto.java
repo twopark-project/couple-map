@@ -1,19 +1,19 @@
 package com.couplemap.memory.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateMemoryRequestDto {
+public class UpdateMemoryRequestDto {
 
     @NotBlank(message = "제목은 필수입니다.")
     @Size(max = 50, message = "제목은 최대 50자까지 입력 가능합니다.")
@@ -26,8 +26,7 @@ public class CreateMemoryRequestDto {
 
     @NotNull(message = "추억 날짜는 필수입니다.")
     private LocalDate memoryDate;
-    @NotNull(message = "위도는 필수입니다.")
-    private BigDecimal latitude;
-    @NotNull(message = "경도는 필수입니다.")
-    private BigDecimal longitude;
+
+    // 삭제할 기존 파일의 ID 목록
+    private List<Long> deleteFileIds;
 }

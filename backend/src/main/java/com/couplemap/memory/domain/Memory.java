@@ -3,6 +3,7 @@ package com.couplemap.memory.domain;
 import com.couplemap.global.common.BaseEntity;
 import com.couplemap.map.domain.Map;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
+import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -73,5 +74,12 @@ public class Memory extends BaseEntity {
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .build();
+    }
+
+    public void update(UpdateMemoryRequestDto request) {
+        this.title = request.getTitle();
+        this.content = request.getContent();
+        this.placeName = request.getPlaceName();
+        this.memoryDate = request.getMemoryDate();
     }
 }
