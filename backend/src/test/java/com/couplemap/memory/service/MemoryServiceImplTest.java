@@ -7,8 +7,10 @@ import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
+import com.couplemap.mediaFile.repository.MediaFileRepository;
 import com.couplemap.memory.domain.Memory;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
+import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.user.domain.User;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,9 +57,13 @@ class MemoryServiceImplTest {
     @Autowired
     private S3Service s3Service;
 
+    @Autowired
+    private MediaFileRepository mediaFileRepository;
+
     private List<String> uploadedKeys = new ArrayList<>();
     private User testUser;
     private User anotherUser;
+    private User notMemberUser;
     private Map testMap;
     private Memory testMemory;
     private MockMultipartFile testFile;
@@ -269,5 +276,82 @@ class MemoryServiceImplTest {
         )
                 .isInstanceOf(MemoryException.class)
                 .hasMessageContaining("수정할 권한이 없습니다");
+    }
+
+    @Test
+    @DisplayName("추억 상세 조회 성공")
+    void getMemoryDetail_Success() {
+        // when
+        MemoryDetailResponseDto result = memoryService.getMemoryDetail(
+                testMap.getMapId(),
+                testMemory.getMemoryId(),
+                testUser.getUserId()
+        );
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getMemoryId()).isEqualTo(testMemory.getMemoryId());
+        assertThat(result.getTitle()).isEqualTo("테스트 추억");
+        assertThat(result.getContent()).isEqualTo("테스트 내용");
+        assertThat(result.getPlaceName()).isEqualTo("테스트 장소");
+        assertThat(result.getMemoryDate()).isEqualTo(LocalDate.of(2024, 1, 1));
+        assertThat(result.getLatitude()).isEqualByComparingTo(new BigDecimal("37.5665"));
+        assertThat(result.getLongitude()).isEqualByComparingTo(new BigDecimal("126.9780"));
+        assertThat(result.getCreatedAt()).isNotNull();
+        assertThat(result.getUpdatedAt()).isNotNull();
+        assertThat(result.getMediaFiles()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("추억 상세 조회 성공 - 미디어 파일 포함")
+    void getMemoryDetail_WithMediaFiles() {
+        // given - 파일과 함께 추억 생성
+        CreateMemoryRequestDto request = new CreateMemoryRequestDto(
+                "파일 포함 추억",
+                "파일 포함 내용",
+                "파일 포함 장소",
+                LocalDate.of(2024, 5, 1),
+                new BigDecimal("37.1234"),
+                new BigDecimal("127.5678")
+        );
+
+        List<MultipartFile> files = new ArrayList<>();
+        if (testFile != null) {
+            files.add(testFile);
+        }
+
+        Long memoryId = memoryService.createMemory(testMap.getMapId(), request, files, testUser.getUserId());
+
+        // when
+        MemoryDetailResponseDto result = memoryService.getMemoryDetail(
+                testMap.getMapId(),
+                memoryId,
+                testUser.getUserId()
+        );
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("파일 포함 추억");
+        if (testFile != null) {
+            assertThat(result.getMediaFiles()).hasSize(1);
+            assertThat(result.getMediaFiles().get(0).getOriginalFilename()).isEqualTo("test.png");
+            assertThat(result.getMediaFiles().get(0).getDisplayOrder()).isEqualTo(1);
+        }
+    }
+
+    @Test
+    @DisplayName("추억 상세 조회 성공 - 다른 멤버도 조회 가능")
+    void getMemoryDetail_AnotherMember() {
+        // when - anotherUser(EDITOR)가 testUser가 작성한 추억 조회
+        MemoryDetailResponseDto result = memoryService.getMemoryDetail(
+                testMap.getMapId(),
+                testMemory.getMemoryId(),
+                anotherUser.getUserId()
+        );
+
+        // then - 조회는 모든 멤버가 가능
+        assertThat(result).isNotNull();
+        assertThat(result.getMemoryId()).isEqualTo(testMemory.getMemoryId());
+        assertThat(result.getTitle()).isEqualTo("테스트 추억");
     }
 }
