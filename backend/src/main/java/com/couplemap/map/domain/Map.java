@@ -30,4 +30,9 @@ public class Map extends BaseEntity {
                 .description(description)
                 .build();
     }
+
+    public void update(String mapName, String description) {
+        this.mapName = mapName;
+        this.description = description;
+    }
 }
