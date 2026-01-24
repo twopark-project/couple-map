@@ -51,9 +51,6 @@ public class MapServiceImpl implements MapService {
     @Override
     @Transactional
     public void deleteMap(Long mapId, Long userId) {
-        Map map = mapRepository.findById(mapId)
-                .orElseThrow(() -> new MapException(MAP_NOT_FOUND));
-
         MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
@@ -61,7 +58,9 @@ public class MapServiceImpl implements MapService {
             throw new MapException(NO_DELETE_PERMISSION);
         }
 
-        mapRepository.delete(map);
+        Map dMap = mapMember.getMap();
+        mapMemberRepository.deleteAllByMap(dMap);
+        mapRepository.delete(dMap);
     }
 
     @Override
