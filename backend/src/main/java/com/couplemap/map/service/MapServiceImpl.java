@@ -90,12 +90,7 @@ public class MapServiceImpl implements MapService {
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUser(user).stream()
                 .filter(mapMember -> mapMember.getMapMemberRole() != MapMemberRole.PENDING)
-                .map(mapMember -> new MapListDto(
-                        mapMember.getMap().getMapId(),
-                        mapMember.getMap().getMapName(),
-                        mapMember.getMap().getDescription(),
-                        mapMember.getMapMemberRole()
-                ))
+                .map(MapListDto::from)
                 .collect(Collectors.toList());
     }
 
@@ -169,11 +164,7 @@ public class MapServiceImpl implements MapService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUserAndMapMemberRole(user, MapMemberRole.PENDING).stream()
-                .map(mapMember -> new MapInvitationDto(
-                        mapMember.getMapMemberId(),
-                        mapMember.getMap().getMapName(),
-                        mapMember.getInviter().getName()
-                ))
+                .map(MapInvitationDto::from)
                 .collect(Collectors.toList());
     }
 }
