@@ -2,6 +2,7 @@ package com.couplemap.memory.controller;
 
 import com.couplemap.global.response.ApiResponse;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
+import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.MemoryListResponseDto;
 import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.memory.service.MemoryService;
@@ -45,6 +46,16 @@ public class MemoryController {
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         List<MemoryListResponseDto> memoryList = memoryService.getMemoryList(mapId, userId);
         return ResponseEntity.ok(ApiResponse.success(memoryList, "추억 목록 조회가 완료되었습니다."));
+    }
+
+    @Operation(summary = "추억 상세 조회", description = "특정 추억의 상세 정보를 조회합니다.")
+    @GetMapping("/{memoryId}")
+    public ResponseEntity<ApiResponse<MemoryDetailResponseDto>> getMemoryDetail(
+            @PathVariable Long mapId,
+            @PathVariable Long memoryId,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        MemoryDetailResponseDto memoryDetail = memoryService.getMemoryDetail(mapId, memoryId, userId);
+        return ResponseEntity.ok(ApiResponse.success(memoryDetail, "추억 상세 조회가 완료되었습니다."));
     }
 
     @Operation(summary = "추억 삭제", description = "추억을 삭제합니다. 작성자만 삭제할 수 있습니다.")

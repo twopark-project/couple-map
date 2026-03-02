@@ -18,6 +18,8 @@ import com.couplemap.mediaFile.domain.MediaFileType;
 import com.couplemap.mediaFile.repository.MediaFileRepository;
 import com.couplemap.memory.domain.Memory;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
+import com.couplemap.memory.dto.MediaFileDto;
+import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.MemoryListResponseDto;
 import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.memory.repository.MemoryRepository;
@@ -98,6 +100,17 @@ public class MemoryServiceImpl implements MemoryService {
         return memories.stream()
                 .map(MemoryListResponseDto::new)
                 .collect(Collectors.toList());
+    }
+
+    public MemoryDetailResponseDto getMemoryDetail(Long mapId, Long memoryId, Long userId) {
+        Memory memory = validateAndGetMemory(mapId, memoryId, userId);
+
+        List<MediaFileDto> mediaFiles = mediaFileRepository.findByMemoryIdOrderByDisplayOrder(memoryId)
+                .stream()
+                .map(MediaFileDto::new)
+                .collect(Collectors.toList());
+
+        return new MemoryDetailResponseDto(memory, mediaFiles);
     }
 
     @Transactional
