@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "map_members")
+@Table(name = "map_members",  uniqueConstraints = @UniqueConstraint(columnNames = {"map_id", "user_id"}))
 public class MapMember extends BaseEntity {
 
     @Id

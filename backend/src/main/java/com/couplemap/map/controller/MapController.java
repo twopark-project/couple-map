@@ -1,10 +1,7 @@
 package com.couplemap.map.controller;
 
 import com.couplemap.global.response.ApiResponse;
-import com.couplemap.map.dto.CreateMapRequestDto;
-import com.couplemap.map.dto.InviteFriendRequestDto;
-import com.couplemap.map.dto.MapInvitationDto;
-import com.couplemap.map.dto.MapListDto;
+import com.couplemap.map.dto.*;
 import com.couplemap.map.service.MapService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +27,22 @@ public class MapController {
         Long mapId = mapService.createMap(request, userId);
         return ResponseEntity.created(URI.create("/api/map/" + mapId))
                 .body(ApiResponse.success(mapId, "지도가 성공적으로 생성되었습니다."));
+    }
+
+    @Operation(summary = "지도 삭제")
+    @DeleteMapping("/{mapId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMap(@PathVariable Long mapId, @AuthenticationPrincipal(expression = "userId") Long userId) {
+        mapService.deleteMap(mapId, userId);
+        return ResponseEntity.ok(ApiResponse.success("지도를 삭제했습니다."));
+    }
+
+    @Operation(summary = "지도 수정")
+    @PutMapping("/{mapId}")
+    public ResponseEntity<ApiResponse<Void>> updateMap(@PathVariable Long mapId,
+                                                        @RequestBody UpdateMapRequestDto request,
+                                                        @AuthenticationPrincipal(expression = "userId") Long userId){
+        mapService.updateMap(mapId, request, userId);
+        return ResponseEntity.ok(ApiResponse.success("지도를 수정했습니다."));
     }
 
     @Operation(summary = "지도 목록 조회")

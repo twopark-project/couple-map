@@ -5,10 +5,7 @@ import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
-import com.couplemap.map.dto.CreateMapRequestDto;
-import com.couplemap.map.dto.InviteFriendRequestDto;
-import com.couplemap.map.dto.MapInvitationDto;
-import com.couplemap.map.dto.MapListDto;
+import com.couplemap.map.dto.*;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
 import com.couplemap.user.domain.User;
@@ -38,6 +35,10 @@ public class MapServiceImpl implements MapService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
+        if (mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName())) {
+            throw new MapException(MAP_NAME_DUPLICATED);
+        }
+
         Map newMap = Map.from(request.getMapName(), request.getDescription());
         mapRepository.save(newMap);
 
@@ -48,17 +49,47 @@ public class MapServiceImpl implements MapService {
     }
 
     @Override
+    @Transactional
+    public void deleteMap(Long mapId, Long userId) {
+        MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
+
+        if (mapMember.getMapMemberRole() != MapMemberRole.OWNER) {
+            throw new MapException(NO_DELETE_PERMISSION);
+        }
+
+        Map dMap = mapMember.getMap();
+        mapMemberRepository.deleteAllByMap(dMap);
+        mapRepository.delete(dMap);
+    }
+
+    @Override
+    @Transactional
+    public void updateMap(Long mapId, UpdateMapRequestDto request, Long userId) {
+        Map map = mapRepository.findById(mapId)
+                .orElseThrow(() -> new MapException(MAP_NOT_FOUND));
+
+        MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
+
+        if (mapMember.getMapMemberRole() != MapMemberRole.OWNER) {
+            throw new MapException(NO_UPDATE_PERMISSION);
+        }
+
+        if (mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId)) {
+            throw new MapException(MAP_NAME_DUPLICATED);
+        }
+
+        map.update(request.getMapName(), request.getDescription());
+    }
+
+    @Override
     public List<MapListDto> getMapList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUser(user).stream()
                 .filter(mapMember -> mapMember.getMapMemberRole() != MapMemberRole.PENDING)
-                .map(mapMember -> new MapListDto(
-                        mapMember.getMap().getMapId(),
-                        mapMember.getMap().getMapName(),
-                        mapMember.getMap().getDescription(),
-                        mapMember.getMapMemberRole()
-                ))
+                .map(MapListDto::from)
                 .collect(Collectors.toList());
     }
 
@@ -132,11 +163,7 @@ public class MapServiceImpl implements MapService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUserAndMapMemberRole(user, MapMemberRole.PENDING).stream()
-                .map(mapMember -> new MapInvitationDto(
-                        mapMember.getMapMemberId(),
-                        mapMember.getMap().getMapName(),
-                        mapMember.getInviter().getName()
-                ))
+                .map(MapInvitationDto::from)
                 .collect(Collectors.toList());
     }
 }

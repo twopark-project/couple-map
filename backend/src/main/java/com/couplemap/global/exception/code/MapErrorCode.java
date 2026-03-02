@@ -12,7 +12,10 @@ public enum MapErrorCode implements ErrorCode {
     ALREADY_MAP_MEMBER(HttpStatus.CONFLICT,  "이미 지도에 참여하고 있는 멤버입니다."),
     MAP_NOT_FOUND(HttpStatus.NOT_FOUND,  "존재하지 않는 지도입니다."),
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND,  "존재하지 않는 초대입니다."),
-    NOT_INVITED_USER(HttpStatus.FORBIDDEN,  "초대받은 사용자가 아닙니다.");
+    NOT_INVITED_USER(HttpStatus.FORBIDDEN,  "초대받은 사용자가 아닙니다."),
+    MAP_NAME_DUPLICATED(HttpStatus.CONFLICT,  "이미 같은 이름의 지도가 존재합니다."),
+    NO_DELETE_PERMISSION(HttpStatus.FORBIDDEN,  "지도 삭제 권한이 없습니다."),
+    NO_UPDATE_PERMISSION(HttpStatus.FORBIDDEN,  "지도 수정 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
