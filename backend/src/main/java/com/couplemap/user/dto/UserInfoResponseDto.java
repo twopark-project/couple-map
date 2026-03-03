@@ -4,22 +4,26 @@ import com.couplemap.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class UserInfoResponseDto {
-    
+
     private Long userId;
-    
+
     private String email;
-    
+
     private String name;
-    
+
     private String nickname;
-    
+
     private String profileImageUrl;
-    
+
     private String friendCode;
-    
+
+    private LocalDateTime createdAt;
+
     public static UserInfoResponseDto from(User user) {
         return UserInfoResponseDto.builder()
                 .userId(user.getUserId())
@@ -28,6 +32,7 @@ public class UserInfoResponseDto {
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
                 .friendCode(user.getFriendCode())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }
