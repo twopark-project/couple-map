@@ -93,12 +93,12 @@ public class MapServiceImpl implements MapService {
         map.update(request.getMapName(), request.getDescription());
 
         if (backgroundImage != null && !backgroundImage.isEmpty()) {
-            // 기존 배경 이미지 삭제
-            if (map.getBackgroundKey() != null) {
-                s3Service.deleteFile(map.getBackgroundKey());
-            }
+            String oldBackgroundKey = map.getBackgroundKey();
             S3UploadDto uploadResult = s3Service.uploadImageFile(backgroundImage);
             map.updateBackground(uploadResult.getUrl(), uploadResult.getKey());
+            if (oldBackgroundKey != null) {
+                s3Service.deleteFile(oldBackgroundKey);
+            }
         }
     }
 
