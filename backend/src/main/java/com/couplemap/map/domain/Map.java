@@ -24,15 +24,20 @@ public class Map extends BaseEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    public static Map from(String mapName,String description){
+    @Column(name = "background_url")
+    private String backgroundUrl;
+
+    public static Map from(String mapName, String description, String backgroundUrl){
         return Map.builder()
                 .mapName(mapName)
                 .description(description)
+                .backgroundUrl(backgroundUrl)
                 .build();
     }
 
-    public void update(String mapName, String description) {
+    public void update(String mapName, String description, String backgroundUrl) {
         this.mapName = mapName;
         this.description = description;
+        this.backgroundUrl = backgroundUrl;
     }
 }

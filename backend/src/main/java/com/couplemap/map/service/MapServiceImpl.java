@@ -39,7 +39,7 @@ public class MapServiceImpl implements MapService {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
-        Map newMap = Map.from(request.getMapName(), request.getDescription());
+        Map newMap = Map.from(request.getMapName(), request.getDescription(), request.getBackgroundUrl());
         mapRepository.save(newMap);
 
         MapMember mapMember = MapMember.from(newMap, user, MapMemberRole.OWNER);
@@ -80,7 +80,7 @@ public class MapServiceImpl implements MapService {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
-        map.update(request.getMapName(), request.getDescription());
+        map.update(request.getMapName(), request.getDescription(), request.getBackgroundUrl());
     }
 
     @Override
@@ -89,7 +89,11 @@ public class MapServiceImpl implements MapService {
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUser(user).stream()
                 .filter(mapMember -> mapMember.getMapMemberRole() != MapMemberRole.PENDING)
-                .map(MapListDto::from)
+                .map(mapMember -> {
+                    long memberCount = mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(
+                            mapMember.getMap().getMapId(), MapMemberRole.PENDING);
+                    return MapListDto.from(mapMember, memberCount);
+                })
                 .collect(Collectors.toList());
     }
 

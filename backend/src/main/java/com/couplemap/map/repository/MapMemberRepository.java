@@ -22,6 +22,8 @@ public interface MapMemberRepository extends JpaRepository<MapMember, Long> {
 
     void deleteAllByMap(Map map);
 
+    long countByMap_MapIdAndMapMemberRoleNot(Long mapId, MapMemberRole role);
+
     @Query("SELECT COUNT(mm) > 0 FROM MapMember mm " +
             "WHERE mm.user.userId = :userId AND mm.map.mapName = :mapName " +
             "AND mm.mapMemberRole != 'PENDING'")

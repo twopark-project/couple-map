@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class UpdateMapRequestDto {
     private String mapName;
     private String description;
+    private String backgroundUrl;
 }
