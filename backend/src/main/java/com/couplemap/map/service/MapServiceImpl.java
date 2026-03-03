@@ -2,6 +2,8 @@ package com.couplemap.map.service;
 
 import com.couplemap.global.exception.exceptions.MapException;
 import com.couplemap.global.exception.exceptions.UserException;
+import com.couplemap.global.s3.S3Service;
+import com.couplemap.global.s3.S3UploadDto;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
@@ -13,6 +15,7 @@ import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,10 +31,11 @@ public class MapServiceImpl implements MapService {
     private final MapRepository mapRepository;
     private final MapMemberRepository mapMemberRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
     @Transactional
     @Override
-    public Long createMap(CreateMapRequestDto request, Long userId) {
+    public Long createMap(CreateMapRequestDto request, MultipartFile backgroundImage, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
@@ -39,7 +43,13 @@ public class MapServiceImpl implements MapService {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
-        Map newMap = Map.from(request.getMapName(), request.getDescription(), request.getBackgroundUrl());
+        Map newMap = Map.from(request.getMapName(), request.getDescription());
+
+        if (backgroundImage != null && !backgroundImage.isEmpty()) {
+            S3UploadDto uploadResult = s3Service.uploadImageFile(backgroundImage);
+            newMap.updateBackground(uploadResult.getUrl(), uploadResult.getKey());
+        }
+
         mapRepository.save(newMap);
 
         MapMember mapMember = MapMember.from(newMap, user, MapMemberRole.OWNER);
@@ -65,7 +75,7 @@ public class MapServiceImpl implements MapService {
 
     @Override
     @Transactional
-    public void updateMap(Long mapId, UpdateMapRequestDto request, Long userId) {
+    public void updateMap(Long mapId, UpdateMapRequestDto request, MultipartFile backgroundImage, Long userId) {
         Map map = mapRepository.findById(mapId)
                 .orElseThrow(() -> new MapException(MAP_NOT_FOUND));
 
@@ -80,7 +90,16 @@ public class MapServiceImpl implements MapService {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
-        map.update(request.getMapName(), request.getDescription(), request.getBackgroundUrl());
+        map.update(request.getMapName(), request.getDescription());
+
+        if (backgroundImage != null && !backgroundImage.isEmpty()) {
+            // 기존 배경 이미지 삭제
+            if (map.getBackgroundKey() != null) {
+                s3Service.deleteFile(map.getBackgroundKey());
+            }
+            S3UploadDto uploadResult = s3Service.uploadImageFile(backgroundImage);
+            map.updateBackground(uploadResult.getUrl(), uploadResult.getKey());
+        }
     }
 
     @Override

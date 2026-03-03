@@ -27,17 +27,28 @@ public class Map extends BaseEntity {
     @Column(name = "background_url")
     private String backgroundUrl;
 
-    public static Map from(String mapName, String description, String backgroundUrl){
+    @Column(name = "background_key")
+    private String backgroundKey;
+
+    public static Map from(String mapName, String description) {
         return Map.builder()
                 .mapName(mapName)
                 .description(description)
-                .backgroundUrl(backgroundUrl)
                 .build();
     }
 
-    public void update(String mapName, String description, String backgroundUrl) {
+    public void update(String mapName, String description) {
         this.mapName = mapName;
         this.description = description;
+    }
+
+    public void updateBackground(String backgroundUrl, String backgroundKey) {
         this.backgroundUrl = backgroundUrl;
+        this.backgroundKey = backgroundKey;
+    }
+
+    public void deleteBackground() {
+        this.backgroundUrl = null;
+        this.backgroundKey = null;
     }
 }

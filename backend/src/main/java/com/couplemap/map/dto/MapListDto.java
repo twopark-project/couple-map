@@ -6,11 +6,11 @@ import lombok.Getter;
 
 @Getter
 public class MapListDto {
-    private Long mapId;
-    private String mapName;
-    private String description;
-    private String backgroundUrl;
-    private MapMemberRole myRole;
+    private final Long mapId;
+    private final String mapName;
+    private final String description;
+    private final String backgroundUrl;
+    private final MapMemberRole myRole;
     private long memberCount;
 
     public MapListDto(Long mapId, String mapName, String description, String backgroundUrl, MapMemberRole myRole, long memberCount) {

@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 public class CreateMapRequestDto {
     private String mapName;
     private String description;
-    private String backgroundUrl;
 }

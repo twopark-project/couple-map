@@ -6,9 +6,11 @@ import com.couplemap.map.service.MapService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -22,9 +24,12 @@ public class MapController {
     private final MapService mapService;
 
     @Operation(summary = "지도 생성")
-    @PostMapping
-    public ResponseEntity<ApiResponse<Long>> createMap(@RequestBody CreateMapRequestDto request, @AuthenticationPrincipal(expression = "userId") Long userId) {
-        Long mapId = mapService.createMap(request, userId);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Long>> createMap(
+            @RequestPart("request") CreateMapRequestDto request,
+            @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        Long mapId = mapService.createMap(request, backgroundImage, userId);
         return ResponseEntity.created(URI.create("/api/map/" + mapId))
                 .body(ApiResponse.success(mapId, "지도가 성공적으로 생성되었습니다."));
     }
@@ -37,11 +42,13 @@ public class MapController {
     }
 
     @Operation(summary = "지도 수정")
-    @PutMapping("/{mapId}")
-    public ResponseEntity<ApiResponse<Void>> updateMap(@PathVariable Long mapId,
-                                                        @RequestBody UpdateMapRequestDto request,
-                                                        @AuthenticationPrincipal(expression = "userId") Long userId){
-        mapService.updateMap(mapId, request, userId);
+    @PutMapping(value = "/{mapId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Void>> updateMap(
+            @PathVariable Long mapId,
+            @RequestPart("request") UpdateMapRequestDto request,
+            @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        mapService.updateMap(mapId, request, backgroundImage, userId);
         return ResponseEntity.ok(ApiResponse.success("지도를 수정했습니다."));
     }
 
