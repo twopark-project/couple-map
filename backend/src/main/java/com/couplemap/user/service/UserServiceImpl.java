@@ -31,12 +31,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
-        // 프로필이 이미 있는 경우 -> 삭제 먼저
-        if (user.getProfileImageKey() != null) {
-            s3Service.deleteFile(user.getProfileImageKey());
-        }
-
+        String oldProfileImageKey = user.getProfileImageKey();
         S3UploadDto uploadResult = s3Service.uploadImageFile(file);
+        if (oldProfileImageKey != null) {
+            s3Service.deleteFile(oldProfileImageKey);
+        }
 
         user.updateProfileImage(uploadResult);
 
