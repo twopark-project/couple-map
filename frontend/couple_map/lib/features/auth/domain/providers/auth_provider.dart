@@ -18,7 +18,20 @@ class AuthError extends AuthState {
 
 class AuthNotifier extends Notifier<AuthState> {
   @override
-  AuthState build() => AuthInitial();
+  AuthState build() {
+    _loadStoredToken();
+    return AuthInitial();
+  }
+
+  Future<void> _loadStoredToken() async {
+    final accessToken = await _repo.getAccessToken();
+    if (accessToken != null && accessToken.isNotEmpty) {
+      state = AuthSuccess(AuthToken(
+        accessToken: accessToken,
+        nicknameSet: true,
+      ));
+    }
+  }
 
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
@@ -32,24 +45,6 @@ class AuthNotifier extends Notifier<AuthState> {
       final token = await loginFn();
       await _repo.saveToken(token);
       state = AuthSuccess(token);
-    } catch (e) {
-      state = AuthError(e.toString());
-    }
-  }
-
-  Future<void> setNickname(String accessToken, String nickname) async {
-    state = AuthLoading();
-    try {
-      await _repo.setNickname(accessToken, nickname);
-      final current = state;
-      if (current is AuthSuccess) {
-        state = AuthSuccess(AuthToken(
-          accessToken: current.token.accessToken,
-          refreshToken: current.token.refreshToken,
-          expiresIn: current.token.expiresIn,
-          nicknameSet: true,
-        ));
-      }
     } catch (e) {
       state = AuthError(e.toString());
     }

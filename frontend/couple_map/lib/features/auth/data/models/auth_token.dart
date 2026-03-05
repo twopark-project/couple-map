@@ -30,7 +30,7 @@ class AuthToken {
       accessToken: accessToken,
       refreshToken: json['refreshToken'] as String?,
       expiresIn: expiresIn,
-      nicknameSet: json['nicknameSet'] as bool? ?? false,
+      nicknameSet: json['isNicknameSet'] as bool? ?? false,
     );
   }
 }
