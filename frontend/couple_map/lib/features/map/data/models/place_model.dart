@@ -20,8 +20,8 @@ class PlaceModel {
       placeName: json['place_name'] ?? '',
       addressName: json['address_name'] ?? '',
       categoryName: json['category_name'] ?? '',
-      x: json['x']?.toString() ?? '37.5665',
-      y: json['y']?.toString() ?? '126.9780',
+      x: json['x']?.toString() ?? '126.9780',
+      y: json['y']?.toString() ?? '37.5665',
     );
   }
 }
