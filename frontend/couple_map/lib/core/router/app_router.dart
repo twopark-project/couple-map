@@ -13,7 +13,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final token = await _storage.read(key: 'accessToken');
       final isLogin = state.matchedLocation == '/login';
-      if (token != null && isLogin) return '/home';
+      final isLoggedIn = token != null && token.isNotEmpty;
+      
+      if (!isLoggedIn && !isLogin) return '/login';
+      if (isLoggedIn && isLogin) return '/home';
       return null;
     },
     routes: [
