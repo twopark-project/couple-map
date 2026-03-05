@@ -45,7 +45,10 @@ dependencies:
   dio: ^5.4.0
 
   # State Management
-  provider: ^6.1.1
+  flutter_riverpod: ^2.5.1
+
+  # Routing
+  go_router: ^14.6.1
 
   # Secure Storage
   flutter_secure_storage: ^9.0.0
@@ -88,6 +91,14 @@ flutter:
   # Environment files
   assets:
     - .env
+    - assets/fonts/
+
+  fonts:
+    - family: Gaegu
+      fonts:
+        - asset: assets/fonts/Gaegu-Regular.ttf
+        - asset: assets/fonts/Gaegu-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:
