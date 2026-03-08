@@ -82,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = '홈 화면 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.';
           _isLoading = false;
         });
       }

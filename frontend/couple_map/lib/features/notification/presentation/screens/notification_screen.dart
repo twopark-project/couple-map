@@ -51,7 +51,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: const Text('요청 처리에 실패했어요. 다시 시도해주세요.'),
             backgroundColor: const Color(0xFFFF8E8E),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
