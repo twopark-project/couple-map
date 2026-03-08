@@ -23,7 +23,19 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   Future<void> _save() async {
     final nickname = _nicknameController.text.trim();
-    if (nickname.isEmpty) return;
+    if (nickname.length < 2 || nickname.length > 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('닉네임은 2-10자로 입력해주세요')),
+      );
+      return;
+    }
+    final regex = RegExp(r'^[가-힣a-zA-Z0-9]+$');
+    if (!regex.hasMatch(nickname)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('한글, 영문, 숫자만 사용 가능합니다')),
+      );
+      return;
+    }
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     setState(() => _isSaving = true);
@@ -37,7 +49,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('오류: ${e.toString()}')));
+            .showSnackBar(const SnackBar(content: Text('닉네임 변경에 실패했어요. 다시 시도해주세요.')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
