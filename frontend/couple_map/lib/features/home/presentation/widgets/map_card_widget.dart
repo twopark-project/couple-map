@@ -132,42 +132,6 @@ class MapCardWidget extends StatelessWidget {
                           ),
                       ],
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            _roleEmoji,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              shadows: [
-                                Shadow(
-                                  color: Color(0x4D000000),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Opacity(
-                          opacity: 0.9,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              _roleLabel,
-                              style: const TextStyle(
-                                fontFamily: 'NotoSansKR',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w300,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
