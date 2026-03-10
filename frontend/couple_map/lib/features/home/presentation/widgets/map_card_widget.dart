@@ -63,9 +63,9 @@ class MapCardWidget extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (map.thumbnailUrl != null)
+              if (map.backgroundUrl != null)
                 CachedNetworkImage(
-                  imageUrl: map.thumbnailUrl!,
+                  imageUrl: map.backgroundUrl!,
                   fit: BoxFit.cover,
                   errorWidget: (_, __, ___) => _buildGradientBg(),
                 )
