@@ -3,14 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../data/repositories/friend_repository.dart';
 
-class FriendInviteScreen extends ConsumerStatefulWidget {
-  const FriendInviteScreen({super.key});
+class FriendInviteSheet extends ConsumerStatefulWidget {
+  final VoidCallback? onAdded;
+
+  const FriendInviteSheet({super.key, this.onAdded});
 
   @override
-  ConsumerState<FriendInviteScreen> createState() => _FriendInviteScreenState();
+  ConsumerState<FriendInviteSheet> createState() => _FriendInviteSheetState();
 }
 
-class _FriendInviteScreenState extends ConsumerState<FriendInviteScreen> {
+class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
   final TextEditingController _codeController = TextEditingController();
   final FriendRepository _repo = FriendRepository();
   bool _isSending = false;
@@ -30,9 +32,10 @@ class _FriendInviteScreenState extends ConsumerState<FriendInviteScreen> {
     try {
       await _repo.sendFriendRequest(auth.token.accessToken, code);
       if (mounted) {
+        Navigator.pop(context);
+        widget.onAdded?.call();
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('친구 요청을 보냈어요!')));
-        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -46,78 +49,110 @@ class _FriendInviteScreenState extends ConsumerState<FriendInviteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          '친구 추가',
-          style: TextStyle(
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            '친구 초대',
+            style: TextStyle(
               color: Color(0xFF191919),
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              letterSpacing: -0.5),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '친구 코드로 추가',
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF191919),
-                  letterSpacing: -0.5),
             ),
-            const SizedBox(height: 8),
-            Text('친구의 코드를 입력해 친구 요청을 보내세요.',
-                style: TextStyle(fontSize: 15, color: Colors.grey[600])),
-            const SizedBox(height: 32),
-            TextField(
-              controller: _codeController,
-              decoration: InputDecoration(
-                hintText: '친구 코드 입력',
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '친구의 코드를 입력하면 바로 연결돼요',
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            controller: _codeController,
+            textCapitalization: TextCapitalization.characters,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF191919),
+            ),
+            decoration: InputDecoration(
+              hintText: '예: KISS99',
+              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
+              filled: true,
+              fillColor: const Color(0xFFF2F0EC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isSending ? null : _sendRequest,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF7A7A),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _isSending ? null : _sendRequest,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF7A7A),
+                disabledBackgroundColor: const Color(0xFFFFB5B5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: _isSending
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('친구 요청 보내기',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700)),
+                elevation: 0,
+              ),
+              child: _isSending
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      '추가하기',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                '닫기',
+                style: TextStyle(
+                  color: Color(0xFF191919),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
