@@ -1,5 +1,7 @@
 package com.couplemap.map.service;
 
+import com.couplemap.friend.domain.FriendshipStatus;
+import com.couplemap.friend.repository.FriendshipRepository;
 import com.couplemap.global.exception.exceptions.MapException;
 import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.s3.S3Service;
@@ -47,6 +49,9 @@ public class MapServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private FriendshipRepository friendshipRepository;
 
     @Mock
     private S3Service s3Service;
@@ -247,11 +252,12 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        InviteFriendRequestDto request = new InviteFriendRequestDto("FRIEND456");
+        InviteFriendRequestDto request = new InviteFriendRequestDto(2L);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
-        when(userRepository.findByFriendCode(request.getFriendCode())).thenReturn(Optional.of(friendUser));
+        when(userRepository.findById(request.getFriendId())).thenReturn(Optional.of(friendUser));
+        when(friendshipRepository.existsFriendship(testUser, friendUser, FriendshipStatus.ACCEPTED)).thenReturn(true);
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, friendUser.getUserId())).thenReturn(Optional.empty());
 
         // when
@@ -267,7 +273,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        InviteFriendRequestDto request = new InviteFriendRequestDto("FRIEND456");
+        InviteFriendRequestDto request = new InviteFriendRequestDto(2L);
         MapMember viewerMember = MapMember.from(testMap, testUser, MapMemberRole.VIEWER);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
@@ -285,12 +291,13 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        InviteFriendRequestDto request = new InviteFriendRequestDto("FRIEND456");
+        InviteFriendRequestDto request = new InviteFriendRequestDto(2L);
         MapMember existingMember = MapMember.from(testMap, friendUser, MapMemberRole.EDITOR);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
-        when(userRepository.findByFriendCode(request.getFriendCode())).thenReturn(Optional.of(friendUser));
+        when(userRepository.findById(request.getFriendId())).thenReturn(Optional.of(friendUser));
+        when(friendshipRepository.existsFriendship(testUser, friendUser, FriendshipStatus.ACCEPTED)).thenReturn(true);
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, friendUser.getUserId())).thenReturn(Optional.of(existingMember));
 
         // when & then

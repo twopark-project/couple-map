@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InviteFriendRequestDto {
-    private String friendCode;
+    private Long friendId;
 }
