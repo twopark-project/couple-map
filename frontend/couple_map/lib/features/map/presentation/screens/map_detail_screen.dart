@@ -13,12 +13,21 @@ import '../../data/models/place_model.dart';
 import '../../../memory/data/models/memory_model.dart';
 import '../../../memory/data/repositories/memory_repository.dart';
 import '../../../memory/presentation/screens/memory_detail_screen.dart';
+import 'map_settings_screen.dart';
 
 class MapDetailScreen extends ConsumerStatefulWidget {
   final int mapId;
   final String? mapName;
+  final String? description;
+  final int memberCount;
 
-  const MapDetailScreen({super.key, required this.mapId, this.mapName});
+  const MapDetailScreen({
+    super.key,
+    required this.mapId,
+    this.mapName,
+    this.description,
+    this.memberCount = 1,
+  });
 
   @override
   ConsumerState<MapDetailScreen> createState() => _MapDetailScreenState();
@@ -1228,23 +1237,42 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
         elevation: 0,
         surfaceTintColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.mapName ?? '',
-              style: const TextStyle(
-                color: Color(0xFF191919),
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
+        title: Text(
+          widget.mapName ?? '',
+          style: const TextStyle(
+            color: Color(0xFF191919),
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapSettingsScreen(
+                  mapId: widget.mapId,
+                  mapName: widget.mapName ?? '',
+                  description: widget.description,
+                  memberCount: widget.memberCount,
+                ),
               ),
             ),
-          ],
-        ),
+            child: const Text(
+              '설정',
+              style: TextStyle(
+                color: Color(0xFFFF7A7A),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Stack(
         children: [

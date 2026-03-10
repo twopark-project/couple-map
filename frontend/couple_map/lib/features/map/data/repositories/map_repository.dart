@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/map_model.dart';
@@ -47,6 +49,49 @@ class MapRepository {
     try {
       await DioClient.instance.post(
         '/api/map/member/$mapMemberId/reject',
+        options: DioClient.authOptions(accessToken),
+      );
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
+  // 지도 수정 (multipart/form-data)
+  Future<void> updateMap(
+    String accessToken,
+    int mapId,
+    String mapName,
+    String? description, [
+    File? backgroundImage,
+  ]) async {
+    try {
+      final requestJson = jsonEncode({
+        'mapName': mapName,
+        if (description != null) 'description': description,
+      });
+      final formData = FormData.fromMap({
+        'request': MultipartFile.fromString(
+          requestJson,
+          contentType: DioMediaType('application', 'json'),
+        ),
+        if (backgroundImage != null)
+          'backgroundImage': await MultipartFile.fromFile(backgroundImage.path),
+      });
+      await DioClient.instance.put(
+        '/api/map/$mapId',
+        data: formData,
+        options: DioClient.authOptions(accessToken),
+      );
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
+  // 지도 삭제
+  Future<void> deleteMap(String accessToken, int mapId) async {
+    try {
+      await DioClient.instance.delete(
+        '/api/map/$mapId',
         options: DioClient.authOptions(accessToken),
       );
     } on DioException catch (e) {

@@ -118,8 +118,10 @@ class _MapMemberScreenState extends ConsumerState<MapMemberScreen> {
                         title: Text(f.nickname,
                             style:
                                 const TextStyle(fontWeight: FontWeight.w700)),
-                        subtitle: Text(f.email,
-                            style: const TextStyle(fontSize: 13)),
+                        subtitle: f.friendCode != null
+                            ? Text('#${f.friendCode}',
+                                style: const TextStyle(fontSize: 13))
+                            : null,
                         trailing: TextButton(
                           onPressed:
                               isInvited ? null : () => _inviteFriend(f.id),
