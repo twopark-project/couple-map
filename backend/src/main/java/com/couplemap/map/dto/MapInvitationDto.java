@@ -7,19 +7,19 @@ import lombok.Getter;
 public class MapInvitationDto {
     private final Long mapMemberId;
     private final String mapName;
-    private final String inviterName;
+    private final String inviterNickname;
 
-    public MapInvitationDto(Long mapMemberId, String mapName, String inviterName) {
+    public MapInvitationDto(Long mapMemberId, String mapName, String inviterNickname) {
         this.mapMemberId = mapMemberId;
         this.mapName = mapName;
-        this.inviterName = inviterName;
+        this.inviterNickname = inviterNickname;
     }
 
     public static MapInvitationDto from(MapMember mapMember) {
         return new MapInvitationDto(
                 mapMember.getMapMemberId(),
                 mapMember.getMap().getMapName(),
-                mapMember.getInviter().getName()
+                mapMember.getInviter().getNickname()
         );
     }
 }

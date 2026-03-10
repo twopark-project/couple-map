@@ -17,7 +17,7 @@ class MypageRepository {
 
   Future<void> updateNickname(String accessToken, String nickname) async {
     try {
-      await DioClient.instance.patch(
+      await DioClient.instance.post(
         '/api/users/nickname',
         data: {'nickname': nickname},
         options: DioClient.authOptions(accessToken),

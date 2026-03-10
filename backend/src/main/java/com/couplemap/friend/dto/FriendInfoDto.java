@@ -10,14 +10,14 @@ public class FriendInfoDto {
 
     private final Long id;
     private final String nickname;
-    private final String email;
+    private final String friendCode;
     private final String imageUrl;
 
     public static FriendInfoDto from(User user) {
         return FriendInfoDto.builder()
                 .id(user.getUserId())
                 .nickname(user.getNickname())
-                .email(user.getEmail())
+                .friendCode(user.getFriendCode())
                 .imageUrl(user.getProfileImageUrl())
                 .build();
     }

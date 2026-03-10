@@ -41,7 +41,7 @@ class NotificationModel {
   factory NotificationModel.fromMapInvitation(Map<String, dynamic> json) {
     final rawId = json['mapMemberId'];
     final mapMemberId = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
-    final inviterName = json['inviterName'] as String? ?? '';
+    final inviterName = json['inviterNickname'] as String? ?? '';
     final mapName = json['mapName'] as String? ?? '';
     return NotificationModel(
       id: 'map_${mapMemberId ?? ''}',
