@@ -22,16 +22,28 @@ import static com.couplemap.global.exception.code.S3ErrorCode.*;
 public class S3ServiceImpl implements S3Service {
 
     private static final String PROFILE_DIR = "profile";
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+    private static final String MEMORY_DIR = "memory";
+    private static final long MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_MEDIA_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    private static final Set<String> ALLOWED_PROFILE_CONTENT_TYPES = Set.of(
             "image/jpeg",
             "image/jpg",
             "image/png"
     );
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+    private static final Set<String> ALLOWED_PROFILE_EXTENSIONS = Set.of(
             "jpeg",
             "jpg",
             "png"
+    );
+    private static final Set<String> ALLOWED_MEDIA_CONTENT_TYPES = Set.of(
+            "image/jpeg", "image/jpg", "image/png",
+            "video/mp4", "video/quicktime",
+            "audio/mpeg", "audio/mp4", "audio/x-m4a"
+    );
+    private static final Set<String> ALLOWED_MEDIA_EXTENSIONS = Set.of(
+            "jpg", "jpeg", "png",
+            "mp4", "mov",
+            "mp3", "m4a"
     );
 
     private final S3Client s3Client;
@@ -42,9 +54,16 @@ public class S3ServiceImpl implements S3Service {
     private String region;
 
     public S3UploadDto uploadImageFile(MultipartFile file) {
-        validateFile(file);
-        String fileName = createFileName(file.getOriginalFilename(), PROFILE_DIR);
+        String ext = validateFile(file, MAX_IMAGE_FILE_SIZE, ALLOWED_PROFILE_CONTENT_TYPES, ALLOWED_PROFILE_EXTENSIONS);
+        return upload(file, createFileName(PROFILE_DIR, ext));
+    }
 
+    public S3UploadDto uploadMediaFile(MultipartFile file) {
+        String ext = validateFile(file, MAX_MEDIA_FILE_SIZE, ALLOWED_MEDIA_CONTENT_TYPES, ALLOWED_MEDIA_EXTENSIONS);
+        return upload(file, createFileName(MEMORY_DIR, ext));
+    }
+
+    private S3UploadDto upload(MultipartFile file, String fileName) {
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucket)
@@ -55,10 +74,8 @@ public class S3ServiceImpl implements S3Service {
             s3Client.putObject(putObjectRequest,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-            String url = getFileUrl(fileName);
-
             return S3UploadDto.builder()
-                    .url(url)
+                    .url(getFileUrl(fileName))
                     .key(fileName)
                     .build();
 
@@ -83,21 +100,19 @@ public class S3ServiceImpl implements S3Service {
         }
     }
 
-    private String createFileName(String originalFileName, String dirName) {
-        String ext = extractExt(originalFileName);
+    private String createFileName(String dirName, String ext) {
         String uuid = UUID.randomUUID().toString();
         return dirName + "/" + uuid + "." + ext;
     }
 
-    private String extractExt(String originalFileName) {
+    private String extractExt(String originalFileName,  Set<String> allowedExtensions) {
         int pos = originalFileName.lastIndexOf(".");
         if (pos == -1) {
             throw new S3Exception(INVALID_FILE_EXTENSION);
         }
         String ext = originalFileName.substring(pos + 1).toLowerCase();
 
-        if (!ALLOWED_EXTENSIONS.contains(ext)) {
-            log.warn("허용되지 않은 확장자: {}", ext);
+        if (!allowedExtensions.contains(ext)) {
             throw new S3Exception(INVALID_FILE_TYPE);
         }
         return ext;
@@ -107,34 +122,32 @@ public class S3ServiceImpl implements S3Service {
         return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, fileName);
     }
 
-    private void validateFile(MultipartFile file){
+    private String validateFile(MultipartFile file, long maxSize, Set<String> allowedTypes, Set<String> allowedExtensions){
         checkNull(file);
-        checkSize(file);
-        checkContentType(file);
-        checkFileExtension(file);
+        checkSize(file, maxSize);
+        checkContentType(file, allowedTypes);
+        return checkFileExtension(file, allowedExtensions);
     }
 
-    void checkNull(MultipartFile file) {
+    private void checkNull(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new S3Exception(FILE_IS_EMPTY);
         }
     }
 
-    void checkSize(MultipartFile file) {
-        if (file.getSize() > MAX_FILE_SIZE) {
-            log.error("파일 크기 초과: {}bytes (최대: {}bytes)", file.getSize(), MAX_FILE_SIZE);
+    private void checkSize(MultipartFile file, long maxSize) {
+        if (file.getSize() > maxSize) {
             throw new S3Exception(FILE_SIZE_EXCEEDED);
         }
     }
-    void checkContentType(MultipartFile file) {
+    private void checkContentType(MultipartFile file, Set<String> allowedTypes) {
         String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            log.warn("허용되지 않은 Content-Type: {}", contentType);
+        if (contentType == null || !allowedTypes.contains(contentType)) {
             throw new S3Exception(INVALID_FILE_TYPE);
         }
     }
 
-    void checkFileExtension(MultipartFile file) {
+    private String checkFileExtension(MultipartFile file, Set<String> allowedExtensions) {
         String originalFilename = file.getOriginalFilename();
 
         if (originalFilename == null || originalFilename.isEmpty()) {
@@ -145,7 +158,7 @@ public class S3ServiceImpl implements S3Service {
             throw new S3Exception(INVALID_FILE_NAME);
         }
 
-        extractExt(originalFilename);
+        return extractExt(originalFilename, allowedExtensions);
     }
 
 }
