@@ -11,6 +11,6 @@ public class LoginTokenResponseDto {
     private final String refreshToken;
     private final Long expiresIn;
 
-    @JsonProperty("isNicknㅇameSet")
+    @JsonProperty("isNicknameSet")
     private final boolean isNicknameSet;
 }
