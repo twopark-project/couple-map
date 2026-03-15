@@ -98,7 +98,11 @@ public class MemoryServiceImpl implements MemoryService {
 
         // 3. DTO로 변환
         return memories.stream()
-                .map(MemoryListResponseDto::new)
+                .map(memory -> {
+                    List<MediaFile> files = mediaFileRepository.findByMemoryIdOrderByDisplayOrder(memory.getMemoryId());
+                    String thumbnailUrl = files.isEmpty() ? null : files.get(0).getFileUrl();
+                    return new MemoryListResponseDto(memory, thumbnailUrl);
+                })
                 .collect(Collectors.toList());
     }
 

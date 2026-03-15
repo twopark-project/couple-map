@@ -4,6 +4,7 @@ import com.couplemap.memory.domain.Memory;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Getter
 public class MemoryListResponseDto {
@@ -12,12 +13,16 @@ public class MemoryListResponseDto {
     private final String placeName;
     private final BigDecimal latitude;
     private final BigDecimal longitude;
+    private final LocalDate memoryDate;
+    private final String thumbnailUrl;
 
-    public MemoryListResponseDto(Memory memory) {
+    public MemoryListResponseDto(Memory memory, String thumbnailUrl) {
         this.memoryId = memory.getMemoryId();
         this.title = memory.getTitle();
         this.placeName = memory.getPlaceName();
         this.latitude = memory.getLatitude();
         this.longitude = memory.getLongitude();
+        this.memoryDate = memory.getMemoryDate();
+        this.thumbnailUrl = thumbnailUrl;
     }
 }
