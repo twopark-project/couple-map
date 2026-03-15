@@ -17,6 +17,7 @@ import com.couplemap.mediaFile.domain.MediaFile;
 import com.couplemap.mediaFile.domain.MediaFileType;
 import com.couplemap.mediaFile.repository.MediaFileRepository;
 import com.couplemap.memory.domain.Memory;
+import com.couplemap.memory.dto.CalendarMemoryResponseDto;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
 import com.couplemap.memory.dto.MediaFileDto;
 import com.couplemap.memory.dto.MemoryDetailResponseDto;
@@ -219,6 +220,19 @@ public class MemoryServiceImpl implements MemoryService {
         }
 
         return memory;
+    }
+
+    @Override
+    public List<CalendarMemoryResponseDto> getCalendarMemories(int year, Long userId) {
+        List<Memory> memories = memoryRepository.findAllByUserIdAndYear(userId, year);
+
+        return memories.stream()
+                .map(memory -> {
+                    List<MediaFile> files = mediaFileRepository.findByMemoryIdOrderByDisplayOrder(memory.getMemoryId());
+                    String thumbnailUrl = files.isEmpty() ? null : files.get(0).getFileUrl();
+                    return new CalendarMemoryResponseDto(memory, thumbnailUrl);
+                })
+                .collect(Collectors.toList());
     }
 
     private void validateMemoryOwnership(Memory memory, Long userId, MemoryErrorCode errorCode) {

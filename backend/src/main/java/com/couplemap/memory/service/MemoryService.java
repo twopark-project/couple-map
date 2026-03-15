@@ -1,5 +1,6 @@
 package com.couplemap.memory.service;
 
+import com.couplemap.memory.dto.CalendarMemoryResponseDto;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
 import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.MemoryListResponseDto;
@@ -14,4 +15,5 @@ public interface MemoryService {
     MemoryDetailResponseDto getMemoryDetail(Long mapId, Long memoryId, Long userId);
     void deleteMemory(Long mapId, Long memoryId, Long userId);
     Long updateMemory(Long mapId, Long memoryId, UpdateMemoryRequestDto request, List<MultipartFile> files, Long userId);
+    List<CalendarMemoryResponseDto> getCalendarMemories(int year, Long userId);
 }
