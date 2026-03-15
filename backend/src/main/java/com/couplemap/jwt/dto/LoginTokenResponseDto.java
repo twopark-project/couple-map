@@ -1,5 +1,6 @@
 package com.couplemap.jwt.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,5 +10,7 @@ public class LoginTokenResponseDto {
     private final String accessToken;
     private final String refreshToken;
     private final Long expiresIn;
+
+    @JsonProperty("isNicknameSet")
     private final boolean isNicknameSet;
 }

@@ -1,5 +1,8 @@
 package com.couplemap.map.service;
 
+import com.couplemap.friend.domain.FriendshipStatus;
+import com.couplemap.friend.repository.FriendshipRepository;
+import com.couplemap.global.exception.exceptions.FriendException;
 import com.couplemap.global.exception.exceptions.MapException;
 import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.s3.S3Service;
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.couplemap.global.exception.code.FriendErrorCode.INVALID_FRIENDSHIP_ID;
 import static com.couplemap.global.exception.code.MapErrorCode.*;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 
@@ -31,6 +35,7 @@ public class MapServiceImpl implements MapService {
     private final MapRepository mapRepository;
     private final MapMemberRepository mapMemberRepository;
     private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
     private final S3Service s3Service;
 
     @Transactional
@@ -129,8 +134,12 @@ public class MapServiceImpl implements MapService {
             throw new MapException(NO_INVITE_PERMISSION);
         }
 
-        User friendToInvite = userRepository.findByFriendCode(request.getFriendCode())
+        User friendToInvite = userRepository.findById(request.getFriendId())
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
+
+        if (!friendshipRepository.existsFriendship(inviter, friendToInvite, FriendshipStatus.ACCEPTED)) {
+            throw new FriendException(INVALID_FRIENDSHIP_ID);
+        }
 
         mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, friendToInvite.getUserId()).ifPresent(m -> {
             throw new MapException(ALREADY_MAP_MEMBER);

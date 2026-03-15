@@ -25,13 +25,11 @@ class MapModel {
 
 class MapInvitation {
   final int mapMemberId;
-  final int mapId;
   final String mapName;
   final String inviterNickname;
 
   const MapInvitation({
     required this.mapMemberId,
-    required this.mapId,
     required this.mapName,
     required this.inviterNickname,
   });
@@ -39,7 +37,6 @@ class MapInvitation {
   factory MapInvitation.fromJson(Map<String, dynamic> json) {
     return MapInvitation(
       mapMemberId: json['mapMemberId'] as int,
-      mapId: json['mapId'] as int,
       mapName: json['mapName'] as String,
       inviterNickname: json['inviterNickname'] as String,
     );

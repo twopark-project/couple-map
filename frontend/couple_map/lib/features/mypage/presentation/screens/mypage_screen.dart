@@ -78,18 +78,6 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
 
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          '친구 코드가 복사되었어요!',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: const Color(0xFFFF8E8E),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
   }
 
   @override
@@ -268,7 +256,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
             hasBorder: true,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
+              MaterialPageRoute(builder: (_) => ProfileEditScreen(user: user)),
             ).then((_) => _loadData()),
           ),
           _MenuRow(

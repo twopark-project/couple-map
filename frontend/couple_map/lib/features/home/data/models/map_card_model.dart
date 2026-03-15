@@ -5,14 +5,16 @@ class MapCardModel {
   final String mapName;
   final String? description;
   final String myRole; // OWNER, EDITOR, VIEWER, PENDING
-  final String? thumbnailUrl;
+  final String? backgroundUrl;
+  final int memberCount;
 
   const MapCardModel({
     required this.mapId,
     required this.mapName,
     this.description,
     required this.myRole,
-    this.thumbnailUrl,
+    this.backgroundUrl,
+    this.memberCount = 1,
   });
 
   factory MapCardModel.fromJson(Map<String, dynamic> json) {
@@ -21,7 +23,8 @@ class MapCardModel {
       mapName: json['mapName'] as String,
       description: json['description'] as String?,
       myRole: json['myRole'] as String,
-      thumbnailUrl: json['thumbnailUrl'] as String?,
+      backgroundUrl: json['backgroundUrl'] as String?,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 1,
     );
   }
 }

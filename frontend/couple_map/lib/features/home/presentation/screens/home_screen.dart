@@ -180,7 +180,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              MapDetailScreen(mapId: _mapList[i].mapId),
+                              MapDetailScreen(
+                                mapId: _mapList[i].mapId,
+                                mapName: _mapList[i].mapName,
+                                description: _mapList[i].description,
+                                memberCount: _mapList[i].memberCount,
+                              ),
                         ),
                       ).then((_) => _loadData()),
                     ),

@@ -77,7 +77,7 @@ public class MemoryServiceImpl implements MemoryService {
         if (files != null && !files.isEmpty()) {
             AtomicInteger displayOrder = new AtomicInteger(1);
             files.forEach(file -> {
-                S3UploadDto s3Dto = s3Service.uploadImageFile(file);
+                S3UploadDto s3Dto = s3Service.uploadMediaFile(file);
                 MediaFileType fileType = getMediaFileType(file);
                 MediaFile mediaFile = MediaFile.from(newMemory, s3Dto, file, fileType, displayOrder.getAndIncrement());
                 mediaFileRepository.save(mediaFile);
@@ -98,7 +98,11 @@ public class MemoryServiceImpl implements MemoryService {
 
         // 3. DTO로 변환
         return memories.stream()
-                .map(MemoryListResponseDto::new)
+                .map(memory -> {
+                    List<MediaFile> files = mediaFileRepository.findByMemoryIdOrderByDisplayOrder(memory.getMemoryId());
+                    String thumbnailUrl = files.isEmpty() ? null : files.get(0).getFileUrl();
+                    return new MemoryListResponseDto(memory, thumbnailUrl);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -172,7 +176,7 @@ public class MemoryServiceImpl implements MemoryService {
             int displayOrder = maxOrder + 1;
 
             for (MultipartFile file : files) {
-                S3UploadDto s3Dto = s3Service.uploadImageFile(file);
+                S3UploadDto s3Dto = s3Service.uploadMediaFile(file);
                 MediaFileType fileType = getMediaFileType(file);
                 newFiles.add(MediaFile.from(memory, s3Dto, file, fileType, displayOrder++));
             }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
+import '../../../auth/data/models/user_model.dart';
+import '../../../mypage/data/repositories/mypage_repository.dart';
 import '../../data/repositories/friend_repository.dart';
 import 'friend_invite_screen.dart';
 
@@ -11,26 +14,18 @@ class FriendScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendScreen> createState() => _FriendScreenState();
 }
 
-class _FriendScreenState extends ConsumerState<FriendScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final FriendRepository _repo = FriendRepository();
+class _FriendScreenState extends ConsumerState<FriendScreen> {
+  final FriendRepository _friendRepo = FriendRepository();
+  final MypageRepository _mypageRepo = MypageRepository();
 
   List<FriendInfo> _friends = [];
-  List<FriendPendingInfo> _pending = [];
+  UserModel? _user;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadData();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -39,13 +34,13 @@ class _FriendScreenState extends ConsumerState<FriendScreen>
     final token = auth.token.accessToken;
     try {
       final results = await Future.wait([
-        _repo.getFriendList(token),
-        _repo.getPendingFriendList(token),
+        _friendRepo.getFriendList(token),
+        _mypageRepo.getUserInfo(token),
       ]);
       if (mounted) {
         setState(() {
           _friends = results[0] as List<FriendInfo>;
-          _pending = results[1] as List<FriendPendingInfo>;
+          _user = results[1] as UserModel;
           _isLoading = false;
         });
       }
@@ -54,28 +49,38 @@ class _FriendScreenState extends ConsumerState<FriendScreen>
     }
   }
 
-  Future<void> _acceptRequest(int friendshipId) async {
-    final auth = ref.read(authProvider);
-    if (auth is! AuthSuccess) return;
-    await _repo.acceptFriendRequest(auth.token.accessToken, friendshipId);
-    _loadData();
+  void _showInviteSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => FriendInviteSheet(onAdded: _loadData),
+    );
   }
 
-  Future<void> _rejectRequest(int friendshipId) async {
-    final auth = ref.read(authProvider);
-    if (auth is! AuthSuccess) return;
-    await _repo.rejectFriendRequest(auth.token.accessToken, friendshipId);
-    _loadData();
+  void _copyCode() {
+    if (_user == null) return;
+    Clipboard.setData(ClipboardData(text: _user!.friendCode));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('친구 코드를 복사했어요!')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFDFBF7),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFDFBF7),
         elevation: 0,
-        surfaceTintColor: Colors.white,
+        surfaceTintColor: const Color(0xFFFDFBF7),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           '친구 관리',
           style: TextStyle(
@@ -85,165 +90,207 @@ class _FriendScreenState extends ConsumerState<FriendScreen>
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_add_alt_1, color: Color(0xFFFF7A7A)),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FriendInviteScreen()),
-            ).then((_) => _loadData()),
+          TextButton(
+            onPressed: _showInviteSheet,
+            child: const Text(
+              '+ 추가',
+              style: TextStyle(
+                color: Color(0xFFFF7A7A),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: const Color(0xFFFF7A7A),
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFFFF7A7A),
-          tabs: [
-            Tab(text: '친구 (${_friends.length})'),
-            Tab(text: '요청 (${_pending.length})'),
-          ],
-        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [_buildFriendList(), _buildPendingList()],
+          : _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildMyCodeCard(),
+          const SizedBox(height: 24),
+          const Text(
+            '내 친구 목록',
+            style: TextStyle(
+              color: Color(0xFF191919),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          const SizedBox(height: 12),
+          _friends.isEmpty ? _buildEmptyState() : _buildFriendList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyCodeCard() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F0EC),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '내 친구 코드',
+            style: TextStyle(
+              color: Color(0xFF888888),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _user?.friendCode ?? '...',
+                  style: const TextStyle(
+                    color: Color(0xFF191919),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 6,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: _copyCode,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF191919),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    '코드 복사',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 60),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '아직 친구가 없어요',
+              style: TextStyle(
+                color: Color(0xFF191919),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '친구 코드를 입력하거나\n내 코드를 공유해보세요',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 14,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildFriendList() {
-    if (_friends.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.people_outline, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('아직 친구가 없어요', style: TextStyle(color: Colors.grey, fontSize: 16)),
-            SizedBox(height: 8),
-            Text('친구 코드로 친구를 추가해보세요',
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
-          ],
-        ),
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _friends.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final f = _friends[index];
-        return _FriendTile(nickname: f.nickname, email: f.email, imageUrl: f.imageUrl);
-      },
-    );
-  }
-
-  Widget _buildPendingList() {
-    if (_pending.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('받은 친구 요청이 없어요',
-                style: TextStyle(color: Colors.grey, fontSize: 16)),
-          ],
-        ),
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _pending.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final req = _pending[index];
-        return Card(
-          elevation: 0,
-          color: Colors.grey[50],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: const Color(0xFFFFE5E5),
-                  backgroundImage: req.imageUrl != null
-                      ? NetworkImage(req.imageUrl!)
-                      : null,
-                  child: req.imageUrl == null
-                      ? Text(req.nickname[0],
-                          style: const TextStyle(
-                              color: Color(0xFFFF7A7A),
-                              fontWeight: FontWeight.w700))
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(req.nickname,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 15)),
-                      Text(req.email,
-                          style: TextStyle(
-                              color: Colors.grey[600], fontSize: 13)),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => _acceptRequest(req.friendshipId),
-                  style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFFF7A7A)),
-                  child: const Text('수락'),
-                ),
-                TextButton(
-                  onPressed: () => _rejectRequest(req.friendshipId),
-                  style:
-                      TextButton.styleFrom(foregroundColor: Colors.grey),
-                  child: const Text('거절'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    return Column(
+      children: _friends.map((f) => _FriendTile(friend: f)).toList(),
     );
   }
 }
 
 class _FriendTile extends StatelessWidget {
-  final String nickname;
-  final String email;
-  final String? imageUrl;
+  final FriendInfo friend;
 
-  const _FriendTile(
-      {required this.nickname, required this.email, this.imageUrl});
+  const _FriendTile({required this.friend});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Colors.grey[50],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xFFFFE5E5),
-          backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
-          child: imageUrl == null
-              ? Text(nickname[0],
-                  style: const TextStyle(
-                      color: Color(0xFFFF7A7A), fontWeight: FontWeight.w700))
-              : null,
-        ),
-        title: Text(nickname,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(email, style: const TextStyle(fontSize: 13)),
+    final codeLabel = friend.friendCode != null ? '#${friend.friendCode}' : '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFF2F0EC),
+            ),
+            child: friend.imageUrl != null
+                ? ClipOval(
+                    child: Image.network(
+                      friend.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Text('🐶', style: TextStyle(fontSize: 22)),
+                      ),
+                    ),
+                  )
+                : const Center(
+                    child: Text('🐶', style: TextStyle(fontSize: 22)),
+                  ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                friend.nickname,
+                style: const TextStyle(
+                  color: Color(0xFF191919),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                codeLabel,
+                style: const TextStyle(
+                  color: Color(0xFF888888),
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

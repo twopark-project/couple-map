@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
@@ -46,7 +47,7 @@ class MemoryRepository {
       formData.files.add(MapEntry(
         'request',
         MultipartFile.fromString(
-          requestData.toString(),
+          jsonEncode(requestData),
           contentType: DioMediaType.parse('application/json'),
         ),
       ));

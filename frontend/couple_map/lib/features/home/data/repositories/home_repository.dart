@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/map_card_model.dart';
@@ -17,12 +19,29 @@ class HomeRepository {
     }
   }
 
-  // 지도 생성
-  Future<int> createMap(String accessToken, String mapName, String? description) async {
+  // 지도 생성 (multipart/form-data)
+  Future<int> createMap(
+    String accessToken,
+    String mapName,
+    String? description, [
+    File? backgroundImage,
+  ]) async {
     try {
+      final requestJson = jsonEncode({
+        'mapName': mapName,
+        if (description != null) 'description': description,
+      });
+      final formData = FormData.fromMap({
+        'request': MultipartFile.fromString(
+          requestJson,
+          contentType: DioMediaType('application', 'json'),
+        ),
+        if (backgroundImage != null)
+          'backgroundImage': await MultipartFile.fromFile(backgroundImage.path),
+      });
       final response = await DioClient.instance.post(
         '/api/map',
-        data: {'mapName': mapName, 'description': description},
+        data: formData,
         options: DioClient.authOptions(accessToken),
       );
       return response.data['data'] as int;
