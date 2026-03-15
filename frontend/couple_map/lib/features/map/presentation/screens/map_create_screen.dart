@@ -28,13 +28,16 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
   static const List<String> _categories = ['나 혼자', '친구들과', '연인과', '가족'];
 
   static const List<List<Color>> _gradients = [
-    [Color(0xFF667EEA), Color(0xFF764BA2)],
-    [Color(0xFFF093FB), Color(0xFFF5576C)],
     [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+    [Color(0xFF667EEA), Color(0xFF764BA2)],
     [Color(0xFF43E97B), Color(0xFF38F9D7)],
-    [Color(0xFFFFA751), Color(0xFFFFE259)],
-    [Color(0xFFFC466B), Color(0xFF3F5EFB)],
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -97,11 +100,11 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFBF7),
+      backgroundColor: const Color(0xFFFAF8F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFDFBF7),
+        backgroundColor: const Color(0xFFFAF8F5),
         elevation: 0,
-        surfaceTintColor: const Color(0xFFFDFBF7),
+        surfaceTintColor: const Color(0xFFFAF8F5),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
           onPressed: () => Navigator.pop(context),
@@ -144,44 +147,32 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                                 ),
                               ),
                         Container(color: Colors.black.withValues(alpha: 0.2)),
-                        // 카메라 버튼
-                        Positioned(
-                          bottom: 12,
-                          right: 12,
-                          child: GestureDetector(
-                            onTap: _pickCoverImage,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.45),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.camera_alt, color: Colors.white, size: 16),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    '커버 사진 변경',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                        // 커버 사진 변경 (정중앙)
+                        GestureDetector(
+                          onTap: _pickCoverImage,
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.camera_alt, color: Colors.white, size: 26),
+                                SizedBox(height: 6),
+                                Text(
+                                  '커버 사진 변경',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        // 그라디언트 선택 (이미지 없을 때만)
+                        // 그라디언트 선택 (이미지 없을 때만, 우하단)
                         if (_coverImage == null)
                           Positioned(
                             bottom: 12,
-                            left: 12,
+                            right: 12,
                             child: Row(
                               children: List.generate(_gradients.length, (i) {
                                 final isSelected = _selectedGradient == i;
@@ -190,7 +181,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                                   child: Container(
                                     width: 24,
                                     height: 24,
-                                    margin: const EdgeInsets.only(right: 6),
+                                    margin: const EdgeInsets.only(left: 6),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       gradient: LinearGradient(
@@ -250,10 +241,18 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                             hintText: '우정 여행 아카이브',
                             hintStyle: TextStyle(color: Colors.grey[400]),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: const Color(0xFFFAF8F5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFFF7A7A)),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -280,10 +279,18 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                             hintText: '짧은 설명 (예: 맛집 도장깨기)',
                             hintStyle: TextStyle(color: Colors.grey[400]),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: const Color(0xFFFAF8F5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFFF7A7A)),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -317,21 +324,19 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? const Color(0xFFFF7A7A)
-                                        : Colors.white,
+                                        ? const Color(0xFFFFF0F0)
+                                        : const Color(0xFFF1F3F5),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? const Color(0xFFFF7A7A)
-                                          : const Color(0xFFE0E0E0),
-                                    ),
+                                    border: isSelected
+                                        ? Border.all(color: const Color(0xFFFFB5B5))
+                                        : null,
                                   ),
                                   child: Text(
                                     cat,
                                     style: TextStyle(
                                       color: isSelected
-                                          ? Colors.white
-                                          : const Color(0xFF888888),
+                                          ? const Color(0xFFFFB5B5)
+                                          : const Color(0xFF868E96),
                                       fontSize: 14,
                                       fontWeight: isSelected
                                           ? FontWeight.w700
@@ -364,8 +369,9 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                               vertical: 14,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFFFAF8F5),
                               borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFECE8E4)),
                             ),
                             child: Text(
                               '${_startDate.year}. '
@@ -399,7 +405,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _isCreating ? null : _create,
+                onPressed: _isCreating || _nameController.text.trim().isEmpty ? null : _create,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF7A7A),
                   disabledBackgroundColor: const Color(0xFFFFB5B5),
