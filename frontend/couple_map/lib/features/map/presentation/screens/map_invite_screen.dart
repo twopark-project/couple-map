@@ -28,7 +28,10 @@ class _MapInviteScreenState extends ConsumerState<MapInviteScreen> {
 
   Future<void> _loadFriends() async {
     final auth = ref.read(authProvider);
-    if (auth is! AuthSuccess) return;
+    if (auth is! AuthSuccess) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
     try {
       final friends = await ref.read(friendRepositoryProvider).getFriendList(auth.token.accessToken);
       if (mounted) setState(() { _friends = friends; _isLoading = false; });
@@ -42,6 +45,7 @@ class _MapInviteScreenState extends ConsumerState<MapInviteScreen> {
     if (auth is! AuthSuccess) return;
     try {
       await ref.read(mapRepositoryProvider).inviteFriendToMap(auth.token.accessToken, widget.mapId, friendId);
+      if (!mounted) return;
       setState(() => _invitedIds.add(friendId));
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -65,7 +69,13 @@ class _MapInviteScreenState extends ConsumerState<MapInviteScreen> {
         surfaceTintColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
         title: const Text(
           '친구 초대',

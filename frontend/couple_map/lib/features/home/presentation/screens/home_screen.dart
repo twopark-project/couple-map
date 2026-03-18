@@ -90,6 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _openMapCreate() async {
     final result = await context.push('/map/create');
+    if (!mounted) return;
     if (result != null) _loadData();
   }
 
