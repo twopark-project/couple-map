@@ -42,7 +42,10 @@ class HomeRepository {
       final response = await DioClient.instance.post(
         '/api/map',
         data: formData,
-        options: DioClient.authOptions(accessToken),
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+          contentType: 'multipart/form-data',
+        ),
       );
       return response.data['data'] as int;
     } on DioException catch (e) {

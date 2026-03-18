@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -11,9 +12,7 @@ import 'dart:io';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../data/models/place_model.dart';
 import '../../../memory/data/models/memory_model.dart';
-import '../../../memory/data/repositories/memory_repository.dart';
-import '../../../memory/presentation/screens/memory_detail_screen.dart';
-import 'map_settings_screen.dart';
+import '../../../memory/domain/providers/memory_provider.dart';
 
 class MapDetailScreen extends ConsumerStatefulWidget {
   final int mapId;
@@ -37,7 +36,6 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
   KakaoMapController? mapController;
   final TextEditingController _searchController = TextEditingController();
   final Dio _dio = Dio();
-  final MemoryRepository _memoryRepo = MemoryRepository();
   final ImagePicker _imagePicker = ImagePicker();
 
   List<PlaceModel> _searchResults = [];
@@ -874,7 +872,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
         ...audios,
       ];
 
-      await _memoryRepo.createMemory(
+      await ref.read(memoryRepositoryProvider).createMemory(
         accessToken,
         widget.mapId,
         requestData,
@@ -951,7 +949,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
       if (auth is! AuthSuccess) return;
       final accessToken = auth.token.accessToken;
 
-      final memories = await _memoryRepo.getMemoryList(accessToken, widget.mapId);
+      final memories = await ref.read(memoryRepositoryProvider).getMemoryList(accessToken, widget.mapId);
 
       if (!mounted) return;
 
@@ -1128,15 +1126,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
                             mapController?.setLevel(3);
 
                             // 추억 상세 화면으로 이동
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MemoryDetailScreen(
-                                  mapId: widget.mapId,
-                                  memoryId: memory.memoryId,
-                                ),
-                              ),
-                            );
+                            context.push('/map/${widget.mapId}/memory/${memory.memoryId}');
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
@@ -1238,7 +1228,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
         surfaceTintColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           widget.mapName ?? '',
@@ -1252,16 +1242,13 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MapSettingsScreen(
-                  mapId: widget.mapId,
-                  mapName: widget.mapName ?? '',
-                  description: widget.description,
-                  memberCount: widget.memberCount,
-                ),
-              ),
+            onPressed: () => context.push(
+              '/map/${widget.mapId}/settings',
+              extra: {
+                'mapName': widget.mapName ?? '',
+                'description': widget.description,
+                'memberCount': widget.memberCount,
+              },
             ),
             child: const Text(
               '설정',

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
-import 'tutorial_screen.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -23,11 +22,7 @@ class LoginScreen extends ConsumerWidget {
           if (token.nicknameSet) {
             context.go('/home');
           } else {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => TutorialScreen(accessToken: token.accessToken),
-              ),
-            );
+            context.push('/tutorial', extra: token.accessToken);
           }
         });
       } else if (next is AuthError) {

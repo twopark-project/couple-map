@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
-import '../../../mypage/data/repositories/mypage_repository.dart';
+import '../../../mypage/domain/providers/mypage_provider.dart';
 import '../../data/repositories/friend_repository.dart';
+import '../../domain/providers/friend_provider.dart';
 import 'friend_invite_screen.dart';
 
 class FriendScreen extends ConsumerStatefulWidget {
@@ -15,9 +17,6 @@ class FriendScreen extends ConsumerStatefulWidget {
 }
 
 class _FriendScreenState extends ConsumerState<FriendScreen> {
-  final FriendRepository _friendRepo = FriendRepository();
-  final MypageRepository _mypageRepo = MypageRepository();
-
   List<FriendInfo> _friends = [];
   UserModel? _user;
   bool _isLoading = true;
@@ -34,8 +33,8 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
     final token = auth.token.accessToken;
     try {
       final results = await Future.wait([
-        _friendRepo.getFriendList(token),
-        _mypageRepo.getUserInfo(token),
+        ref.read(friendRepositoryProvider).getFriendList(token),
+        ref.read(mypageRepositoryProvider).getUserInfo(token),
       ]);
       if (mounted) {
         setState(() {
@@ -79,7 +78,7 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
         surfaceTintColor: const Color(0xFFFDFBF7),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '친구 관리',

@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../data/repositories/memory_repository.dart';
+import '../../domain/providers/memory_provider.dart';
 
 class MemoryCreateScreen extends ConsumerStatefulWidget {
   final int mapId;
@@ -26,7 +27,6 @@ class MemoryCreateScreen extends ConsumerStatefulWidget {
 class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
-  final MemoryRepository _repo = MemoryRepository();
   final ImagePicker _picker = ImagePicker();
 
   List<File> _selectedImages = [];
@@ -41,6 +41,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
 
   Future<void> _pickImages() async {
     final picked = await _picker.pickMultiImage();
+    if (!mounted) return;
     if (picked.isNotEmpty) {
       setState(() {
         _selectedImages = picked.map((x) => File(x.path)).toList();
@@ -68,14 +69,14 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
         if (widget.longitude != null) 'longitude': widget.longitude,
         'memoryDate': DateTime.now().toIso8601String().split('T').first,
       };
-      await _repo.createMemory(
+      await ref.read(memoryRepositoryProvider).createMemory(
         auth.token.accessToken,
         widget.mapId,
         requestData,
         _selectedImages.isNotEmpty ? _selectedImages : null,
       );
       if (mounted) {
-        Navigator.pop(context, true);
+        context.pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -97,7 +98,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
         surfaceTintColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Color(0xFF191919)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '추억 남기기',

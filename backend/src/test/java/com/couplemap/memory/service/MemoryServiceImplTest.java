@@ -9,6 +9,7 @@ import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
 import com.couplemap.mediaFile.repository.MediaFileRepository;
 import com.couplemap.memory.domain.Memory;
+import com.couplemap.memory.dto.CalendarMemoryResponseDto;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
 import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.UpdateMemoryRequestDto;
@@ -136,24 +137,12 @@ class MemoryServiceImplTest {
         }
         uploadedKeys.clear();
 
-        // DB 정리
-        try {
-            if (testMemory != null) memoryRepository.delete(testMemory);
-        } catch (Exception e) {
-        }
-        try {
-            mapMemberRepository.deleteAll();
-        } catch (Exception e) {
-        }
-        try {
-            if (testMap != null) mapRepository.delete(testMap);
-        } catch (Exception e) {
-        }
-        try {
-            if (testUser != null) userRepository.delete(testUser);
-            if (anotherUser != null) userRepository.delete(anotherUser);
-        } catch (Exception e) {
-        }
+        // DB 정리 (FK 순서: mediaFile → memory → mapMember → map → user)
+        mediaFileRepository.deleteAll();
+        memoryRepository.deleteAll();
+        mapMemberRepository.deleteAll();
+        mapRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -353,5 +342,105 @@ class MemoryServiceImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getMemoryId()).isEqualTo(testMemory.getMemoryId());
         assertThat(result.getTitle()).isEqualTo("테스트 추억");
+    }
+
+    @Test
+    @DisplayName("캘린더 추억 조회 성공 - 해당 연도 추억만 반환")
+    void getCalendarMemories_Success() {
+        // given - 2024년 추억 추가
+        CreateMemoryRequestDto request2024 = new CreateMemoryRequestDto(
+                "2024 추억",
+                "2024 내용",
+                "2024 장소",
+                LocalDate.of(2024, 6, 15),
+                new BigDecimal("37.1234"),
+                new BigDecimal("127.5678")
+        );
+        memoryService.createMemory(testMap.getMapId(), request2024, null, testUser.getUserId());
+
+        // 2025년 추억 추가
+        CreateMemoryRequestDto request2025 = new CreateMemoryRequestDto(
+                "2025 추억",
+                "2025 내용",
+                "2025 장소",
+                LocalDate.of(2025, 3, 10),
+                new BigDecimal("37.5555"),
+                new BigDecimal("126.9999")
+        );
+        memoryService.createMemory(testMap.getMapId(), request2025, null, testUser.getUserId());
+
+        // when - 2024년 조회 (setUp의 testMemory도 2024-01-01)
+        List<CalendarMemoryResponseDto> result = memoryService.getCalendarMemories(2024, testUser.getUserId());
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting("title")
+                .containsExactlyInAnyOrder("테스트 추억", "2024 추억");
+        assertThat(result).allSatisfy(dto -> {
+            assertThat(dto.getMemoryDate().getYear()).isEqualTo(2024);
+            assertThat(dto.getMapId()).isEqualTo(testMap.getMapId());
+        });
+    }
+
+    @Test
+    @DisplayName("캘린더 추억 조회 - 해당 연도에 추억이 없으면 빈 리스트 반환")
+    void getCalendarMemories_EmptyYear() {
+        // when - 2030년 조회
+        List<CalendarMemoryResponseDto> result = memoryService.getCalendarMemories(2030, testUser.getUserId());
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("캘린더 추억 조회 - 여러 지도의 추억을 모두 반환")
+    void getCalendarMemories_MultipleMapMemories() {
+        // given - 두 번째 맵 생성
+        Map secondMap = Map.from("두번째맵", "두번째 설명");
+        secondMap = mapRepository.save(secondMap);
+        MapMember secondMapMember = MapMember.from(secondMap, testUser, MapMemberRole.OWNER);
+        mapMemberRepository.save(secondMapMember);
+
+        CreateMemoryRequestDto request = new CreateMemoryRequestDto(
+                "두번째맵 추억",
+                "두번째맵 내용",
+                "두번째맵 장소",
+                LocalDate.of(2024, 7, 20),
+                new BigDecimal("35.1234"),
+                new BigDecimal("129.5678")
+        );
+        memoryService.createMemory(secondMap.getMapId(), request, null, testUser.getUserId());
+
+        // when - 2024년 조회
+        List<CalendarMemoryResponseDto> result = memoryService.getCalendarMemories(2024, testUser.getUserId());
+
+        // then - testMap(2024-01-01) + secondMap(2024-07-20)
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting("title")
+                .containsExactlyInAnyOrder("테스트 추억", "두번째맵 추억");
+    }
+
+    @Test
+    @DisplayName("캘린더 추억 조회 - PENDING 멤버는 해당 맵 추억 조회 불가")
+    void getCalendarMemories_PendingMemberExcluded() {
+        // given - notMemberUser를 PENDING으로 추가
+        User pendingUser = User.builder()
+                .email("pending@example.com")
+                .name("펜딩유저")
+                .friendCode("PEND1234")
+                .providerId("PEND12341")
+                .loginType("KAKAO")
+                .role(UserRole.USER)
+                .build();
+        pendingUser = userRepository.save(pendingUser);
+
+        MapMember pendingMember = MapMember.from(testMap, pendingUser, MapMemberRole.PENDING);
+        mapMemberRepository.save(pendingMember);
+
+        // when
+        List<CalendarMemoryResponseDto> result = memoryService.getCalendarMemories(2024, pendingUser.getUserId());
+
+        // then - PENDING 멤버는 추억 조회 불가
+        assertThat(result).isEmpty();
     }
 }

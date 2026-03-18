@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -28,7 +29,7 @@ class AppBarWidget extends StatelessWidget {
         children: [
           if (showBack)
             GestureDetector(
-              onTap: onBack ?? () => Navigator.pop(context),
+              onTap: onBack ?? () => context.pop(),
               child: const Icon(Icons.arrow_back_ios,
                   color: AppColors.textLight, size: 20),
             )

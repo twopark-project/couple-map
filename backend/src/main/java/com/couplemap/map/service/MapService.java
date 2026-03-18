@@ -21,4 +21,6 @@ public interface MapService {
     void deleteMap(Long mapId, Long userId);
 
     void updateMap(Long mapId, UpdateMapRequestDto request, MultipartFile backgroundImage, Long userId);
+
+    List<MapMemberDto> getMapMembers(Long mapId, Long userId);
 }

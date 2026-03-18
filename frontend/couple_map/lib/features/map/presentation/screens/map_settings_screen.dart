@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../data/repositories/map_repository.dart';
-import 'map_member_screen.dart';
+import '../../domain/providers/map_provider.dart';
 
 class MapSettingsScreen extends ConsumerStatefulWidget {
   final int mapId;
@@ -23,8 +23,6 @@ class MapSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
-  final MapRepository _repo = MapRepository();
-
   bool _isEditMode = false;
   bool _isSaving = false;
 
@@ -52,7 +50,7 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
     if (auth is! AuthSuccess) return;
     setState(() => _isSaving = true);
     try {
-      await _repo.updateMap(
+      await ref.read(mapRepositoryProvider).updateMap(
         auth.token.accessToken,
         widget.mapId,
         name,
@@ -103,8 +101,8 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     try {
-      await _repo.deleteMap(auth.token.accessToken, widget.mapId);
-      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
+      await ref.read(mapRepositoryProvider).deleteMap(auth.token.accessToken, widget.mapId);
+      if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -123,7 +121,7 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
         surfaceTintColor: const Color(0xFFFDFBF7),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '지도 설정',
@@ -199,22 +197,12 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
               _buildNavRow(
                 label: '참여 멤버',
                 trailing: '${widget.memberCount}명',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MapMemberScreen(mapId: widget.mapId),
-                  ),
-                ),
+                onTap: () => context.push('/map/${widget.mapId}/members'),
               ),
               _buildDivider(),
               _buildNavRow(
                 label: '친구 초대',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MapMemberScreen(mapId: widget.mapId),
-                  ),
-                ),
+                onTap: () => context.push('/map/${widget.mapId}/invite'),
               ),
             ]),
 

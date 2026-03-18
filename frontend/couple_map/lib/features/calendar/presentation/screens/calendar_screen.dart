@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../../auth/data/repositories/auth_repository.dart';
-import '../../../home/data/repositories/home_repository.dart';
-import '../../../memory/data/models/memory_model.dart';
-import '../../../memory/data/repositories/memory_repository.dart';
-import '../../../memory/presentation/screens/memory_detail_screen.dart';
-
-// ─── 내부 데이터 클래스 ──────────────────────────────────────────────────────
-class _MemoryEntry {
-  final int mapId;
-  final MemorySummary summary;
-
-  _MemoryEntry({required this.mapId, required this.summary});
-}
+import '../../data/repositories/calendar_repository.dart';
+import '../../domain/providers/calendar_provider.dart';
 
 // ─── 캘린더 스크린 ──────────────────────────────────────────────────────────
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -24,15 +14,11 @@ class CalendarScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
-  final HomeRepository _homeRepo = HomeRepository();
-  final MemoryRepository _memoryRepo = MemoryRepository();
-  final AuthRepository _authRepo = AuthRepository();
-
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime _selectedDate = DateTime.now();
 
   // 날짜 키 → 추억 리스트
-  Map<String, List<_MemoryEntry>> _memoryMap = {};
+  Map<String, List<CalendarMemory>> _memoryMap = {};
   bool _isLoading = true;
 
   static const _emojis = [
@@ -49,42 +35,33 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAllMemories();
+    _loadMemories();
   }
 
   Future<String?> _getToken() async {
     final auth = ref.read(authProvider);
     if (auth is AuthSuccess) return auth.token.accessToken;
-    return await _authRepo.getAccessToken();
+    return await ref.read(authRepositoryProvider).getAccessToken();
   }
 
-  Future<void> _loadAllMemories() async {
+  Future<void> _loadMemories({bool forceRefresh = false}) async {
     setState(() => _isLoading = true);
     try {
       final token = await _getToken();
       if (token == null) return;
 
-      final maps = await _homeRepo.getMapList(token);
+      final calendarRepo = ref.read(calendarRepositoryProvider);
+      final memories = await calendarRepo.getCalendarMemories(
+        token,
+        _currentMonth.year,
+        forceRefresh: forceRefresh,
+      );
 
-      // 모든 지도의 추억을 병렬로 로드
-      final futures = maps.map((m) async {
-        try {
-          final memories = await _memoryRepo.getMemoryList(token, m.mapId);
-          return memories.map((s) => _MemoryEntry(mapId: m.mapId, summary: s));
-        } catch (_) {
-          return <_MemoryEntry>[];
-        }
-      });
-
-      final results = await Future.wait(futures);
-      final newMap = <String, List<_MemoryEntry>>{};
-
-      for (final entries in results) {
-        for (final entry in entries) {
-          if (entry.summary.memoryDate == null) continue;
-          final key = _dateKey(entry.summary.memoryDate!);
-          newMap.putIfAbsent(key, () => []).add(entry);
-        }
+      final newMap = <String, List<CalendarMemory>>{};
+      for (final memory in memories) {
+        if (memory.memoryDate == null) continue;
+        final key = _dateKey(memory.memoryDate!);
+        newMap.putIfAbsent(key, () => []).add(memory);
       }
 
       if (mounted) {
@@ -101,7 +78,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   String _dateKey(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-  List<_MemoryEntry> get _selectedEntries =>
+  List<CalendarMemory> get _selectedEntries =>
       _memoryMap[_dateKey(_selectedDate)] ?? [];
 
   int get _monthMemoryCount {
@@ -120,6 +97,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   bool _hasMemory(DateTime date) =>
       (_memoryMap[_dateKey(date)] ?? []).isNotEmpty;
 
+  void _changeMonth(int delta) {
+    final newMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month + delta,
+    );
+    final yearChanged = newMonth.year != _currentMonth.year;
+    setState(() {
+      _currentMonth = newMonth;
+      _selectedDate = DateTime(newMonth.year, newMonth.month, 1);
+    });
+    if (yearChanged) {
+      _loadMemories();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,7 +127,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Expanded(
                     child: RefreshIndicator(
                       color: const Color(0xFFFF8E8E),
-                      onRefresh: _loadAllMemories,
+                      onRefresh: () => _loadMemories(forceRefresh: true),
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: Padding(
@@ -157,7 +149,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                   ),
                 ],
-              ),
+            ),
       ),
     );
   }
@@ -191,14 +183,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () => setState(() {
-                _currentMonth = DateTime(
-                  _currentMonth.year,
-                  _currentMonth.month - 1,
-                );
-                _selectedDate =
-                    DateTime(_currentMonth.year, _currentMonth.month, 1);
-              }),
+              onTap: () => _changeMonth(-1),
               child: Container(
                 width: 32,
                 height: 32,
@@ -221,14 +206,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             const SizedBox(width: 16),
             GestureDetector(
-              onTap: () => setState(() {
-                _currentMonth = DateTime(
-                  _currentMonth.year,
-                  _currentMonth.month + 1,
-                );
-                _selectedDate =
-                    DateTime(_currentMonth.year, _currentMonth.month, 1);
-              }),
+              onTap: () => _changeMonth(1),
               child: Container(
                 width: 32,
                 height: 32,
@@ -464,8 +442,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  Widget _buildMemoryTile(_MemoryEntry entry) {
-    final s = entry.summary;
+  Widget _buildMemoryTile(CalendarMemory memory) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -483,44 +460,35 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => MemoryDetailScreen(
-                mapId: entry.mapId,
-                memoryId: s.memoryId,
-              ),
-            ),
-          ),
+          onTap: () => context.push('/map/${memory.mapId}/memory/${memory.memoryId}'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                // 이모지 or 썸네일
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: s.thumbnailUrl != null
+                    color: memory.thumbnailUrl != null
                         ? Colors.transparent
-                        : _bgColor(s.memoryId),
+                        : _bgColor(memory.memoryId),
                     shape: BoxShape.circle,
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: s.thumbnailUrl != null
+                  child: memory.thumbnailUrl != null
                       ? Image.network(
-                          s.thumbnailUrl!,
+                          memory.thumbnailUrl!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Center(
                             child: Text(
-                              _emoji(s.memoryId),
+                              _emoji(memory.memoryId),
                               style: const TextStyle(fontSize: 20),
                             ),
                           ),
                         )
                       : Center(
                           child: Text(
-                            _emoji(s.memoryId),
+                            _emoji(memory.memoryId),
                             style: const TextStyle(fontSize: 20),
                           ),
                         ),
@@ -531,7 +499,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        s.title,
+                        memory.title,
                         style: const TextStyle(
                           fontFamily: 'NotoSansKR',
                           fontSize: 14,
@@ -543,7 +511,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        s.placeName,
+                        memory.placeName,
                         style: const TextStyle(
                           fontFamily: 'NotoSansKR',
                           fontSize: 12,

@@ -23,6 +23,29 @@ class MapModel {
   }
 }
 
+class MapMemberInfo {
+  final int userId;
+  final String nickname;
+  final String? profileImageUrl;
+  final String role;
+
+  const MapMemberInfo({
+    required this.userId,
+    required this.nickname,
+    this.profileImageUrl,
+    required this.role,
+  });
+
+  factory MapMemberInfo.fromJson(Map<String, dynamic> json) {
+    return MapMemberInfo(
+      userId: json['userId'] as int,
+      nickname: json['nickname'] as String,
+      profileImageUrl: json['profileImageUrl'] as String?,
+      role: json['role'] as String,
+    );
+  }
+}
+
 class MapInvitation {
   final int mapMemberId;
   final String mapName;

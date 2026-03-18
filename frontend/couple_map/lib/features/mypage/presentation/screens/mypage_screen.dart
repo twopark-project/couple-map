@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../../auth/data/repositories/auth_repository.dart';
 import '../../../auth/data/models/user_model.dart';
-import '../../../friend/data/repositories/friend_repository.dart';
-import '../../data/repositories/mypage_repository.dart';
-import '../../../home/data/repositories/home_repository.dart';
-import 'profile_edit_screen.dart';
-import '../../../friend/presentation/screens/friend_screen.dart';
+import '../../../friend/domain/providers/friend_provider.dart';
+import '../../domain/providers/mypage_provider.dart';
+import '../../../home/domain/providers/home_provider.dart';
 
 class MypageScreen extends ConsumerStatefulWidget {
   final VoidCallback? onLogout;
@@ -20,11 +18,6 @@ class MypageScreen extends ConsumerStatefulWidget {
 }
 
 class _MypageScreenState extends ConsumerState<MypageScreen> {
-  final MypageRepository _mypageRepo = MypageRepository();
-  final HomeRepository _homeRepo = HomeRepository();
-  final FriendRepository _friendRepo = FriendRepository();
-  final AuthRepository _authRepo = AuthRepository();
-
   UserModel? _user;
   int _mapCount = 0;
   int _friendCount = 0;
@@ -39,7 +32,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
   Future<String?> _getToken() async {
     final auth = ref.read(authProvider);
     if (auth is AuthSuccess) return auth.token.accessToken;
-    return await _authRepo.getAccessToken();
+    return await ref.read(authRepositoryProvider).getAccessToken();
   }
 
   Future<void> _loadData() async {
@@ -49,9 +42,9 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
       if (token == null) return;
 
       final results = await Future.wait([
-        _mypageRepo.getUserInfo(token),
-        _homeRepo.getMapList(token),
-        _friendRepo.getFriendList(token),
+        ref.read(mypageRepositoryProvider).getUserInfo(token),
+        ref.read(homeRepositoryProvider).getMapList(token),
+        ref.read(friendRepositoryProvider).getFriendList(token),
       ]);
 
       if (mounted) {
@@ -70,7 +63,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
   Future<void> _logout() async {
     try {
       final token = await _getToken();
-      if (token != null) await _authRepo.logout(token);
+      if (token != null) await ref.read(authRepositoryProvider).logout(token);
     } catch (_) {}
     ref.read(authProvider.notifier).reset();
     widget.onLogout?.call();
@@ -254,18 +247,14 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
           _MenuRow(
             label: '프로필 수정',
             hasBorder: true,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ProfileEditScreen(user: user)),
-            ).then((_) => _loadData()),
+            onTap: () => context.push('/profile/edit', extra: user)
+                .then((_) => _loadData()),
           ),
           _MenuRow(
             label: '친구 관리',
             hasBorder: true,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FriendScreen()),
-            ).then((_) => _loadData()),
+            onTap: () => context.push('/friends')
+                .then((_) => _loadData()),
           ),
           _MenuRow(label: '알림 설정', hasBorder: false, onTap: null),
         ],

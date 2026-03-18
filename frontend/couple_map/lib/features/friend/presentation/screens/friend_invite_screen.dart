@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../data/repositories/friend_repository.dart';
+import '../../domain/providers/friend_provider.dart';
 
 class FriendInviteSheet extends ConsumerStatefulWidget {
   final VoidCallback? onAdded;
@@ -14,7 +14,6 @@ class FriendInviteSheet extends ConsumerStatefulWidget {
 
 class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
   final TextEditingController _codeController = TextEditingController();
-  final FriendRepository _repo = FriendRepository();
   bool _isSending = false;
 
   @override
@@ -30,7 +29,7 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
     if (auth is! AuthSuccess) return;
     setState(() => _isSending = true);
     try {
-      await _repo.sendFriendRequest(auth.token.accessToken, code);
+      await ref.read(friendRepositoryProvider).sendFriendRequest(auth.token.accessToken, code);
       if (mounted) {
         Navigator.pop(context);
         widget.onAdded?.call();

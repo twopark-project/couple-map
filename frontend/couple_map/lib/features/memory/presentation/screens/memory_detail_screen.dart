@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../data/models/memory_model.dart';
-import '../../data/repositories/memory_repository.dart';
+import '../../domain/providers/memory_provider.dart';
 
 class MemoryDetailScreen extends ConsumerStatefulWidget {
   final int mapId;
@@ -19,7 +20,6 @@ class MemoryDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _MemoryDetailScreenState extends ConsumerState<MemoryDetailScreen> {
-  final MemoryRepository _repo = MemoryRepository();
   MemoryModel? _memory;
   bool _isLoading = true;
   String? _error;
@@ -35,7 +35,7 @@ class _MemoryDetailScreenState extends ConsumerState<MemoryDetailScreen> {
     if (authState is! AuthSuccess) return;
     final accessToken = authState.token.accessToken;
     try {
-      final memory = await _repo.getMemoryDetail(
+      final memory = await ref.read(memoryRepositoryProvider).getMemoryDetail(
           accessToken, widget.mapId, widget.memoryId);
       if (mounted) {
         setState(() {
@@ -63,7 +63,7 @@ class _MemoryDetailScreenState extends ConsumerState<MemoryDetailScreen> {
         surfaceTintColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '추억 상세',

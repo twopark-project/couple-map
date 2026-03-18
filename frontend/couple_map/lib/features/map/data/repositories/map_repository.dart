@@ -87,6 +87,20 @@ class MapRepository {
     }
   }
 
+  // 지도 멤버 목록 조회
+  Future<List<MapMemberInfo>> getMapMembers(String accessToken, int mapId) async {
+    try {
+      final response = await DioClient.instance.get(
+        '/api/map/$mapId/members',
+        options: DioClient.authOptions(accessToken),
+      );
+      final data = response.data['data'] as List;
+      return data.map((json) => MapMemberInfo.fromJson(json as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
   // 지도 삭제
   Future<void> deleteMap(String accessToken, int mapId) async {
     try {
