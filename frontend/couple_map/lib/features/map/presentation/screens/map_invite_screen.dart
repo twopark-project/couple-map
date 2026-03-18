@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../../friend/data/repositories/friend_repository.dart';
-import '../../data/repositories/map_repository.dart';
+import '../../../friend/domain/providers/friend_provider.dart';
+import '../../domain/providers/map_provider.dart';
 
-class MapMemberScreen extends ConsumerStatefulWidget {
+class MapInviteScreen extends ConsumerStatefulWidget {
   final int mapId;
 
-  const MapMemberScreen({super.key, required this.mapId});
+  const MapInviteScreen({super.key, required this.mapId});
 
   @override
-  ConsumerState<MapMemberScreen> createState() => _MapMemberScreenState();
+  ConsumerState<MapInviteScreen> createState() => _MapInviteScreenState();
 }
 
-class _MapMemberScreenState extends ConsumerState<MapMemberScreen> {
-  final MapRepository _mapRepo = MapRepository();
-  final FriendRepository _friendRepo = FriendRepository();
+class _MapInviteScreenState extends ConsumerState<MapInviteScreen> {
   List<FriendInfo> _friends = [];
   final Set<int> _invitedIds = {};
   bool _isLoading = true;
@@ -30,7 +30,7 @@ class _MapMemberScreenState extends ConsumerState<MapMemberScreen> {
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     try {
-      final friends = await _friendRepo.getFriendList(auth.token.accessToken);
+      final friends = await ref.read(friendRepositoryProvider).getFriendList(auth.token.accessToken);
       if (mounted) setState(() { _friends = friends; _isLoading = false; });
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -41,7 +41,7 @@ class _MapMemberScreenState extends ConsumerState<MapMemberScreen> {
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     try {
-      await _mapRepo.inviteFriendToMap(auth.token.accessToken, widget.mapId, friendId);
+      await ref.read(mapRepositoryProvider).inviteFriendToMap(auth.token.accessToken, widget.mapId, friendId);
       setState(() => _invitedIds.add(friendId));
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -65,7 +65,7 @@ class _MapMemberScreenState extends ConsumerState<MapMemberScreen> {
         surfaceTintColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '친구 초대',

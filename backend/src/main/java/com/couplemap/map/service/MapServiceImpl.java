@@ -191,6 +191,17 @@ public class MapServiceImpl implements MapService {
     }
 
     @Override
+    public List<MapMemberDto> getMapMembers(Long mapId, Long userId) {
+        mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
+                .filter(m -> m.getMapMemberRole() != MapMemberRole.PENDING)
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
+
+        return mapMemberRepository.findAllByMap_MapIdAndMapMemberRoleNot(mapId, MapMemberRole.PENDING).stream()
+                .map(MapMemberDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<MapInvitationDto> getInvitationList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));

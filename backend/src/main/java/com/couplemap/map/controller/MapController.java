@@ -59,6 +59,14 @@ public class MapController {
         return ResponseEntity.ok(ApiResponse.success(mapList, "지도 목록 조회가 완료되었습니다."));
     }
 
+    @Operation(summary = "지도 멤버 목록 조회")
+    @GetMapping("/{mapId}/members")
+    public ResponseEntity<ApiResponse<List<MapMemberDto>>> getMapMembers(@PathVariable Long mapId,
+                                                                         @AuthenticationPrincipal(expression = "userId") Long userId) {
+        List<MapMemberDto> members = mapService.getMapMembers(mapId, userId);
+        return ResponseEntity.ok(ApiResponse.success(members, "지도 멤버 목록 조회가 완료되었습니다."));
+    }
+
     @Operation(summary = "지도에 친구 초대")
     @PostMapping("/{mapId}/invite")
     public ResponseEntity<ApiResponse<Void>> inviteFriend(@PathVariable Long mapId,
