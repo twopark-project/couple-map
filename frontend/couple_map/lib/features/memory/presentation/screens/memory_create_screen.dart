@@ -41,6 +41,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
 
   Future<void> _pickImages() async {
     final picked = await _picker.pickMultiImage();
+    if (!mounted) return;
     if (picked.isNotEmpty) {
       setState(() {
         _selectedImages = picked.map((x) => File(x.path)).toList();

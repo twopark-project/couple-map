@@ -103,7 +103,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         child: Row(
           children: [
             GestureDetector(
-              onTap: () => context.pop(),
+              onTap: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
               child: const Text(
                 '◀',
                 style: TextStyle(fontSize: 20, color: Color(0xFFAAAAAA)),
