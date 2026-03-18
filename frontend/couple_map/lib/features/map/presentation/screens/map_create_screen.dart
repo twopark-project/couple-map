@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../../home/data/repositories/home_repository.dart';
+import '../../../home/domain/providers/home_provider.dart';
 
 class MapCreateScreen extends ConsumerStatefulWidget {
   const MapCreateScreen({super.key});
@@ -16,7 +17,6 @@ class MapCreateScreen extends ConsumerStatefulWidget {
 class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
-  final HomeRepository _repo = HomeRepository();
   final ImagePicker _picker = ImagePicker();
 
   File? _coverImage;
@@ -80,13 +80,13 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
     if (auth is! AuthSuccess) return;
     setState(() => _isCreating = true);
     try {
-      final mapId = await _repo.createMap(
+      final mapId = await ref.read(homeRepositoryProvider).createMap(
         auth.token.accessToken,
         name,
         _descController.text.trim().isNotEmpty ? _descController.text.trim() : null,
         _coverImage,
       );
-      if (mounted) Navigator.pop(context, mapId);
+      if (mounted) context.pop(mapId);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -107,7 +107,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
         surfaceTintColor: const Color(0xFFFAF8F5),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '지도 만들기',

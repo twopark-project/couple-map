@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/place_model.dart';
 
 class PlaceSearchScreen extends StatefulWidget {
@@ -60,7 +61,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
   }
 
   void _select(PlaceModel place) {
-    Navigator.pop(context, {
+    context.pop({
       'name': place.placeName,
       'latitude': double.tryParse(place.y) ?? 37.5665,
       'longitude': double.tryParse(place.x) ?? 126.9780,
@@ -77,7 +78,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
         surfaceTintColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF191919)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: TextField(
           controller: _controller,

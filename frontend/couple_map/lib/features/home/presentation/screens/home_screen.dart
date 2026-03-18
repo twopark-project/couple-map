@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-import '../../../auth/data/repositories/auth_repository.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
-import '../../../mypage/data/repositories/mypage_repository.dart';
+import '../../../mypage/domain/providers/mypage_provider.dart';
 import '../../data/models/map_card_model.dart';
-import '../../data/repositories/home_repository.dart';
-import '../../../map/presentation/screens/map_detail_screen.dart';
-import '../../../map/presentation/screens/map_create_screen.dart';
-import '../../../notification/presentation/screens/notification_screen.dart';
+import '../../domain/providers/home_provider.dart';
 import '../../../mypage/presentation/screens/mypage_screen.dart';
 import '../../../calendar/presentation/screens/calendar_screen.dart';
 import '../widgets/map_card_widget.dart';
@@ -23,10 +20,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final HomeRepository _homeRepository = HomeRepository();
-  final AuthRepository _authRepository = AuthRepository();
-  final MypageRepository _mypageRepository = MypageRepository();
-
   int _currentIndex = 0;
   UserModel? _userInfo;
   List<MapCardModel> _mapList = [];
@@ -55,7 +48,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<String?> _getToken() async {
     final authState = ref.read(authProvider);
     if (authState is AuthSuccess) return authState.token.accessToken;
-    return await _authRepository.getAccessToken();
+    return await ref.read(authRepositoryProvider).getAccessToken();
   }
 
   Future<void> _loadData() async {
@@ -68,8 +61,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (token == null) throw '로그인 정보가 없습니다.';
 
       final results = await Future.wait([
-        _mypageRepository.getUserInfo(token),
-        _homeRepository.getMapList(token),
+        ref.read(mypageRepositoryProvider).getUserInfo(token),
+        ref.read(homeRepositoryProvider).getMapList(token),
       ]);
 
       if (mounted) {
@@ -92,20 +85,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _openNotifications() async {
     final token = await _getToken();
     if (!mounted || token == null) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => NotificationScreen(accessToken: token),
-      ),
-    );
+    context.push('/notifications', extra: token);
   }
 
   Future<void> _openMapCreate() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const MapCreateScreen()),
-    );
-    if (result == true) _loadData();
+    final result = await context.push('/map/create');
+    if (result != null) _loadData();
   }
 
   void _handleLogout() {
@@ -176,17 +161,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: MapCardWidget(
                       map: _mapList[i],
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              MapDetailScreen(
-                                mapId: _mapList[i].mapId,
-                                mapName: _mapList[i].mapName,
-                                description: _mapList[i].description,
-                                memberCount: _mapList[i].memberCount,
-                              ),
-                        ),
+                      onTap: () => context.push(
+                        '/map/${_mapList[i].mapId}',
+                        extra: {
+                          'mapName': _mapList[i].mapName,
+                          'description': _mapList[i].description,
+                          'memberCount': _mapList[i].memberCount,
+                        },
                       ).then((_) => _loadData()),
                     ),
                   ),

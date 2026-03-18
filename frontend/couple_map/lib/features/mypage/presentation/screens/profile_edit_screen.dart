@@ -2,10 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
-import '../../data/repositories/mypage_repository.dart';
+import '../../domain/providers/mypage_provider.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   final UserModel user;
@@ -18,7 +19,6 @@ class ProfileEditScreen extends ConsumerStatefulWidget {
 
 class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   late final TextEditingController _nicknameController;
-  final MypageRepository _repo = MypageRepository();
   bool _isSaving = false;
   File? _pickedImage;
 
@@ -64,9 +64,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (auth is! AuthSuccess) return;
     setState(() => _isSaving = true);
     try {
-      await _repo.updateNickname(auth.token.accessToken, nickname);
+      await ref.read(mypageRepositoryProvider).updateNickname(auth.token.accessToken, nickname);
       if (_pickedImage != null) {
-        await _repo.uploadProfileImage(auth.token.accessToken, _pickedImage!);
+        await ref.read(mypageRepositoryProvider).uploadProfileImage(auth.token.accessToken, _pickedImage!);
       }
       if (mounted) {
         setState(() => _pickedImage = null);
@@ -104,7 +104,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           '프로필 수정',

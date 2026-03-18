@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/notification_model.dart';
 import '../../domain/providers/notification_provider.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../friend/data/repositories/friend_repository.dart';
+import '../../../friend/domain/providers/friend_provider.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   final String accessToken;
@@ -16,8 +17,6 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
-  final FriendRepository _friendRepository = FriendRepository();
-
   @override
   void initState() {
     super.initState();
@@ -31,9 +30,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     try {
       if (friendshipId != null) {
         if (accepted) {
-          await _friendRepository.acceptFriendRequest(widget.accessToken, friendshipId);
+          await ref.read(friendRepositoryProvider).acceptFriendRequest(widget.accessToken, friendshipId);
         } else {
-          await _friendRepository.rejectFriendRequest(widget.accessToken, friendshipId);
+          await ref.read(friendRepositoryProvider).rejectFriendRequest(widget.accessToken, friendshipId);
         }
       } else if (mapMemberId != null) {
         final action = accepted ? 'accept' : 'reject';
@@ -104,7 +103,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         child: Row(
           children: [
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () => context.pop(),
               child: const Text(
                 '◀',
                 style: TextStyle(fontSize: 20, color: Color(0xFFAAAAAA)),

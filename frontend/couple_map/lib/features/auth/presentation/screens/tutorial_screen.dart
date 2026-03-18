@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../common/widgets/primary_button.dart';
-import 'terms_screen.dart';
 
 class TutorialScreen extends StatefulWidget {
   final String accessToken;
@@ -41,11 +41,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
   }
 
   void _goToTerms() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => TermsScreen(accessToken: widget.accessToken),
-      ),
-    );
+    context.go('/terms', extra: widget.accessToken);
   }
 
   @override

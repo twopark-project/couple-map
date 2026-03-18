@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../data/models/memory_model.dart';
-import '../../data/repositories/memory_repository.dart';
+import '../../domain/providers/memory_provider.dart';
 
 class PhotoGalleryScreen extends ConsumerStatefulWidget {
   final int mapId;
@@ -19,7 +19,6 @@ class PhotoGalleryScreen extends ConsumerStatefulWidget {
 }
 
 class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
-  final MemoryRepository _repo = MemoryRepository();
   List<MediaFile> _images = [];
   bool _isLoading = true;
   int _currentIndex = 0;
@@ -34,7 +33,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     try {
-      final memory = await _repo.getMemoryDetail(
+      final memory = await ref.read(memoryRepositoryProvider).getMemoryDetail(
         auth.token.accessToken,
         widget.mapId,
         widget.memoryId,

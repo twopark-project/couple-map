@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../common/widgets/app_bar_widget.dart';
 import '../../../../common/widgets/primary_button.dart';
-import 'profile_setup_screen.dart';
 
 class TermsScreen extends StatefulWidget {
   final String accessToken;
@@ -38,11 +38,7 @@ class _TermsScreenState extends State<TermsScreen> {
 
   void _onNext() {
     if (!_canProceed) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ProfileSetupScreen(accessToken: widget.accessToken),
-      ),
-    );
+    context.go('/profile-setup', extra: widget.accessToken);
   }
 
   @override
