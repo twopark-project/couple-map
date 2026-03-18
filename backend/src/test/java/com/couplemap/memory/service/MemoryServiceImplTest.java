@@ -137,24 +137,12 @@ class MemoryServiceImplTest {
         }
         uploadedKeys.clear();
 
-        // DB 정리
-        try {
-            if (testMemory != null) memoryRepository.delete(testMemory);
-        } catch (Exception e) {
-        }
-        try {
-            mapMemberRepository.deleteAll();
-        } catch (Exception e) {
-        }
-        try {
-            if (testMap != null) mapRepository.delete(testMap);
-        } catch (Exception e) {
-        }
-        try {
-            if (testUser != null) userRepository.delete(testUser);
-            if (anotherUser != null) userRepository.delete(anotherUser);
-        } catch (Exception e) {
-        }
+        // DB 정리 (FK 순서: mediaFile → memory → mapMember → map → user)
+        mediaFileRepository.deleteAll();
+        memoryRepository.deleteAll();
+        mapMemberRepository.deleteAll();
+        mapRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
