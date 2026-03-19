@@ -93,6 +93,7 @@ flutter:
   assets:
     - .env
     - assets/fonts/
+    - assets/images/covers/
 
   fonts:
     - family: Gaegu
