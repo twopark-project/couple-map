@@ -64,12 +64,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (auth is! AuthSuccess) return;
     setState(() => _isSaving = true);
     try {
-      await ref.read(mypageRepositoryProvider).updateNickname(auth.token.accessToken, nickname);
+      final updatedNickname = await ref.read(mypageRepositoryProvider).updateNickname(auth.token.accessToken, nickname);
+      String? updatedImageUrl = widget.user.profileImageUrl;
       if (_pickedImage != null) {
-        await ref.read(mypageRepositoryProvider).uploadProfileImage(auth.token.accessToken, _pickedImage!);
+        updatedImageUrl = await ref.read(mypageRepositoryProvider).uploadProfileImage(auth.token.accessToken, _pickedImage!);
       }
       if (mounted) {
-        setState(() => _pickedImage = null);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
@@ -82,6 +82,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             margin: const EdgeInsets.all(16),
           ),
         );
+        context.pop({
+          'nickname': updatedNickname,
+          'profileImageUrl': updatedImageUrl,
+        });
       }
     } catch (e) {
       if (mounted) {

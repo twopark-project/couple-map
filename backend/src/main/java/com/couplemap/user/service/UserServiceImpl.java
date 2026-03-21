@@ -7,6 +7,7 @@ import com.couplemap.user.domain.User;
 import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.dto.NicknameResponseDto;
 import com.couplemap.user.dto.UserInfoResponseDto;
+import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final MemoryRepository memoryRepository;
     private final S3Service s3Service;
 
     @Transactional
@@ -79,6 +81,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         
-        return UserInfoResponseDto.from(user);
+        long memoryCount = memoryRepository.countByUserMaps(userId);
+        return UserInfoResponseDto.from(user, memoryCount);
     }
 }

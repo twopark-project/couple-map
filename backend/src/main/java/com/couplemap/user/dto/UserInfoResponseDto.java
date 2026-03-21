@@ -24,7 +24,9 @@ public class UserInfoResponseDto {
 
     private LocalDateTime createdAt;
 
-    public static UserInfoResponseDto from(User user) {
+    private long memoryCount;
+
+    public static UserInfoResponseDto from(User user, long memoryCount) {
         return UserInfoResponseDto.builder()
                 .userId(user.getUserId())
                 .email(user.getEmail())
@@ -33,6 +35,7 @@ public class UserInfoResponseDto {
                 .profileImageUrl(user.getProfileImageUrl())
                 .friendCode(user.getFriendCode())
                 .createdAt(user.getCreatedAt())
+                .memoryCount(memoryCount)
                 .build();
     }
 }

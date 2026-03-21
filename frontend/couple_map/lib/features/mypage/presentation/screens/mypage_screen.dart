@@ -14,10 +14,10 @@ class MypageScreen extends ConsumerStatefulWidget {
   const MypageScreen({super.key, this.onLogout});
 
   @override
-  ConsumerState<MypageScreen> createState() => _MypageScreenState();
+  ConsumerState<MypageScreen> createState() => MypageScreenState();
 }
 
-class _MypageScreenState extends ConsumerState<MypageScreen> {
+class MypageScreenState extends ConsumerState<MypageScreen> {
   UserModel? _user;
   int _mapCount = 0;
   int _friendCount = 0;
@@ -34,6 +34,8 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
     if (auth is AuthSuccess) return auth.token.accessToken;
     return await ref.read(authRepositoryProvider).getAccessToken();
   }
+
+  void loadData() => _loadData();
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
@@ -166,23 +168,15 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Text(
-                          user.nickname[0],
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF8E8E),
-                          ),
+                        errorBuilder: (_, __, ___) => const Text(
+                          '🐻',
+                          style: TextStyle(fontSize: 36),
                         ),
                       ),
                     )
-                  : Text(
-                      user.nickname[0],
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFF8E8E),
-                      ),
+                  : const Text(
+                      '🐻',
+                      style: TextStyle(fontSize: 36),
                     ),
             ),
           ),
@@ -224,7 +218,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        _StatCard(value: '0', label: '추억'),
+        _StatCard(value: _user?.memoryCount.toString() ?? '0', label: '추억'),
         const SizedBox(width: 10),
         _StatCard(value: _mapCount.toString(), label: '지도'),
         const SizedBox(width: 10),
@@ -247,8 +241,17 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
           _MenuRow(
             label: '프로필 수정',
             hasBorder: true,
-            onTap: () => context.push('/profile/edit', extra: user)
-                .then((_) => _loadData()),
+            onTap: () async {
+              final result = await context.push<Map<String, dynamic>>('/profile/edit', extra: user);
+              if (result != null && mounted) {
+                setState(() {
+                  _user = _user!.copyWith(
+                    nickname: result['nickname'] as String?,
+                    profileImageUrl: result['profileImageUrl'] as String?,
+                  );
+                });
+              }
+            },
           ),
           _MenuRow(
             label: '친구 관리',

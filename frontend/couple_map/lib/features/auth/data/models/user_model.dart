@@ -5,7 +5,8 @@ class UserModel {
   final String nickname;
   final String? profileImageUrl;
   final String friendCode;
-  final String? createdAt; 
+  final String? createdAt;
+  final int memoryCount;
 
   const UserModel({
     required this.userId,
@@ -15,6 +16,7 @@ class UserModel {
     this.profileImageUrl,
     required this.friendCode,
     this.createdAt,
+    this.memoryCount = 0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,23 @@ class UserModel {
       profileImageUrl: json['profileImageUrl'] as String?,
       friendCode: json['friendCode'] as String,
       createdAt: json['createdAt'] as String?,
+      memoryCount: (json['memoryCount'] as int?) ?? 0,
+    );
+  }
+
+  UserModel copyWith({
+    String? nickname,
+    String? profileImageUrl,
+  }) {
+    return UserModel(
+      userId: userId,
+      email: email,
+      name: name,
+      nickname: nickname ?? this.nickname,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      friendCode: friendCode,
+      createdAt: createdAt,
+      memoryCount: memoryCount,
     );
   }
 
