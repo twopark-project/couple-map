@@ -96,7 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _handleLogout() {
-    ref.read(authProvider.notifier).reset();
+    context.go('/login');
   }
 
   @override
@@ -193,7 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Moment Map',
+              'Vestige',
               style: TextStyle(
                 fontFamily: 'Gaegu',
                 fontSize: 28,

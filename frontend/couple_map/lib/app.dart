@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/network/dio_client.dart';
 import 'core/router/app_router.dart';
@@ -18,10 +19,17 @@ class CoupleMapApp extends ConsumerWidget {
     };
 
     return MaterialApp.router(
-      title: 'Couple Map',
+      title: 'Vestige',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,
+      locale: const Locale('ko', 'KR'),
+      supportedLocales: const [Locale('ko', 'KR')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }

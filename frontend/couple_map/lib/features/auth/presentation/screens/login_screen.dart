@@ -47,7 +47,7 @@ class LoginScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Couple Map',
+                      'Vestige',
                       style: TextStyle(
                         fontFamily: 'Gaegu',
                         fontSize: 52,
