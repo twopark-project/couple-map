@@ -71,6 +71,70 @@ class MypageScreenState extends ConsumerState<MypageScreen> {
     widget.onLogout?.call();
   }
 
+  Future<void> _deleteAccount() async {
+    // 1차 확인
+    final firstConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFDFBF7),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '회원 탈퇴',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: const Text('탈퇴하면 모든 데이터가 삭제되며\n복구할 수 없어요. 정말 탈퇴하시겠어요?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소', style: TextStyle(color: Color(0xFF888888))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('탈퇴', style: TextStyle(color: Color(0xFFD32F2F), fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (firstConfirm != true || !mounted) return;
+
+    // 2차 확인
+    final secondConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFDFBF7),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '정말 탈퇴하시겠어요?',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: const Text('지도, 추억, 친구 목록 등\n모든 정보가 영구적으로 삭제됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소', style: TextStyle(color: Color(0xFF888888))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('탈퇴하기', style: TextStyle(color: Color(0xFFD32F2F), fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (secondConfirm != true) return;
+
+    try {
+      final token = await _getToken();
+      if (token != null) {
+        await ref.read(mypageRepositoryProvider).deleteAccount(token);
+        await ref.read(authRepositoryProvider).clearToken();
+      }
+    } catch (_) {}
+    if (mounted) {
+      ref.read(authProvider.notifier).reset();
+      widget.onLogout?.call();
+    }
+  }
+
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
   }
@@ -131,6 +195,20 @@ class MypageScreenState extends ConsumerState<MypageScreen> {
           _buildMenuSection2(),
           const SizedBox(height: 12),
           _buildLogoutSection(),
+          const SizedBox(height: 24),
+          Center(
+            child: GestureDetector(
+              onTap: _deleteAccount,
+              child: const Text(
+                '회원 탈퇴',
+                style: TextStyle(
+                  color: Color(0xFFBBBBBB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
         ],
       ),
@@ -156,7 +234,15 @@ class MypageScreenState extends ConsumerState<MypageScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE4E1),
+              color: user.profileImageUrl == null
+                  ? const [
+                      Color(0xFFFFE5E5),
+                      Color(0xFFE5F0FF),
+                      Color(0xFFE5FFE8),
+                      Color(0xFFFFF3E5),
+                      Color(0xFFF0E5FF),
+                    ][user.userId % 5]
+                  : const Color(0xFFFFE4E1),
               borderRadius: BorderRadius.circular(40),
             ),
             child: Center(
@@ -168,15 +254,15 @@ class MypageScreenState extends ConsumerState<MypageScreen> {
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Text(
-                          '🐻',
-                          style: TextStyle(fontSize: 36),
+                        errorBuilder: (_, __, ___) => Text(
+                          const ['🐰', '🦊', '🐶', '🐼', '🐻'][user.userId % 5],
+                          style: const TextStyle(fontSize: 36),
                         ),
                       ),
                     )
-                  : const Text(
-                      '🐻',
-                      style: TextStyle(fontSize: 36),
+                  : Text(
+                      const ['🐰', '🦊', '🐶', '🐼', '🐻'][user.userId % 5],
+                      style: const TextStyle(fontSize: 36),
                     ),
             ),
           ),
@@ -375,6 +461,7 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

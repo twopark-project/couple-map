@@ -44,4 +44,26 @@ class MypageRepository {
       throw DioClient.handleError(e);
     }
   }
+
+  Future<void> deleteProfileImage(String accessToken) async {
+    try {
+      await DioClient.instance.delete(
+        '/api/users/profile-image',
+        options: DioClient.authOptions(accessToken),
+      );
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
+  Future<void> deleteAccount(String accessToken) async {
+    try {
+      await DioClient.instance.delete(
+        '/api/users/me',
+        options: DioClient.authOptions(accessToken),
+      );
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
 }

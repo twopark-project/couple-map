@@ -41,4 +41,8 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             "WHERE f.receiver.userId = :userId AND f.status = :status")
     List<Friendship> findFriendshipsWhereReceiver(@Param("userId") Long userId,
                                                   @Param("status") FriendshipStatus status);
+
+    @Query("DELETE FROM Friendship f WHERE f.requester.userId = :userId OR f.receiver.userId = :userId")
+    @org.springframework.data.jpa.repository.Modifying
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

@@ -10,4 +10,5 @@ public interface UserService {
     void deleteProfileImage(Long userId);
     NicknameResponseDto setNickname(Long userId, String nickname);
     UserInfoResponseDto getUserInfo(Long userId);
+    void deleteAccount(Long userId);
 }
