@@ -76,7 +76,7 @@ class FriendServiceImplTest {
                "ERROR_CODE"
         );
 
-        assertThatThrownBy(() -> friendService.sendFriendRequest(dto,(long)3))
+        assertThatThrownBy(() -> friendService.sendFriendRequest(dto, 999999L))
                 .isInstanceOf(UserException.class);
     }
 

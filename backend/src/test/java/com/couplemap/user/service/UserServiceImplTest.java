@@ -1,6 +1,17 @@
 package com.couplemap.user.service;
 
+import com.couplemap.friend.domain.Friendship;
+import com.couplemap.friend.domain.FriendshipStatus;
+import com.couplemap.friend.repository.FriendshipRepository;
+import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.s3.S3ServiceImpl;
+import com.couplemap.map.domain.Map;
+import com.couplemap.map.domain.MapMember;
+import com.couplemap.map.domain.MapMemberRole;
+import com.couplemap.map.repository.MapMemberRepository;
+import com.couplemap.map.repository.MapRepository;
+import com.couplemap.memory.domain.Memory;
+import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.dto.ProfileImageResponseDto;
@@ -18,10 +29,13 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class UserServiceImplTest {
@@ -31,6 +45,18 @@ class UserServiceImplTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private MapRepository mapRepository;
+
+    @Autowired
+    private MapMemberRepository mapMemberRepository;
+
+    @Autowired
+    private MemoryRepository memoryRepository;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
 
     @Autowired
     private S3ServiceImpl s3ServiceImpl;
@@ -246,12 +272,87 @@ class UserServiceImplTest {
     void getUserInfo_WithoutNickname() {
         // when
         UserInfoResponseDto response = userService.getUserInfo(testUser.getUserId());
-        
+
         // then
         assertThat(response.getUserId()).isEqualTo(testUser.getUserId());
         assertThat(response.getEmail()).isEqualTo("test@example.com");
         assertThat(response.getName()).isEqualTo("테스트유저");
         assertThat(response.getNickname()).isNull();
         assertThat(response.getFriendCode()).isEqualTo("TEST1234");
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 성공 - 유저, 지도, 추억, 친구 관계 모두 삭제")
+    void deleteAccount_Success() {
+        // given - 친구 유저 생성
+        User friendUser = userRepository.save(User.builder()
+                .email("friend@example.com")
+                .name("친구유저")
+                .friendCode("FRIEND01")
+                .providerId("FRIEND01")
+                .loginType("KAKAO")
+                .role(UserRole.USER)
+                .build());
+
+        // 지도 생성 (testUser가 OWNER)
+        Map ownedMap = mapRepository.save(Map.from("우리의 지도", "설명", "COUPLE"));
+
+        // 지도 멤버 등록
+        mapMemberRepository.save(MapMember.from(ownedMap, testUser, MapMemberRole.OWNER));
+        mapMemberRepository.save(MapMember.from(ownedMap, friendUser, testUser, MapMemberRole.EDITOR));
+
+        // 추억 생성
+        memoryRepository.save(Memory.builder()
+                .map(ownedMap)
+                .user(testUser)
+                .title("첫 데이트")
+                .placeName("카페")
+                .address("서울시 강남구")
+                .memoryDate(LocalDate.of(2025, 1, 1))
+                .latitude(new BigDecimal("37.12345678"))
+                .longitude(new BigDecimal("127.12345678"))
+                .category("CAFE")
+                .build());
+
+        // 친구 관계 생성
+        friendshipRepository.save(Friendship.createRequest(testUser, friendUser));
+
+        Long userId = testUser.getUserId();
+        Long mapId = ownedMap.getMapId();
+
+        // when
+        userService.deleteAccount(userId);
+
+        // then - 유저 삭제 확인
+        assertThat(userRepository.findById(userId)).isEmpty();
+
+        // 지도 삭제 확인
+        assertThat(mapRepository.findById(mapId)).isEmpty();
+
+        // 지도 멤버 삭제 확인
+        assertThat(mapMemberRepository.findAllByUser(friendUser)
+                .stream().filter(mm -> mm.getMap().getMapId().equals(mapId)).toList()).isEmpty();
+
+        // 추억 삭제 확인
+        assertThat(memoryRepository.findAllByMap_MapId(mapId)).isEmpty();
+
+        // 친구 관계 삭제 확인
+        assertThat(friendshipRepository.findFriendsWhereRequester(userId, FriendshipStatus.PENDING)).isEmpty();
+        assertThat(friendshipRepository.findFriendsWhereReceiver(userId, FriendshipStatus.PENDING)).isEmpty();
+
+        // cleanup - testUser는 이미 삭제됨
+        testUser = null;
+        userRepository.delete(friendUser);
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 실패 - 존재하지 않는 유저")
+    void deleteAccount_UserNotFound() {
+        // given
+        Long nonExistentUserId = 99999L;
+
+        // when & then
+        assertThatThrownBy(() -> userService.deleteAccount(nonExistentUserId))
+                .isInstanceOf(UserException.class);
     }
 }

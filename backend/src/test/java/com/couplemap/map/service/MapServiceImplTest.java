@@ -96,7 +96,7 @@ public class MapServiceImplTest {
     @DisplayName("지도 생성 성공")
     void createMap_Success() {
         // given
-        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description");
+        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description", "Solo");
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
@@ -117,7 +117,7 @@ public class MapServiceImplTest {
     @DisplayName("지도 생성 실패 - 지도 이름 중복")
     void createMap_MapNameDuplicated() {
         // given
-        CreateMapRequestDto request = new CreateMapRequestDto("Duplicate Map", "Description");
+        CreateMapRequestDto request = new CreateMapRequestDto("Duplicate Map", "Description", "Solo");
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
@@ -169,7 +169,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
@@ -192,7 +192,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
         MapMember editorMember = MapMember.from(testMap, testUser, MapMemberRole.EDITOR);
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
@@ -210,7 +210,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Duplicate Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Duplicate Map", "Updated Description", "Solo");
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
@@ -418,7 +418,7 @@ public class MapServiceImplTest {
     @DisplayName("지도 생성 성공 - 배경 이미지 포함")
     void createMap_WithBackgroundImage_Success() {
         // given
-        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description");
+        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description", "Solo");
         Long userId = 1L;
         MultipartFile backgroundImage = new MockMultipartFile(
                 "backgroundImage",
@@ -451,7 +451,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
         MultipartFile newBackgroundImage = new MockMultipartFile(
                 "backgroundImage",
                 "new_test.jpg",
@@ -488,7 +488,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
         MultipartFile newBackgroundImage = new MockMultipartFile(
                 "backgroundImage",
                 "new_test.jpg",
