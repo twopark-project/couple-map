@@ -4,13 +4,19 @@ class MapModel {
   final int mapId;
   final String mapName;
   final String? description;
+  final String? backgroundUrl;
   final String myRole; // OWNER, EDITOR, VIEWER, PENDING
+  final int memberCount;
+  final String? category;
 
   const MapModel({
     required this.mapId,
     required this.mapName,
     this.description,
+    this.backgroundUrl,
     required this.myRole,
+    this.memberCount = 1,
+    this.category,
   });
 
   factory MapModel.fromJson(Map<String, dynamic> json) {
@@ -18,7 +24,10 @@ class MapModel {
       mapId: json['mapId'] as int,
       mapName: json['mapName'] as String,
       description: json['description'] as String?,
+      backgroundUrl: json['backgroundUrl'] as String?,
       myRole: json['myRole'] as String,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 1,
+      category: json['category'] as String?,
     );
   }
 }

@@ -7,6 +7,8 @@ class MapCardModel {
   final String myRole; // OWNER, EDITOR, VIEWER, PENDING
   final String? backgroundUrl;
   final int memberCount;
+  final String? category;
+  final String? createdAt;
 
   const MapCardModel({
     required this.mapId,
@@ -15,6 +17,8 @@ class MapCardModel {
     required this.myRole,
     this.backgroundUrl,
     this.memberCount = 1,
+    this.category,
+    this.createdAt,
   });
 
   factory MapCardModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,8 @@ class MapCardModel {
       myRole: json['myRole'] as String,
       backgroundUrl: json['backgroundUrl'] as String?,
       memberCount: (json['memberCount'] as num?)?.toInt() ?? 1,
+      category: json['category'] as String?,
+      createdAt: json['createdAt'] as String?,
     );
   }
 }

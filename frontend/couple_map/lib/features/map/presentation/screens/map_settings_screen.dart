@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../domain/providers/map_provider.dart';
 
+
 class MapSettingsScreen extends ConsumerStatefulWidget {
   final int mapId;
   final String mapName;
   final String? description;
   final int memberCount;
+  final String? category;
 
   const MapSettingsScreen({
     super.key,
@@ -16,6 +18,7 @@ class MapSettingsScreen extends ConsumerStatefulWidget {
     required this.mapName,
     this.description,
     this.memberCount = 1,
+    this.category,
   });
 
   @override
@@ -23,54 +26,6 @@ class MapSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
-  bool _isEditMode = false;
-  bool _isSaving = false;
-
-  late TextEditingController _nameController;
-  late TextEditingController _descController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.mapName);
-    _descController = TextEditingController(text: widget.description ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveChanges() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-    final auth = ref.read(authProvider);
-    if (auth is! AuthSuccess) return;
-    setState(() => _isSaving = true);
-    try {
-      await ref.read(mapRepositoryProvider).updateMap(
-        auth.token.accessToken,
-        widget.mapId,
-        name,
-        _descController.text.trim().isNotEmpty ? _descController.text.trim() : null,
-      );
-      if (mounted) {
-        setState(() => _isEditMode = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('수정되었어요!')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('오류: ${e.toString()}')));
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -134,32 +89,17 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
         ),
         centerTitle: true,
         actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Color(0xFFFF7A7A),
-                  ),
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: _isEditMode ? _saveChanges : () => setState(() => _isEditMode = true),
-              child: Text(
-                _isEditMode ? '저장' : '수정',
-                style: const TextStyle(
-                  color: Color(0xFFFF7A7A),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
+          TextButton(
+            onPressed: () => context.push('/map/${widget.mapId}/edit'),
+            child: const Text(
+              '수정',
+              style: TextStyle(
+                color: Color(0xFFFF7A7A),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -173,18 +113,12 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
             _buildInfoCard([
               _buildInfoRow(
                 label: '지도 이름',
-                value: _nameController.text,
-                controller: _nameController,
-                isEditing: _isEditMode,
+                value: widget.mapName,
               ),
               _buildDivider(),
               _buildInfoRow(
                 label: '설명',
-                value: _descController.text.isNotEmpty
-                    ? _descController.text
-                    : '-',
-                controller: _descController,
-                isEditing: _isEditMode,
+                value: widget.description ?? '-',
               ),
             ]),
 
@@ -256,8 +190,6 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
   Widget _buildInfoRow({
     required String label,
     required String value,
-    required TextEditingController controller,
-    required bool isEditing,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -275,29 +207,15 @@ class _MapSettingsScreenState extends ConsumerState<MapSettingsScreen> {
             ),
           ),
           Expanded(
-            child: isEditing
-                ? TextField(
-                    controller: controller,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF191919),
-                    ),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                      border: InputBorder.none,
-                    ),
-                  )
-                : Text(
-                    value,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF888888),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF888888),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

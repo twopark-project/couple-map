@@ -41,7 +41,7 @@ class _MapMemberListScreenState extends ConsumerState<MapMemberListScreen> {
   String _roleLabel(String role) {
     switch (role) {
       case 'OWNER':
-        return '방장';
+        return 'Owner';
       case 'EDITOR':
         return '멤버';
       default:
@@ -62,7 +62,7 @@ class _MapMemberListScreenState extends ConsumerState<MapMemberListScreen> {
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          '참여 멤버',
+          'Member',
           style: TextStyle(
             color: Color(0xFF191919),
             fontSize: 18,
@@ -101,18 +101,22 @@ class _MapMemberListScreenState extends ConsumerState<MapMemberListScreen> {
                         children: [
                           CircleAvatar(
                             radius: 22,
-                            backgroundColor: const Color(0xFFFFE5E5),
+                            backgroundColor: m.profileImageUrl == null
+                                ? const [
+                                    Color(0xFFFFE5E5),
+                                    Color(0xFFE5F0FF),
+                                    Color(0xFFE5FFE8),
+                                    Color(0xFFFFF3E5),
+                                    Color(0xFFF0E5FF),
+                                  ][m.userId % 5]
+                                : const Color(0xFFFFE5E5),
                             backgroundImage: m.profileImageUrl != null
                                 ? NetworkImage(m.profileImageUrl!)
                                 : null,
                             child: m.profileImageUrl == null
                                 ? Text(
-                                    m.nickname.isNotEmpty ? m.nickname[0] : '?',
-                                    style: const TextStyle(
-                                      color: Color(0xFFFF7A7A),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                    ),
+                                    const ['🐰', '🦊', '🐶', '🐼', '🐻'][m.userId % 5],
+                                    style: const TextStyle(fontSize: 20),
                                   )
                                 : null,
                           ),

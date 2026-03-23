@@ -6,24 +6,37 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
-import '../../../home/domain/providers/home_provider.dart';
+import '../../data/models/map_model.dart';
+import '../../domain/providers/map_provider.dart';
 
-class MapCreateScreen extends ConsumerStatefulWidget {
-  const MapCreateScreen({super.key});
+class MapEditScreen extends ConsumerStatefulWidget {
+  final int mapId;
+
+  const MapEditScreen({
+    super.key,
+    required this.mapId,
+  });
 
   @override
-  ConsumerState<MapCreateScreen> createState() => _MapCreateScreenState();
+  ConsumerState<MapEditScreen> createState() => _MapEditScreenState();
 }
 
-class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
+class _MapEditScreenState extends ConsumerState<MapEditScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  File? _coverImage;
+  File? _newCoverImage;
   String? _selectedDefaultCover;
   String _selectedCategory = 'Solo';
-  bool _isCreating = false;
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  // 원본 데이터 (변경 감지용)
+  String _initialName = '';
+  String _initialDesc = '';
+  String _initialCategory = 'Solo';
+  String? _backgroundImageUrl;
 
   static const Map<String, String> _categories = {
     'Solo': '나 혼자',
@@ -45,6 +58,37 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
   void initState() {
     super.initState();
     _nameController.addListener(() => setState(() {}));
+    _loadMapDetail();
+  }
+
+  Future<void> _loadMapDetail() async {
+    final auth = ref.read(authProvider);
+    if (auth is! AuthSuccess) return;
+    try {
+      final map = await ref.read(mapRepositoryProvider).getMapDetail(
+        auth.token.accessToken,
+        widget.mapId,
+      );
+      if (mounted) {
+        setState(() {
+          _nameController.text = map.mapName;
+          _descController.text = map.description ?? '';
+          _selectedCategory = map.category ?? 'Solo';
+          _backgroundImageUrl = map.backgroundUrl;
+          _initialName = map.mapName;
+          _initialDesc = map.description ?? '';
+          _initialCategory = _selectedCategory;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로딩 실패: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -70,10 +114,18 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null && mounted) {
       setState(() {
-        _coverImage = File(picked.path);
+        _newCoverImage = File(picked.path);
         _selectedDefaultCover = null;
       });
     }
+  }
+
+  bool get _hasChanges {
+    return _nameController.text.trim() != _initialName ||
+        _descController.text.trim() != _initialDesc ||
+        _newCoverImage != null ||
+        _selectedDefaultCover != null ||
+        _selectedCategory != _initialCategory;
   }
 
   Future<File?> _assetToTempFile(String assetPath) async {
@@ -85,33 +137,48 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
     return file;
   }
 
-  Future<void> _create() async {
+  Future<void> _save() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('지도 이름을 입력해주세요')),
+      );
+      return;
+    }
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
-    setState(() => _isCreating = true);
+
+    setState(() => _isSaving = true);
     try {
-      File? coverFile = _coverImage;
+      File? coverFile = _newCoverImage;
       if (coverFile == null && _selectedDefaultCover != null) {
         coverFile = await _assetToTempFile(_selectedDefaultCover!);
       }
 
-      final mapId = await ref.read(homeRepositoryProvider).createMap(
+      await ref.read(mapRepositoryProvider).updateMap(
         auth.token.accessToken,
+        widget.mapId,
         name,
-        _descController.text.trim().isNotEmpty ? _descController.text.trim() : null,
-        _categories[_selectedCategory] ?? '나 혼자',
+        _descController.text.trim().isNotEmpty
+            ? _descController.text.trim()
+            : null,
+        _selectedCategory,
         coverFile,
       );
-      if (mounted) context.pop(mapId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('수정되었어요!')),
+        );
+        context.pop(true);
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('오류: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류: ${e.toString()}')),
+        );
       }
     } finally {
-      if (mounted) setState(() => _isCreating = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -128,7 +195,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          '지도 만들기',
+          '지도 수정',
           style: TextStyle(
             color: Color(0xFF191919),
             fontSize: 18,
@@ -138,7 +205,9 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF7A7A)))
+          : Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
@@ -156,7 +225,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _nameController,
-                          hintText: '우정 여행 아카이브',
+                          hintText: '지도 이름을 입력해주세요',
                         ),
                         const SizedBox(height: 20),
 
@@ -164,7 +233,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                         const SizedBox(height: 8),
                         _buildTextField(
                           controller: _descController,
-                          hintText: '짧은 설명 (예: 맛집 도장깨기)',
+                          hintText: '짧은 설명 (선택)',
                           maxLines: 3,
                         ),
                         const SizedBox(height: 20),
@@ -215,7 +284,6 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
             ),
           ),
 
-          // 완료 버튼
           Padding(
             padding: EdgeInsets.fromLTRB(
               20, 12, 20,
@@ -225,7 +293,9 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _isCreating || _nameController.text.trim().isEmpty ? null : _create,
+                onPressed: _isSaving || _nameController.text.trim().isEmpty || !_hasChanges
+                    ? null
+                    : _save,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF7A7A),
                   disabledBackgroundColor: const Color(0xFFFFB5B5),
@@ -234,18 +304,14 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: _isCreating
+                child: _isSaving
                     ? const SizedBox(
                         width: 22, height: 22,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                       )
                     : const Text(
-                        '완료',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        '저장',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                       ),
               ),
             ),
@@ -256,9 +322,10 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
   }
 
   Widget _buildCoverSection() {
-    final hasNewImage = _coverImage != null;
+    final hasNewImage = _newCoverImage != null;
     final hasDefaultCover = _selectedDefaultCover != null;
-    final hasAnyCover = hasNewImage || hasDefaultCover;
+    final hasExistingImage = _backgroundImageUrl != null && !hasNewImage && !hasDefaultCover;
+    final hasAnyCover = hasNewImage || hasDefaultCover || hasExistingImage;
 
     return SizedBox(
       width: double.infinity,
@@ -267,9 +334,15 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
         fit: StackFit.expand,
         children: [
           if (hasNewImage)
-            Image.file(_coverImage!, fit: BoxFit.cover)
+            Image.file(_newCoverImage!, fit: BoxFit.cover)
           else if (hasDefaultCover)
             Image.asset(_selectedDefaultCover!, fit: BoxFit.cover)
+          else if (hasExistingImage)
+            Image.network(
+              _backgroundImageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildDefaultBg(),
+            )
           else
             _buildDefaultBg(),
 
@@ -327,7 +400,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
               right: 12,
               child: GestureDetector(
                 onTap: () => setState(() {
-                  _coverImage = null;
+                  _newCoverImage = null;
                   _selectedDefaultCover = null;
                 }),
                 child: Container(
@@ -397,7 +470,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                   onTap: () {
                     setState(() {
                       _selectedDefaultCover = path;
-                      _coverImage = null;
+                      _newCoverImage = null;
                     });
                     Navigator.pop(context);
                   },
