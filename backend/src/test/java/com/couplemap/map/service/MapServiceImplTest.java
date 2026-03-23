@@ -86,7 +86,7 @@ public class MapServiceImplTest {
                 .build();
         ReflectionTestUtils.setField(friendUser, "userId", 2L);
 
-        testMap = Map.from("Test Map", "Test Description");
+        testMap = Map.from("Test Map", "Test Description", "Solo");
         ReflectionTestUtils.setField(testMap, "mapId", 1L);
 
         testMapMember = MapMember.from(testMap, testUser, MapMemberRole.OWNER);
@@ -227,9 +227,9 @@ public class MapServiceImplTest {
     void getMapList_ExcludePending() {
         // given
         Long userId = 1L;
-        Map map1 = Map.from("Map 1", "Description 1");
+        Map map1 = Map.from("Map 1", "Description 1", "Friends");
         ReflectionTestUtils.setField(map1, "mapId", 10L);
-        Map map2 = Map.from("Map 2", "Description 2");
+        Map map2 = Map.from("Map 2", "Description 2", "Couple");
         ReflectionTestUtils.setField(map2, "mapId", 20L);
         MapMember ownerMember = MapMember.from(map1, testUser, MapMemberRole.OWNER);
         MapMember pendingMember = MapMember.from(map2, testUser, testUser, MapMemberRole.PENDING);
@@ -239,7 +239,7 @@ public class MapServiceImplTest {
         when(mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(10L, MapMemberRole.PENDING)).thenReturn(1L);
 
         // when
-        List<MapListDto> result = mapService.getMapList(userId);
+        List<MapInfoDto> result = mapService.getMapList(userId);
 
         // then
         assertThat(result).hasSize(1);
@@ -382,8 +382,8 @@ public class MapServiceImplTest {
     void getInvitationList_Success() {
         // given
         Long userId = 1L;
-        Map map1 = Map.from("Map 1", "Description 1");
-        Map map2 = Map.from("Map 2", "Description 2");
+        Map map1 = Map.from("Map 1", "Description 1", "Friends");
+        Map map2 = Map.from("Map 2", "Description 2", "Couple");
         MapMember invitation1 = MapMember.from(map1, testUser, friendUser, MapMemberRole.PENDING);
         MapMember invitation2 = MapMember.from(map2, testUser, friendUser, MapMemberRole.PENDING);
 

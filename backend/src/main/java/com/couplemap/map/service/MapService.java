@@ -8,7 +8,9 @@ import java.util.List;
 public interface MapService {
     Long createMap(CreateMapRequestDto request, MultipartFile backgroundImage, Long userId);
 
-    List<MapListDto> getMapList(Long userId);
+    List<MapInfoDto> getMapList(Long userId);
+
+    MapInfoDto getMapDetail(Long mapId, Long userId);
 
     void inviteFriend(Long mapId, InviteFriendRequestDto request, Long userId);
 

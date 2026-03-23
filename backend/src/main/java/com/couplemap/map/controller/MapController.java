@@ -34,6 +34,14 @@ public class MapController {
                 .body(ApiResponse.success(mapId, "지도가 성공적으로 생성되었습니다."));
     }
 
+    @Operation(summary = "지도 조회")
+    @GetMapping("/{mapId}")
+    public ResponseEntity<ApiResponse<MapInfoDto>> getMap(@PathVariable Long mapId,
+                                                      @AuthenticationPrincipal(expression = "userId") Long userId) {
+        MapInfoDto mapDetail = mapService.getMapDetail(mapId, userId);
+        return ResponseEntity.ok(ApiResponse.success(mapDetail, "지도 조회가 완료되었습니다."));
+    }
+
     @Operation(summary = "지도 삭제")
     @DeleteMapping("/{mapId}")
     public ResponseEntity<ApiResponse<Void>> deleteMap(@PathVariable Long mapId, @AuthenticationPrincipal(expression = "userId") Long userId) {
@@ -54,8 +62,8 @@ public class MapController {
 
     @Operation(summary = "지도 목록 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<MapListDto>>> getMapList(@AuthenticationPrincipal(expression = "userId") Long userId) {
-        List<MapListDto> mapList = mapService.getMapList(userId);
+    public ResponseEntity<ApiResponse<List<MapInfoDto>>> getMapList(@AuthenticationPrincipal(expression = "userId") Long userId) {
+        List<MapInfoDto> mapList = mapService.getMapList(userId);
         return ResponseEntity.ok(ApiResponse.success(mapList, "지도 목록 조회가 완료되었습니다."));
     }
 

@@ -37,4 +37,11 @@ public interface MapMemberRepository extends JpaRepository<MapMember, Long> {
     boolean existsByUserIdAndMapNameExcludingMapId(@Param("userId") Long userId,
                                                      @Param("mapName") String mapName,
                                                      @Param("excludeMapId") Long excludeMapId);
+
+    @Query("SELECT mm.map FROM MapMember mm WHERE mm.user.userId = :userId AND mm.mapMemberRole = 'OWNER'")
+    List<Map> findOwnedMapsByUserId(@Param("userId") Long userId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM MapMember mm WHERE mm.user.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }
