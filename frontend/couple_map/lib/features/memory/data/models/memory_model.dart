@@ -39,6 +39,8 @@ class MemoryModel {
   final String title;
   final String? content;
   final String placeName;
+  final String? address;
+  final String? category;
   final DateTime memoryDate;
   final double latitude;
   final double longitude;
@@ -49,6 +51,8 @@ class MemoryModel {
     required this.title,
     this.content,
     required this.placeName,
+    this.address,
+    this.category,
     required this.memoryDate,
     required this.latitude,
     required this.longitude,
@@ -61,6 +65,8 @@ class MemoryModel {
       title: json['title'] as String,
       content: json['content'] as String?,
       placeName: json['placeName'] as String,
+      address: json['address'] as String?,
+      category: json['category'] as String?,
       memoryDate: DateTime.parse(json['memoryDate'] as String),
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
@@ -76,6 +82,7 @@ class MemorySummary {
   final int memoryId;
   final String title;
   final String placeName;
+  final String? category;
   final double latitude;
   final double longitude;
   final DateTime? memoryDate;
@@ -85,6 +92,7 @@ class MemorySummary {
     required this.memoryId,
     required this.title,
     required this.placeName,
+    this.category,
     required this.latitude,
     required this.longitude,
     this.memoryDate,
@@ -96,6 +104,7 @@ class MemorySummary {
       memoryId: json['memoryId'] as int,
       title: json['title'] as String,
       placeName: json['placeName'] as String,
+      category: json['category'] as String?,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       memoryDate: json['memoryDate'] != null

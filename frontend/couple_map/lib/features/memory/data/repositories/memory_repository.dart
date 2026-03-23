@@ -70,4 +70,50 @@ class MemoryRepository {
       throw DioClient.handleError(e);
     }
   }
+
+  Future<void> updateMemory(
+    String accessToken,
+    int mapId,
+    int memoryId,
+    Map<String, dynamic> requestData,
+    List<File>? files,
+  ) async {
+    try {
+      final formData = FormData();
+      formData.files.add(MapEntry(
+        'request',
+        MultipartFile.fromString(
+          jsonEncode(requestData),
+          contentType: DioMediaType.parse('application/json'),
+        ),
+      ));
+      if (files != null) {
+        for (final file in files) {
+          formData.files.add(MapEntry(
+            'files',
+            await MultipartFile.fromFile(file.path,
+                filename: file.path.split('/').last),
+          ));
+        }
+      }
+      await DioClient.instance.put(
+        '/api/maps/$mapId/memories/$memoryId',
+        data: formData,
+        options: DioClient.authOptions(accessToken),
+      );
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
+  Future<void> deleteMemory(String accessToken, int mapId, int memoryId) async {
+    try {
+      await DioClient.instance.delete(
+        '/api/maps/$mapId/memories/$memoryId',
+        options: DioClient.authOptions(accessToken),
+      );
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
 }
