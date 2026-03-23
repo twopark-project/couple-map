@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,17 +21,24 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
   final ImagePicker _picker = ImagePicker();
 
   File? _coverImage;
-  int _selectedGradient = 0;
-  String _selectedCategory = '나 혼자';
-  DateTime _startDate = DateTime.now();
+  String? _selectedDefaultCover;
+  String _selectedCategory = 'Solo';
   bool _isCreating = false;
 
-  static const List<String> _categories = ['나 혼자', '친구들과', '연인과', '가족'];
+  static const Map<String, String> _categories = {
+    'Solo': '나 혼자',
+    'Friends': '친구들과',
+    'Couple': '연인과',
+    'Family': '가족',
+  };
 
-  static const List<List<Color>> _gradients = [
-    [Color(0xFF4FACFE), Color(0xFF00F2FE)],
-    [Color(0xFF667EEA), Color(0xFF764BA2)],
-    [Color(0xFF43E97B), Color(0xFF38F9D7)],
+  static const List<String> _defaultCovers = [
+    'assets/images/covers/cover_1.jpg',
+    'assets/images/covers/cover_2.jpg',
+    'assets/images/covers/cover_3.jpg',
+    'assets/images/covers/cover_4.jpg',
+    'assets/images/covers/cover_5.jpg',
+    'assets/images/covers/cover_6.jpg',
   ];
 
   @override
@@ -60,17 +68,21 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
       return;
     }
     final picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) setState(() => _coverImage = File(picked.path));
+    if (picked != null && mounted) {
+      setState(() {
+        _coverImage = File(picked.path);
+        _selectedDefaultCover = null;
+      });
+    }
   }
 
-  Future<void> _pickStartDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _startDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (date != null) setState(() => _startDate = date);
+  Future<File?> _assetToTempFile(String assetPath) async {
+    final data = await rootBundle.load(assetPath);
+    final fileName = assetPath.split('/').last;
+    final tempDir = Directory.systemTemp;
+    final file = File('${tempDir.path}/$fileName');
+    await file.writeAsBytes(data.buffer.asUint8List());
+    return file;
   }
 
   Future<void> _create() async {
@@ -80,11 +92,17 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
     if (auth is! AuthSuccess) return;
     setState(() => _isCreating = true);
     try {
+      File? coverFile = _coverImage;
+      if (coverFile == null && _selectedDefaultCover != null) {
+        coverFile = await _assetToTempFile(_selectedDefaultCover!);
+      }
+
       final mapId = await ref.read(homeRepositoryProvider).createMap(
         auth.token.accessToken,
         name,
         _descController.text.trim().isNotEmpty ? _descController.text.trim() : null,
-        _coverImage,
+        _categories[_selectedCategory] ?? '나 혼자',
+        coverFile,
       );
       if (mounted) context.pop(mapId);
     } catch (e) {
@@ -127,201 +145,43 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 커버 사진
-                  SizedBox(
-                    width: double.infinity,
-                    height: 180,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // 배경: 사진 or 그라디언트
-                        _coverImage != null
-                            ? Image.file(_coverImage!, fit: BoxFit.cover)
-                            : Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: _gradients[_selectedGradient],
-                                  ),
-                                ),
-                              ),
-                        Container(color: Colors.black.withValues(alpha: 0.2)),
-                        // 커버 사진 변경 (정중앙)
-                        GestureDetector(
-                          onTap: _pickCoverImage,
-                          child: const Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.camera_alt, color: Colors.white, size: 26),
-                                SizedBox(height: 6),
-                                Text(
-                                  '커버 사진 변경',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // 그라디언트 선택 (이미지 없을 때만, 우하단)
-                        if (_coverImage == null)
-                          Positioned(
-                            bottom: 12,
-                            right: 12,
-                            child: Row(
-                              children: List.generate(_gradients.length, (i) {
-                                final isSelected = _selectedGradient == i;
-                                return GestureDetector(
-                                  onTap: () => setState(() => _selectedGradient = i),
-                                  child: Container(
-                                    width: 24,
-                                    height: 24,
-                                    margin: const EdgeInsets.only(left: 6),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: _gradients[i],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      border: isSelected
-                                          ? Border.all(color: Colors.white, width: 2.5)
-                                          : null,
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                        // 사진 선택 취소 버튼 (이미지 있을 때)
-                        if (_coverImage != null)
-                          Positioned(
-                            top: 12,
-                            right: 12,
-                            child: GestureDetector(
-                              onTap: () => setState(() => _coverImage = null),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.45),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.close, color: Colors.white, size: 16),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                  _buildCoverSection(),
 
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 지도 이름
-                        const Text(
-                          '지도 이름',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF888888),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        _buildLabel('지도 이름'),
                         const SizedBox(height: 8),
-                        TextField(
+                        _buildTextField(
                           controller: _nameController,
-                          style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
-                          decoration: InputDecoration(
-                            hintText: '우정 여행 아카이브',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
-                            filled: true,
-                            fillColor: const Color(0xFFFAF8F5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFFF7A7A)),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
+                          hintText: '우정 여행 아카이브',
                         ),
                         const SizedBox(height: 20),
 
-                        // 설명
-                        const Text(
-                          '설명',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF888888),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        _buildLabel('설명'),
                         const SizedBox(height: 8),
-                        TextField(
+                        _buildTextField(
                           controller: _descController,
-                          style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
-                          decoration: InputDecoration(
-                            hintText: '짧은 설명 (예: 맛집 도장깨기)',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
-                            filled: true,
-                            fillColor: const Color(0xFFFAF8F5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFECE8E4)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFFF7A7A)),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
+                          hintText: '짧은 설명 (예: 맛집 도장깨기)',
+                          maxLines: 3,
                         ),
                         const SizedBox(height: 20),
 
-                        // 카테고리
-                        const Text(
-                          '카테고리',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF888888),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        _buildLabel('카테고리'),
                         const SizedBox(height: 10),
                         Row(
-                          children: _categories.map((cat) {
-                            final isSelected = _selectedCategory == cat;
+                          children: _categories.entries.map((entry) {
+                            final key = entry.key;
+                            final label = entry.value;
+                            final isSelected = _selectedCategory == key;
                             return Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: GestureDetector(
-                                onTap: () => setState(() => _selectedCategory = cat),
+                                onTap: () => setState(() => _selectedCategory = key),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: isSelected
                                         ? const Color(0xFFFFF0F0)
@@ -332,57 +192,19 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                                         : null,
                                   ),
                                   child: Text(
-                                    cat,
+                                    label,
                                     style: TextStyle(
                                       color: isSelected
                                           ? const Color(0xFFFFB5B5)
                                           : const Color(0xFF868E96),
                                       fontSize: 14,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                     ),
                                   ),
                                 ),
                               ),
                             );
                           }).toList(),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // 시작일
-                        const Text(
-                          '시작일',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF888888),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: _pickStartDate,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFAF8F5),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFECE8E4)),
-                            ),
-                            child: Text(
-                              '${_startDate.year}. '
-                              '${_startDate.month.toString().padLeft(2, '0')}. '
-                              '${_startDate.day.toString().padLeft(2, '0')}',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFF191919),
-                              ),
-                            ),
-                          ),
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -396,9 +218,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
           // 완료 버튼
           Padding(
             padding: EdgeInsets.fromLTRB(
-              20,
-              12,
-              20,
+              20, 12, 20,
               MediaQuery.of(context).padding.bottom + 20,
             ),
             child: SizedBox(
@@ -415,7 +235,10 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                   elevation: 0,
                 ),
                 child: _isCreating
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const SizedBox(
+                        width: 22, height: 22,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                      )
                     : const Text(
                         '완료',
                         style: TextStyle(
@@ -428,6 +251,201 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCoverSection() {
+    final hasNewImage = _coverImage != null;
+    final hasDefaultCover = _selectedDefaultCover != null;
+    final hasAnyCover = hasNewImage || hasDefaultCover;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 180,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hasNewImage)
+            Image.file(_coverImage!, fit: BoxFit.cover)
+          else if (hasDefaultCover)
+            Image.asset(_selectedDefaultCover!, fit: BoxFit.cover)
+          else
+            _buildDefaultBg(),
+
+          Container(color: Colors.black.withValues(alpha: 0.25)),
+
+          // 중앙 버튼 2개
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: _pickCoverImage,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.photo_library, color: Colors.white, size: 18),
+                        SizedBox(width: 6),
+                        Text('갤러리', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: _showDefaultCoverPicker,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.image, color: Colors.white, size: 18),
+                        SizedBox(width: 6),
+                        Text('기본 이미지', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (hasAnyCover)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  _coverImage = null;
+                  _selectedDefaultCover = null;
+                }),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultBg() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+        ),
+      ),
+    );
+  }
+
+  void _showDefaultCoverPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 16),
+              width: 36, height: 4,
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+            ),
+            const Text(
+              '기본 이미지 선택',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF191919)),
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 1.3,
+              ),
+              itemCount: _defaultCovers.length,
+              itemBuilder: (context, index) {
+                final path = _defaultCovers[index];
+                final isSelected = _selectedDefaultCover == path;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDefaultCover = path;
+                      _coverImage = null;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected ? Border.all(color: const Color(0xFFFF7A7A), width: 3) : null,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(isSelected ? 9 : 12),
+                      child: Image.asset(path, fit: BoxFit.cover),
+                    ),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(fontSize: 13, color: Color(0xFF888888), fontWeight: FontWeight.w500),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(color: Colors.grey[400]),
+        filled: true,
+        fillColor: const Color(0xFFFAF8F5),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFECE8E4))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFECE8E4))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFF7A7A))),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

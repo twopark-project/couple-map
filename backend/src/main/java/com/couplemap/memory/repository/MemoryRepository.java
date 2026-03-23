@@ -19,4 +19,14 @@ public interface MemoryRepository extends JpaRepository<Memory, Long> {
             "AND YEAR(m.memoryDate) = :year " +
             "ORDER BY m.memoryDate ASC")
     List<Memory> findAllByUserIdAndYear(@Param("userId") Long userId, @Param("year") int year);
+
+    @Query("SELECT COUNT(m) FROM Memory m " +
+            "JOIN MapMember mm ON m.map = mm.map " +
+            "WHERE mm.user.userId = :userId " +
+            "AND mm.mapMemberRole IN (com.couplemap.map.domain.MapMemberRole.OWNER, com.couplemap.map.domain.MapMemberRole.EDITOR)")
+    long countByUserMaps(@Param("userId") Long userId);
+
+    void deleteAllByUser_UserId(Long userId);
+
+    void deleteAllByMap_MapId(Long mapId);
 }

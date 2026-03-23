@@ -77,16 +77,15 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
         elevation: 0,
         surfaceTintColor: const Color(0xFFFDFBF7),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C2C2C), size: 20),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           '친구 관리',
           style: TextStyle(
-            color: Color(0xFF191919),
-            fontSize: 18,
+            color: Color(0xFF2C2C2C),
+            fontSize: 17,
             fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
           ),
         ),
         centerTitle: true,
@@ -96,13 +95,17 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
             child: const Text(
               '+ 추가',
               style: TextStyle(
-                color: Color(0xFFFF7A7A),
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                color: Color(0xFFFF8E8E),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFF0ECE8)),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -121,9 +124,9 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
           const Text(
             '내 친구 목록',
             style: TextStyle(
-              color: Color(0xFF191919),
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+              color: Color(0xFF2C2C2C),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 12),
@@ -137,8 +140,9 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F0EC),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0x0A000000)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,8 +151,9 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
             '내 친구 코드',
             style: TextStyle(
               color: Color(0xFF888888),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 10),
@@ -158,10 +163,11 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
                 child: Text(
                   _user?.friendCode ?? '...',
                   style: const TextStyle(
+                    fontFamily: 'Gaegu',
                     color: Color(0xFF191919),
-                    fontSize: 22,
+                    fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 6,
+                    letterSpacing: 3,
                   ),
                 ),
               ),
@@ -170,15 +176,15 @@ class _FriendScreenState extends ConsumerState<FriendScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF191919),
-                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xFF2C2C2C),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
                     '코드 복사',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -242,32 +248,46 @@ class _FriendTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFFF2F0EC),
+              color: friend.imageUrl == null
+                  ? const [
+                      Color(0xFFFFE5E5),
+                      Color(0xFFE5F0FF),
+                      Color(0xFFE5FFE8),
+                      Color(0xFFFFF3E5),
+                      Color(0xFFF0E5FF),
+                    ][friend.id % 5]
+                  : const Color(0xFFF8F9FA),
             ),
             child: friend.imageUrl != null
                 ? ClipOval(
                     child: Image.network(
                       friend.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Text('🐶', style: TextStyle(fontSize: 22)),
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Text(
+                          const ['🐰', '🦊', '🐶', '🐼', '🐻'][friend.id % 5],
+                          style: const TextStyle(fontSize: 22),
+                        ),
                       ),
                     ),
                   )
-                : const Center(
-                    child: Text('🐶', style: TextStyle(fontSize: 22)),
+                : Center(
+                    child: Text(
+                      const ['🐰', '🦊', '🐶', '🐼', '🐻'][friend.id % 5],
+                      style: const TextStyle(fontSize: 22),
+                    ),
                   ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -284,7 +304,7 @@ class _FriendTile extends StatelessWidget {
                 codeLabel,
                 style: const TextStyle(
                   color: Color(0xFF888888),
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
               ),
             ],

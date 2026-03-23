@@ -20,6 +20,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _mypageKey = GlobalKey<MypageScreenState>();
   int _currentIndex = 0;
   UserModel? _userInfo;
   List<MapCardModel> _mapList = [];
@@ -95,7 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _handleLogout() {
-    ref.read(authProvider.notifier).reset();
+    context.go('/login');
   }
 
   @override
@@ -107,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           _buildMapListPage(),
           const CalendarScreen(),
-          MypageScreen(onLogout: _handleLogout),
+          MypageScreen(key: _mypageKey, onLogout: _handleLogout),
         ],
       ),
       floatingActionButton: _currentIndex == 0 ? _buildFab() : null,
@@ -168,6 +169,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'mapName': _mapList[i].mapName,
                           'description': _mapList[i].description,
                           'memberCount': _mapList[i].memberCount,
+                          'category': _mapList[i].category,
                         },
                       ).then((_) => _loadData()),
                     ),
@@ -191,7 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Moment Map',
+              'Vestige',
               style: TextStyle(
                 fontFamily: 'Gaegu',
                 fontSize: 28,
@@ -342,7 +344,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               isActive ? const Color(0xFF2C2C2C) : const Color(0xFFCCCCCC);
           return Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _currentIndex = i),
+              onTap: () {
+                setState(() => _currentIndex = i);
+                if (i == 2) _mypageKey.currentState?.loadData();
+              },
               behavior: HitTestBehavior.opaque,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

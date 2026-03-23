@@ -30,16 +30,21 @@ public class Map extends BaseEntity {
     @Column(name = "background_key")
     private String backgroundKey;
 
-    public static Map from(String mapName, String description) {
+    @Column(name = "category", length = 10)
+    private String category;
+
+    public static Map from(String mapName, String description, String category) {
         return Map.builder()
                 .mapName(mapName)
                 .description(description)
+                .category(category)
                 .build();
     }
 
-    public void update(String mapName, String description) {
+    public void update(String mapName, String description, String category) {
         this.mapName = mapName;
         this.description = description;
+        this.category = category;
     }
 
     public void updateBackground(String backgroundUrl, String backgroundKey) {

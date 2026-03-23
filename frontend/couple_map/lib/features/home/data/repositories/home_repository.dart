@@ -23,13 +23,15 @@ class HomeRepository {
   Future<int> createMap(
     String accessToken,
     String mapName,
-    String? description, [
+    String? description,
+    String category, [
     File? backgroundImage,
   ]) async {
     try {
       final requestJson = jsonEncode({
         'mapName': mapName,
         if (description != null) 'description': description,
+        'category': category,
       });
       final formData = FormData.fromMap({
         'request': MultipartFile.fromString(

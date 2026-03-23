@@ -56,18 +56,33 @@ class MapRepository {
     }
   }
 
+  // 지도 상세 조회
+  Future<MapModel> getMapDetail(String accessToken, int mapId) async {
+    try {
+      final response = await DioClient.instance.get(
+        '/api/map/$mapId',
+        options: DioClient.authOptions(accessToken),
+      );
+      return MapModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
   // 지도 수정 (multipart/form-data)
   Future<void> updateMap(
     String accessToken,
     int mapId,
     String mapName,
     String? description, [
+    String? category,
     File? backgroundImage,
   ]) async {
     try {
       final requestJson = jsonEncode({
         'mapName': mapName,
         if (description != null) 'description': description,
+        if (category != null) 'category': category,
       });
       final formData = FormData.fromMap({
         'request': MultipartFile.fromString(

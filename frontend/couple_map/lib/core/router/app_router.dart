@@ -15,9 +15,10 @@ import '../../features/map/presentation/screens/map_settings_screen.dart';
 import '../../features/map/presentation/screens/map_invite_screen.dart';
 import '../../features/map/presentation/screens/map_member_list_screen.dart';
 import '../../features/map/presentation/screens/place_search_screen.dart';
-import '../../features/memory/presentation/screens/memory_detail_screen.dart';
 import '../../features/memory/presentation/screens/memory_create_screen.dart';
-import '../../features/memory/presentation/screens/photo_gallery_screen.dart';
+import '../../features/memory/presentation/screens/memory_edit_screen.dart';
+import '../../features/memory/presentation/screens/memory_list_screen.dart';
+import '../../features/map/presentation/screens/map_edit_screen.dart';
 import '../../features/mypage/presentation/screens/profile_edit_screen.dart';
 import '../../features/friend/presentation/screens/friend_screen.dart';
 
@@ -93,6 +94,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             mapName: extra?['mapName'] as String?,
             description: extra?['description'] as String?,
             memberCount: extra?['memberCount'] as int? ?? 1,
+            category: extra?['category'] as String?,
           );
         },
         routes: [
@@ -106,7 +108,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 mapName: extra['mapName'] as String,
                 description: extra['description'] as String?,
                 memberCount: extra['memberCount'] as int? ?? 1,
+                category: extra['category'] as String?,
               );
+            },
+          ),
+          GoRoute(
+            path: 'edit',
+            builder: (_, state) {
+              final mapId = int.parse(state.pathParameters['mapId']!);
+              return MapEditScreen(mapId: mapId);
+            },
+          ),
+          GoRoute(
+            path: 'memories',
+            builder: (_, state) {
+              final mapId = int.parse(state.pathParameters['mapId']!);
+              return MemoryListScreen(mapId: mapId);
             },
           ),
           GoRoute(
@@ -131,6 +148,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return MemoryCreateScreen(
                 mapId: mapId,
                 placeName: extra?['placeName'] as String?,
+                address: extra?['addressName'] as String?,
                 latitude: extra?['latitude'] as double?,
                 longitude: extra?['longitude'] as double?,
               );
@@ -138,18 +156,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'memory/:memoryId',
-            builder: (_, state) {
-              final mapId = int.parse(state.pathParameters['mapId']!);
-              final memoryId = int.parse(state.pathParameters['memoryId']!);
-              return MemoryDetailScreen(mapId: mapId, memoryId: memoryId);
-            },
+            builder: (_, __) => const SizedBox.shrink(),
             routes: [
               GoRoute(
-                path: 'photos',
+                path: 'edit',
                 builder: (_, state) {
                   final mapId = int.parse(state.pathParameters['mapId']!);
                   final memoryId = int.parse(state.pathParameters['memoryId']!);
-                  return PhotoGalleryScreen(mapId: mapId, memoryId: memoryId);
+                  return MemoryEditScreen(mapId: mapId, memoryId: memoryId);
                 },
               ),
             ],

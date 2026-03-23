@@ -29,7 +29,13 @@ class AppBarWidget extends StatelessWidget {
         children: [
           if (showBack)
             GestureDetector(
-              onTap: onBack ?? () => context.pop(),
+              onTap: onBack ?? () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/login');
+                }
+              },
               child: const Icon(Icons.arrow_back_ios,
                   color: AppColors.textLight, size: 20),
             )

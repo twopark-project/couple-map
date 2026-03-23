@@ -1,5 +1,6 @@
 package com.couplemap.memory.service;
 
+import com.couplemap.friend.repository.FriendshipRepository;
 import com.couplemap.global.exception.exceptions.MemoryException;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.map.domain.Map;
@@ -61,6 +62,9 @@ class MemoryServiceImplTest {
     @Autowired
     private MediaFileRepository mediaFileRepository;
 
+    @Autowired
+    private FriendshipRepository friendshipRepository;
+
     private List<String> uploadedKeys = new ArrayList<>();
     private User testUser;
     private User anotherUser;
@@ -94,7 +98,7 @@ class MemoryServiceImplTest {
 
         // 테스트 맵 생성
 
-        testMap = Map.from("테스트맵", "테스트 설명");
+        testMap = Map.from("테스트맵", "테스트 설명", "Solo");
         testMap = mapRepository.save(testMap);
 
         // 맵 멤버 등록 (testUser는 OWNER)
@@ -109,9 +113,11 @@ class MemoryServiceImplTest {
                 "테스트 추억",
                 "테스트 내용",
                 "테스트 장소",
+                null,
                 LocalDate.of(2024, 1, 1),
                 new BigDecimal("37.5665"),
-                new BigDecimal("126.9780")
+                new BigDecimal("126.9780"),
+                null
         );
 
         testMemory = Memory.from(memoryRequest, testMap, testUser);
@@ -137,7 +143,8 @@ class MemoryServiceImplTest {
         }
         uploadedKeys.clear();
 
-        // DB 정리 (FK 순서: mediaFile → memory → mapMember → map → user)
+        // DB 정리 (FK 순서: friendship → mediaFile → memory → mapMember → map → user)
+        friendshipRepository.deleteAll();
         mediaFileRepository.deleteAll();
         memoryRepository.deleteAll();
         mapMemberRepository.deleteAll();
@@ -153,9 +160,11 @@ class MemoryServiceImplTest {
                 "새로운 추억",
                 "새로운 내용",
                 "새로운 장소",
+                null,
                 LocalDate.of(2024, 3, 15),
                 new BigDecimal("37.1234"),
-                new BigDecimal("127.5678")
+                new BigDecimal("127.5678"),
+                null
         );
 
         // when
@@ -178,9 +187,11 @@ class MemoryServiceImplTest {
                 "두번째 추억",
                 "두번째 내용",
                 "두번째 장소",
+                null,
                 LocalDate.of(2024, 4, 1),
                 new BigDecimal("36.5555"),
-                new BigDecimal("128.1111")
+                new BigDecimal("128.1111"),
+                null
         );
         memoryService.createMemory(testMap.getMapId(), additionalRequest, null, testUser.getUserId());
 
@@ -234,6 +245,7 @@ class MemoryServiceImplTest {
                 "수정된 내용",
                 "수정된 장소",
                 LocalDate.of(2024, 2, 1),
+                null,
                 null
         );
 
@@ -256,6 +268,7 @@ class MemoryServiceImplTest {
                 null,
                 "장소",
                 LocalDate.of(2024, 1, 1),
+                null,
                 null
         );
 
@@ -299,9 +312,11 @@ class MemoryServiceImplTest {
                 "파일 포함 추억",
                 "파일 포함 내용",
                 "파일 포함 장소",
+                null,
                 LocalDate.of(2024, 5, 1),
                 new BigDecimal("37.1234"),
-                new BigDecimal("127.5678")
+                new BigDecimal("127.5678"),
+                null
         );
 
         List<MultipartFile> files = new ArrayList<>();
@@ -352,9 +367,11 @@ class MemoryServiceImplTest {
                 "2024 추억",
                 "2024 내용",
                 "2024 장소",
+                null,
                 LocalDate.of(2024, 6, 15),
                 new BigDecimal("37.1234"),
-                new BigDecimal("127.5678")
+                new BigDecimal("127.5678"),
+                null
         );
         memoryService.createMemory(testMap.getMapId(), request2024, null, testUser.getUserId());
 
@@ -363,9 +380,11 @@ class MemoryServiceImplTest {
                 "2025 추억",
                 "2025 내용",
                 "2025 장소",
+                null,
                 LocalDate.of(2025, 3, 10),
                 new BigDecimal("37.5555"),
-                new BigDecimal("126.9999")
+                new BigDecimal("126.9999"),
+                null
         );
         memoryService.createMemory(testMap.getMapId(), request2025, null, testUser.getUserId());
 
@@ -396,7 +415,7 @@ class MemoryServiceImplTest {
     @DisplayName("캘린더 추억 조회 - 여러 지도의 추억을 모두 반환")
     void getCalendarMemories_MultipleMapMemories() {
         // given - 두 번째 맵 생성
-        Map secondMap = Map.from("두번째맵", "두번째 설명");
+        Map secondMap = Map.from("두번째맵", "두번째 설명", "Friends");
         secondMap = mapRepository.save(secondMap);
         MapMember secondMapMember = MapMember.from(secondMap, testUser, MapMemberRole.OWNER);
         mapMemberRepository.save(secondMapMember);
@@ -405,9 +424,11 @@ class MemoryServiceImplTest {
                 "두번째맵 추억",
                 "두번째맵 내용",
                 "두번째맵 장소",
+                null,
                 LocalDate.of(2024, 7, 20),
                 new BigDecimal("35.1234"),
-                new BigDecimal("129.5678")
+                new BigDecimal("129.5678"),
+                null
         );
         memoryService.createMemory(secondMap.getMapId(), request, null, testUser.getUserId());
 

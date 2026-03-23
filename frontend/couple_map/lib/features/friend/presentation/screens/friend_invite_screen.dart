@@ -53,7 +53,7 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
         left: 24,
         right: 24,
         top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -73,6 +73,7 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
           const Text(
             '친구 초대',
             style: TextStyle(
+              fontFamily: 'NotoSerifKR',
               color: Color(0xFF191919),
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -80,7 +81,7 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
           ),
           const SizedBox(height: 6),
           Text(
-            '친구의 코드를 입력하면 바로 연결돼요',
+            '친구의 코드를 입력해주세요.',
             style: TextStyle(
               color: Colors.grey[500],
               fontSize: 14,
@@ -97,7 +98,7 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
               color: Color(0xFF191919),
             ),
             decoration: InputDecoration(
-              hintText: '예: KISS99',
+              hintText: '예: FRIEND',
               hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
               filled: true,
               fillColor: const Color(0xFFF2F0EC),
@@ -139,8 +140,14 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
           SizedBox(
             width: double.infinity,
             height: 52,
-            child: TextButton(
+            child: OutlinedButton(
               onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFE0E0E0)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
               child: const Text(
                 '닫기',
                 style: TextStyle(

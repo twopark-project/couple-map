@@ -12,6 +12,7 @@ public class CalendarMemoryResponseDto {
     private final String title;
     private final String placeName;
     private final LocalDate memoryDate;
+    private final String category;
     private final String thumbnailUrl;
 
     public CalendarMemoryResponseDto(Memory memory, String thumbnailUrl) {
@@ -20,6 +21,7 @@ public class CalendarMemoryResponseDto {
         this.title = memory.getTitle();
         this.placeName = memory.getPlaceName();
         this.memoryDate = memory.getMemoryDate();
+        this.category = memory.getCategory();
         this.thumbnailUrl = thumbnailUrl;
     }
 }

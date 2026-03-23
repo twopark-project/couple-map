@@ -21,6 +21,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   late final TextEditingController _nicknameController;
   bool _isSaving = false;
   File? _pickedImage;
+  bool _resetToDefault = false;
 
   @override
   void initState() {
@@ -34,6 +35,117 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     super.dispose();
   }
 
+  void _showImageOptions() {
+    FocusScope.of(context).unfocus();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAF8F5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 12),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDDD8D3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            _buildOptionTile(
+              icon: Icons.photo_library_rounded,
+              label: '갤러리에서 선택',
+              subtitle: '앨범에서 사진을 가져와요',
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage();
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(height: 1, color: const Color(0xFFECE8E4)),
+            ),
+            _buildOptionTile(
+              icon: Icons.pets_rounded,
+              label: '기본 이미지로 변경',
+              subtitle: '캐릭터로 돌아가요',
+              onTap: () {
+                Navigator.pop(context);
+                setState(() {
+                  _pickedImage = null;
+                  _resetToDefault = true;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionTile({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF0F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: const Color(0xFFFF7A7A), size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C2C2C),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF999999),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC), size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
@@ -41,7 +153,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       imageQuality: 80,
     );
     if (picked != null) {
-      setState(() => _pickedImage = File(picked.path));
+      setState(() {
+        _pickedImage = File(picked.path);
+        _resetToDefault = false;
+      });
     }
   }
 
@@ -64,12 +179,15 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (auth is! AuthSuccess) return;
     setState(() => _isSaving = true);
     try {
-      await ref.read(mypageRepositoryProvider).updateNickname(auth.token.accessToken, nickname);
-      if (_pickedImage != null) {
-        await ref.read(mypageRepositoryProvider).uploadProfileImage(auth.token.accessToken, _pickedImage!);
+      final updatedNickname = await ref.read(mypageRepositoryProvider).updateNickname(auth.token.accessToken, nickname);
+      String? updatedImageUrl = widget.user.profileImageUrl;
+      if (_resetToDefault) {
+        await ref.read(mypageRepositoryProvider).deleteProfileImage(auth.token.accessToken);
+        updatedImageUrl = null;
+      } else if (_pickedImage != null) {
+        updatedImageUrl = await ref.read(mypageRepositoryProvider).uploadProfileImage(auth.token.accessToken, _pickedImage!);
       }
       if (mounted) {
-        setState(() => _pickedImage = null);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
@@ -82,6 +200,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             margin: const EdgeInsets.all(16),
           ),
         );
+        context.pop({
+          'nickname': updatedNickname,
+          'profileImageUrl': updatedImageUrl,
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -148,29 +270,38 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             // 프로필 아바타
             Center(
               child: GestureDetector(
-                onTap: _pickImage,
+                onTap: _showImageOptions,
                 child: Stack(
                   children: [
                     Container(
                       width: 90,
                       height: 90,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFE4E4),
+                      decoration: BoxDecoration(
+                        color: const [
+                          Color(0xFFFFE5E5),
+                          Color(0xFFE5F0FF),
+                          Color(0xFFE5FFE8),
+                          Color(0xFFFFF3E5),
+                          Color(0xFFF0E5FF),
+                        ][widget.user.userId % 5],
                         shape: BoxShape.circle,
                       ),
                       child: _pickedImage != null
                           ? ClipOval(
                               child: Image.file(_pickedImage!, fit: BoxFit.cover),
                             )
-                          : widget.user.profileImageUrl != null
+                          : (!_resetToDefault && widget.user.profileImageUrl != null)
                               ? ClipOval(
                                   child: Image.network(
                                     widget.user.profileImageUrl!,
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                              : const Center(
-                                  child: Text('🐻', style: TextStyle(fontSize: 44)),
+                              : Center(
+                                  child: Text(
+                                    const ['🐰', '🦊', '🐶', '🐼', '🐻'][widget.user.userId % 5],
+                                    style: const TextStyle(fontSize: 44),
+                                  ),
                                 ),
                     ),
                     Positioned(

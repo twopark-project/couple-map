@@ -14,10 +14,10 @@ class MypageScreen extends ConsumerStatefulWidget {
   const MypageScreen({super.key, this.onLogout});
 
   @override
-  ConsumerState<MypageScreen> createState() => _MypageScreenState();
+  ConsumerState<MypageScreen> createState() => MypageScreenState();
 }
 
-class _MypageScreenState extends ConsumerState<MypageScreen> {
+class MypageScreenState extends ConsumerState<MypageScreen> {
   UserModel? _user;
   int _mapCount = 0;
   int _friendCount = 0;
@@ -34,6 +34,8 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
     if (auth is AuthSuccess) return auth.token.accessToken;
     return await ref.read(authRepositoryProvider).getAccessToken();
   }
+
+  void loadData() => _loadData();
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
@@ -67,6 +69,70 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
     } catch (_) {}
     ref.read(authProvider.notifier).reset();
     widget.onLogout?.call();
+  }
+
+  Future<void> _deleteAccount() async {
+    // 1차 확인
+    final firstConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFDFBF7),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '회원 탈퇴',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: const Text('탈퇴하면 모든 데이터가 삭제되며\n복구할 수 없어요. 정말 탈퇴하시겠어요?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소', style: TextStyle(color: Color(0xFF888888))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('탈퇴', style: TextStyle(color: Color(0xFFD32F2F), fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (firstConfirm != true || !mounted) return;
+
+    // 2차 확인
+    final secondConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFDFBF7),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '정말 탈퇴하시겠어요?',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: const Text('지도, 추억, 친구 목록 등\n모든 정보가 영구적으로 삭제됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소', style: TextStyle(color: Color(0xFF888888))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('탈퇴하기', style: TextStyle(color: Color(0xFFD32F2F), fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (secondConfirm != true) return;
+
+    try {
+      final token = await _getToken();
+      if (token != null) {
+        await ref.read(mypageRepositoryProvider).deleteAccount(token);
+        await ref.read(authRepositoryProvider).clearToken();
+      }
+    } catch (_) {}
+    if (mounted) {
+      ref.read(authProvider.notifier).reset();
+      widget.onLogout?.call();
+    }
   }
 
   void _copyCode(String code) {
@@ -129,6 +195,20 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
           _buildMenuSection2(),
           const SizedBox(height: 12),
           _buildLogoutSection(),
+          const SizedBox(height: 24),
+          Center(
+            child: GestureDetector(
+              onTap: _deleteAccount,
+              child: const Text(
+                '회원 탈퇴',
+                style: TextStyle(
+                  color: Color(0xFFBBBBBB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
         ],
       ),
@@ -154,7 +234,15 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE4E1),
+              color: user.profileImageUrl == null
+                  ? const [
+                      Color(0xFFFFE5E5),
+                      Color(0xFFE5F0FF),
+                      Color(0xFFE5FFE8),
+                      Color(0xFFFFF3E5),
+                      Color(0xFFF0E5FF),
+                    ][user.userId % 5]
+                  : const Color(0xFFFFE4E1),
               borderRadius: BorderRadius.circular(40),
             ),
             child: Center(
@@ -167,22 +255,14 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
                         height: 80,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Text(
-                          user.nickname[0],
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF8E8E),
-                          ),
+                          const ['🐰', '🦊', '🐶', '🐼', '🐻'][user.userId % 5],
+                          style: const TextStyle(fontSize: 36),
                         ),
                       ),
                     )
                   : Text(
-                      user.nickname[0],
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFF8E8E),
-                      ),
+                      const ['🐰', '🦊', '🐶', '🐼', '🐻'][user.userId % 5],
+                      style: const TextStyle(fontSize: 36),
                     ),
             ),
           ),
@@ -224,7 +304,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        _StatCard(value: '0', label: '추억'),
+        _StatCard(value: _user?.memoryCount.toString() ?? '0', label: '추억'),
         const SizedBox(width: 10),
         _StatCard(value: _mapCount.toString(), label: '지도'),
         const SizedBox(width: 10),
@@ -247,8 +327,17 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
           _MenuRow(
             label: '프로필 수정',
             hasBorder: true,
-            onTap: () => context.push('/profile/edit', extra: user)
-                .then((_) => _loadData()),
+            onTap: () async {
+              final result = await context.push<Map<String, dynamic>>('/profile/edit', extra: user);
+              if (result != null && mounted) {
+                setState(() {
+                  _user = _user!.copyWith(
+                    nickname: result['nickname'] as String?,
+                    profileImageUrl: result['profileImageUrl'] as String?,
+                  );
+                });
+              }
+            },
           ),
           _MenuRow(
             label: '친구 관리',
@@ -372,6 +461,7 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

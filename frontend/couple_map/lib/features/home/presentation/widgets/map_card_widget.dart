@@ -20,25 +20,27 @@ class MapCardWidget extends StatelessWidget {
   List<Color> get _gradient =>
       _gradients[map.mapId.abs() % _gradients.length];
 
-  String get _roleLabel {
-    switch (map.myRole) {
-      case 'OWNER':
-        return '나의 지도';
-      case 'EDITOR':
-        return '공유된 지도';
-      case 'VIEWER':
-        return '초대된 지도';
-      default:
-        return '지도';
-    }
-  }
+  static const _categoryEnglish = {
+    '나 혼자': 'Solo',
+    '친구들과': 'Friends',
+    '연인과': 'Couple',
+    '가족': 'Family',
+    'Solo': 'Solo',
+    'Friends': 'Friends',
+    'Couple': 'Couple',
+    'Family': 'Family',
+  };
 
-  String get _roleEmoji {
-    switch (map.myRole) {
-      case 'OWNER':
-        return '🗺️';
-      default:
-        return '🤝';
+  String get _categoryLabel =>
+      _categoryEnglish[map.category] ?? map.category ?? '';
+
+  String get _formattedDate {
+    if (map.createdAt == null) return '';
+    try {
+      final dt = DateTime.parse(map.createdAt!);
+      return '${dt.year}.${dt.month.toString().padLeft(2, '0')}.${dt.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
     }
   }
 
@@ -78,11 +80,11 @@ class MapCardWidget extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0x0D000000),
+                      Color(0x66000000),
                       Color(0x00000000),
-                      Color(0x99000000),
+                      Color(0x80000000),
                     ],
-                    stops: [0, 0.3, 1],
+                    stops: [0, 0.4, 1],
                   ),
                 ),
               ),
@@ -93,6 +95,7 @@ class MapCardWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // 상단: 제목 + 카테고리 | 날짜
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -100,7 +103,7 @@ class MapCardWidget extends StatelessWidget {
                           map.mapName,
                           style: const TextStyle(
                             fontFamily: 'Gaegu',
-                            fontSize: 22,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             shadows: [
@@ -114,24 +117,54 @@ class MapCardWidget extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (map.description != null &&
-                            map.description!.isNotEmpty)
-                          Opacity(
-                            opacity: 0.9,
-                            child: Text(
-                              map.description!,
-                              style: const TextStyle(
-                                fontFamily: 'NotoSansKR',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w300,
-                                color: Colors.white,
+                        const SizedBox(height: 2),
+                        Text(
+                          _categoryLabel.isNotEmpty && _formattedDate.isNotEmpty
+                              ? '$_categoryLabel | $_formattedDate'
+                              : _categoryLabel.isNotEmpty
+                                  ? _categoryLabel
+                                  : _formattedDate,
+                          style: const TextStyle(
+                            fontFamily: 'NotoSansKR',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white70,
+                            shadows: [
+                              Shadow(
+                                color: Color(0x4D000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
+                    // 하단 우측: 설명
+                    if (map.description != null &&
+                        map.description!.isNotEmpty)
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: Text(
+                          map.description!,
+                          style: const TextStyle(
+                            fontFamily: 'NotoSansKR',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Color(0x4D000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
                   ],
                 ),
               ),

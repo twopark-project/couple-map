@@ -86,7 +86,7 @@ public class MapServiceImplTest {
                 .build();
         ReflectionTestUtils.setField(friendUser, "userId", 2L);
 
-        testMap = Map.from("Test Map", "Test Description");
+        testMap = Map.from("Test Map", "Test Description", "Solo");
         ReflectionTestUtils.setField(testMap, "mapId", 1L);
 
         testMapMember = MapMember.from(testMap, testUser, MapMemberRole.OWNER);
@@ -96,7 +96,7 @@ public class MapServiceImplTest {
     @DisplayName("지도 생성 성공")
     void createMap_Success() {
         // given
-        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description");
+        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description", "Solo");
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
@@ -117,7 +117,7 @@ public class MapServiceImplTest {
     @DisplayName("지도 생성 실패 - 지도 이름 중복")
     void createMap_MapNameDuplicated() {
         // given
-        CreateMapRequestDto request = new CreateMapRequestDto("Duplicate Map", "Description");
+        CreateMapRequestDto request = new CreateMapRequestDto("Duplicate Map", "Description", "Solo");
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
@@ -169,7 +169,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
@@ -192,7 +192,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
         MapMember editorMember = MapMember.from(testMap, testUser, MapMemberRole.EDITOR);
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
@@ -210,7 +210,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Duplicate Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Duplicate Map", "Updated Description", "Solo");
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
@@ -227,9 +227,9 @@ public class MapServiceImplTest {
     void getMapList_ExcludePending() {
         // given
         Long userId = 1L;
-        Map map1 = Map.from("Map 1", "Description 1");
+        Map map1 = Map.from("Map 1", "Description 1", "Friends");
         ReflectionTestUtils.setField(map1, "mapId", 10L);
-        Map map2 = Map.from("Map 2", "Description 2");
+        Map map2 = Map.from("Map 2", "Description 2", "Couple");
         ReflectionTestUtils.setField(map2, "mapId", 20L);
         MapMember ownerMember = MapMember.from(map1, testUser, MapMemberRole.OWNER);
         MapMember pendingMember = MapMember.from(map2, testUser, testUser, MapMemberRole.PENDING);
@@ -239,7 +239,7 @@ public class MapServiceImplTest {
         when(mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(10L, MapMemberRole.PENDING)).thenReturn(1L);
 
         // when
-        List<MapListDto> result = mapService.getMapList(userId);
+        List<MapInfoDto> result = mapService.getMapList(userId);
 
         // then
         assertThat(result).hasSize(1);
@@ -382,8 +382,8 @@ public class MapServiceImplTest {
     void getInvitationList_Success() {
         // given
         Long userId = 1L;
-        Map map1 = Map.from("Map 1", "Description 1");
-        Map map2 = Map.from("Map 2", "Description 2");
+        Map map1 = Map.from("Map 1", "Description 1", "Friends");
+        Map map2 = Map.from("Map 2", "Description 2", "Couple");
         MapMember invitation1 = MapMember.from(map1, testUser, friendUser, MapMemberRole.PENDING);
         MapMember invitation2 = MapMember.from(map2, testUser, friendUser, MapMemberRole.PENDING);
 
@@ -418,7 +418,7 @@ public class MapServiceImplTest {
     @DisplayName("지도 생성 성공 - 배경 이미지 포함")
     void createMap_WithBackgroundImage_Success() {
         // given
-        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description");
+        CreateMapRequestDto request = new CreateMapRequestDto("New Map", "Description", "Solo");
         Long userId = 1L;
         MultipartFile backgroundImage = new MockMultipartFile(
                 "backgroundImage",
@@ -451,7 +451,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
         MultipartFile newBackgroundImage = new MockMultipartFile(
                 "backgroundImage",
                 "new_test.jpg",
@@ -488,7 +488,7 @@ public class MapServiceImplTest {
         // given
         Long mapId = 1L;
         Long userId = 1L;
-        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description");
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated Map", "Updated Description", "Solo");
         MultipartFile newBackgroundImage = new MockMultipartFile(
                 "backgroundImage",
                 "new_test.jpg",

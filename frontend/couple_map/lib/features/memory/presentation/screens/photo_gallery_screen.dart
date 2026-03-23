@@ -1,53 +1,72 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../auth/domain/providers/auth_provider.dart';
+import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import '../../data/models/memory_model.dart';
-import '../../domain/providers/memory_provider.dart';
 
-class PhotoGalleryScreen extends ConsumerStatefulWidget {
-  final int mapId;
-  final int memoryId;
+class PhotoGalleryScreen extends StatefulWidget {
+  final List<MediaFile> images;
+  final int initialIndex;
 
   const PhotoGalleryScreen({
     super.key,
-    required this.mapId,
-    required this.memoryId,
+    required this.images,
+    this.initialIndex = 0,
   });
 
   @override
-  ConsumerState<PhotoGalleryScreen> createState() => _PhotoGalleryScreenState();
+  State<PhotoGalleryScreen> createState() => _PhotoGalleryScreenState();
 }
 
-class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
-  List<MediaFile> _images = [];
-  bool _isLoading = true;
-  int _currentIndex = 0;
+class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
+  late int _currentIndex;
+  late PageController _pageController;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
   }
 
-  Future<void> _load() async {
-    final auth = ref.read(authProvider);
-    if (auth is! AuthSuccess) return;
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _downloadImage() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
     try {
-      final memory = await ref.read(memoryRepositoryProvider).getMemoryDetail(
-        auth.token.accessToken,
-        widget.mapId,
-        widget.memoryId,
-      );
+      final url = widget.images[_currentIndex].fileUrl;
+      final dir = await getTemporaryDirectory();
+      final ext = url.split('.').last.split('?').first;
+      final path = '${dir.path}/vestige_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      await Dio().download(url, path);
+      await Gal.putImage(path);
       if (mounted) {
-        setState(() {
-          _images = memory.mediaFiles
-              .where((f) => f.fileType == MediaType.image)
-              .toList();
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('사진이 저장되었어요!', style: TextStyle(fontWeight: FontWeight.w600)),
+            backgroundColor: const Color(0xFFFF8E8E),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장에 실패했어요')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -55,61 +74,84 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: _images.isEmpty
-            ? null
-            : Text(
-                '${_currentIndex + 1} / ${_images.length}',
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-              ),
-      ),
-      body: _isLoading
-          ? const Center(
+      body: Stack(
+        children: [
+          PhotoViewGallery.builder(
+            pageController: _pageController,
+            itemCount: widget.images.length,
+            onPageChanged: (i) => setState(() => _currentIndex = i),
+            builder: (context, index) {
+              return PhotoViewGalleryPageOptions(
+                imageProvider: NetworkImage(widget.images[index].fileUrl),
+                minScale: PhotoViewComputedScale.contained,
+                maxScale: PhotoViewComputedScale.covered * 3,
+                heroAttributes: PhotoViewHeroAttributes(tag: 'photo_$index'),
+              );
+            },
+            loadingBuilder: (context, event) => const Center(
               child: CircularProgressIndicator(color: Colors.white),
-            )
-          : _images.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.image_not_supported_outlined,
-                          size: 64, color: Colors.white38),
-                      SizedBox(height: 16),
-                      Text(
-                        '사진이 없어요',
-                        style: TextStyle(color: Colors.white54, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                )
-              : PageView.builder(
-                  itemCount: _images.length,
-                  onPageChanged: (i) => setState(() => _currentIndex = i),
-                  itemBuilder: (context, index) {
-                    return InteractiveViewer(
-                      child: Center(
-                        child: Image.network(
-                          _images[index].fileUrl,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                  color: Colors.white),
-                            );
-                          },
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.broken_image_outlined,
-                            color: Colors.white38,
-                            size: 64,
-                          ),
+            ),
+            backgroundDecoration: const BoxDecoration(color: Colors.black),
+          ),
+          // 상단 바
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
                         ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 20),
                       ),
-                    );
-                  },
+                    ),
+                    Text(
+                      '${_currentIndex + 1} / ${widget.images.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _downloadImage,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: _isSaving
+                            ? const Padding(
+                                padding: EdgeInsets.all(8),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.download, color: Colors.white, size: 20),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

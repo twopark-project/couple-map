@@ -57,8 +57,16 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfoResponseDto>> getMyInfo(
             @AuthenticationPrincipal(expression = "userId") Long userId) {
-        
+
         UserInfoResponseDto response = userService.getUserInfo(userId);
         return ResponseEntity.ok(ApiResponse.success(response, "내 정보 조회 성공"));
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "계정 및 모든 관련 데이터를 삭제합니다")
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        userService.deleteAccount(userId);
+        return ResponseEntity.ok(ApiResponse.success("회원 탈퇴가 완료되었습니다."));
     }
 }

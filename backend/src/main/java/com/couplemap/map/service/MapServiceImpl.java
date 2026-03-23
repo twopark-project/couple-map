@@ -48,7 +48,7 @@ public class MapServiceImpl implements MapService {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
-        Map newMap = Map.from(request.getMapName(), request.getDescription());
+        Map newMap = Map.from(request.getMapName(), request.getDescription(), request.getCategory());
 
         if (backgroundImage != null && !backgroundImage.isEmpty()) {
             S3UploadDto uploadResult = s3Service.uploadImageFile(backgroundImage);
@@ -95,7 +95,7 @@ public class MapServiceImpl implements MapService {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
-        map.update(request.getMapName(), request.getDescription());
+        map.update(request.getMapName(), request.getDescription(), request.getCategory());
 
         if (backgroundImage != null && !backgroundImage.isEmpty()) {
             String oldBackgroundKey = map.getBackgroundKey();
@@ -108,7 +108,7 @@ public class MapServiceImpl implements MapService {
     }
 
     @Override
-    public List<MapListDto> getMapList(Long userId) {
+    public List<MapInfoDto> getMapList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return mapMemberRepository.findAllByUser(user).stream()
@@ -116,9 +116,19 @@ public class MapServiceImpl implements MapService {
                 .map(mapMember -> {
                     long memberCount = mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(
                             mapMember.getMap().getMapId(), MapMemberRole.PENDING);
-                    return MapListDto.from(mapMember, memberCount);
+                    return MapInfoDto.from(mapMember, memberCount);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public MapInfoDto getMapDetail(Long mapId, Long userId) {
+        MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
+                .filter(m -> m.getMapMemberRole() != MapMemberRole.PENDING)
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
+
+        long memberCount = mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(mapId, MapMemberRole.PENDING);
+        return MapInfoDto.from(mapMember, memberCount);
     }
 
     @Transactional
