@@ -110,10 +110,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                   context.go('/');
                 }
               },
-              child: const Text(
-                '◀',
-                style: TextStyle(fontSize: 20, color: Color(0xFFAAAAAA)),
-              ),
+              child: const Icon(Icons.arrow_back_ios, color: Color(0xFF191919), size: 20),
             ),
             const Expanded(
               child: Text(

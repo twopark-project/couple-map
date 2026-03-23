@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
+import '../../../memory/presentation/screens/memory_detail_screen.dart';
 import '../../data/repositories/calendar_repository.dart';
 import '../../domain/providers/calendar_provider.dart';
 
@@ -21,16 +21,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Map<String, List<CalendarMemory>> _memoryMap = {};
   bool _isLoading = true;
 
-  static const _emojis = [
-    '❤️', '🌸', '🎬', '☕', '🏔️', '🍜', '🍰', '🎵', '📸', '✨', '🌊', '🌙',
-  ];
-  static const _bgColors = [
-    Color(0xFFFFE4E4), Color(0xFFE4F0FF), Color(0xFFE4FFE4),
-    Color(0xFFFFEDD5), Color(0xFFF0E4FF), Color(0xFFE4FFF0),
-  ];
+  static const _categoryIcons = {
+    '음식점': Icons.restaurant,
+    '카페': Icons.coffee,
+    '영화관': Icons.movie,
+    '쇼핑': Icons.shopping_bag,
+    '관광지': Icons.temple_buddhist,
+  };
 
-  String _emoji(int id) => _emojis[id.abs() % _emojis.length];
-  Color _bgColor(int id) => _bgColors[id.abs() % _bgColors.length];
+  static const _categoryColors = {
+    '음식점': Color(0xFFFF9800),
+    '카페': Color(0xFF8D6E63),
+    '영화관': Color(0xFF7E57C2),
+    '쇼핑': Color(0xFF42A5F5),
+    '관광지': Color(0xFF66BB6A),
+  };
+
+  static const _categoryBgColors = {
+    '음식점': Color(0xFFFFF3E0),
+    '카페': Color(0xFFEFEBE9),
+    '영화관': Color(0xFFEDE7F6),
+    '쇼핑': Color(0xFFE3F2FD),
+    '관광지': Color(0xFFE8F5E9),
+  };
 
   @override
   void initState() {
@@ -221,7 +234,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          '이번 달 추억 $_monthMemoryCount개',
+          '${_isCurrentMonth ? '이번 달' : '${_currentMonth.month}월'} 추억 $_monthMemoryCount개',
           style: const TextStyle(
             fontFamily: 'NotoSansKR',
             fontSize: 13,
@@ -371,6 +384,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   // ── 추억 섹션 ──
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return _currentMonth.year == now.year && _currentMonth.month == now.month;
+  }
+
   bool get _isSelectedToday {
     final now = DateTime.now();
     return _selectedDate.year == now.year &&
@@ -460,7 +478,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () => context.push('/map/${memory.mapId}/memory/${memory.memoryId}'),
+          onTap: () => showMemoryDetailSheet(context, memory.mapId, memory.memoryId),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
@@ -471,7 +489,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   decoration: BoxDecoration(
                     color: memory.thumbnailUrl != null
                         ? Colors.transparent
-                        : _bgColor(memory.memoryId),
+                        : (_categoryBgColors[memory.category] ?? const Color(0xFFFFF0F0)),
                     shape: BoxShape.circle,
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -480,16 +498,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           memory.thumbnailUrl!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Center(
-                            child: Text(
-                              _emoji(memory.memoryId),
-                              style: const TextStyle(fontSize: 20),
+                            child: Icon(
+                              _categoryIcons[memory.category] ?? Icons.place,
+                              color: _categoryColors[memory.category] ?? const Color(0xFFFF7A7A),
+                              size: 20,
                             ),
                           ),
                         )
                       : Center(
-                          child: Text(
-                            _emoji(memory.memoryId),
-                            style: const TextStyle(fontSize: 20),
+                          child: Icon(
+                            _categoryIcons[memory.category] ?? Icons.place,
+                            color: _categoryColors[memory.category] ?? const Color(0xFFFF7A7A),
+                            size: 20,
                           ),
                         ),
                 ),

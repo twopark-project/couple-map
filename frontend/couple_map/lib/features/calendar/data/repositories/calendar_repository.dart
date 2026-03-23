@@ -7,6 +7,7 @@ class CalendarMemory {
   final String title;
   final String placeName;
   final DateTime? memoryDate;
+  final String? category;
   final String? thumbnailUrl;
 
   const CalendarMemory({
@@ -15,6 +16,7 @@ class CalendarMemory {
     required this.title,
     required this.placeName,
     this.memoryDate,
+    this.category,
     this.thumbnailUrl,
   });
 
@@ -27,6 +29,7 @@ class CalendarMemory {
       memoryDate: json['memoryDate'] != null
           ? DateTime.parse(json['memoryDate'] as String)
           : null,
+      category: json['category'] as String?,
       thumbnailUrl: json['thumbnailUrl'] as String?,
     );
   }
