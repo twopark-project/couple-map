@@ -24,10 +24,14 @@ public class CreateMemoryRequestDto {
     @NotBlank(message = "장소명은 필수입니다.")
     private String placeName;
 
+    private String address;
+
     @NotNull(message = "추억 날짜는 필수입니다.")
     private LocalDate memoryDate;
     @NotNull(message = "위도는 필수입니다.")
     private BigDecimal latitude;
     @NotNull(message = "경도는 필수입니다.")
     private BigDecimal longitude;
+
+    private String category;
 }

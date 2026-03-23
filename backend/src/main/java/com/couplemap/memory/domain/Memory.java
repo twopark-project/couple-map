@@ -42,6 +42,9 @@ public class Memory extends BaseEntity {
     @Column(name = "place_name", nullable = false, length = 100)
     private String placeName;
 
+    @Column(name = "address", length = 200)
+    private String address;
+
     @Column(name = "memory_date")
     private LocalDate memoryDate;
 
@@ -51,16 +54,21 @@ public class Memory extends BaseEntity {
     @Column(name = "longitude", precision = 11, scale = 8)
     private BigDecimal longitude;
 
+    @Column(name = "category", length = 20)
+    private String category;
+
     @Builder
-    private Memory(Map map, User user, String title, String content, String placeName, LocalDate memoryDate, BigDecimal latitude, BigDecimal longitude) {
+    private Memory(Map map, User user, String title, String content, String placeName, String address, LocalDate memoryDate, BigDecimal latitude, BigDecimal longitude, String category) {
         this.map = map;
         this.user = user;
         this.title = title;
         this.content = content;
         this.placeName = placeName;
+        this.address = address;
         this.memoryDate = memoryDate;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.category = category;
     }
 
     public static Memory from(CreateMemoryRequestDto request, Map map, User user) {
@@ -70,9 +78,11 @@ public class Memory extends BaseEntity {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .placeName(request.getPlaceName())
+                .address(request.getAddress())
                 .memoryDate(request.getMemoryDate())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
+                .category(request.getCategory())
                 .build();
     }
 
@@ -81,5 +91,6 @@ public class Memory extends BaseEntity {
         this.content = request.getContent();
         this.placeName = request.getPlaceName();
         this.memoryDate = request.getMemoryDate();
+        this.category = request.getCategory();
     }
 }

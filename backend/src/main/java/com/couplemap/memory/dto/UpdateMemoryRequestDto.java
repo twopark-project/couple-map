@@ -27,6 +27,8 @@ public class UpdateMemoryRequestDto {
     @NotNull(message = "추억 날짜는 필수입니다.")
     private LocalDate memoryDate;
 
+    private String category;
+
     // 삭제할 기존 파일의 ID 목록
     private List<Long> deleteFileIds;
 }

@@ -14,6 +14,7 @@ public class MemoryListResponseDto {
     private final BigDecimal latitude;
     private final BigDecimal longitude;
     private final LocalDate memoryDate;
+    private final String category;
     private final String thumbnailUrl;
 
     public MemoryListResponseDto(Memory memory, String thumbnailUrl) {
@@ -23,6 +24,7 @@ public class MemoryListResponseDto {
         this.latitude = memory.getLatitude();
         this.longitude = memory.getLongitude();
         this.memoryDate = memory.getMemoryDate();
+        this.category = memory.getCategory();
         this.thumbnailUrl = thumbnailUrl;
     }
 }

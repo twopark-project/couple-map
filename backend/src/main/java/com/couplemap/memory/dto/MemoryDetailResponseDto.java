@@ -14,9 +14,11 @@ public class MemoryDetailResponseDto {
     private final String title;
     private final String content;
     private final String placeName;
+    private final String address;
     private final LocalDate memoryDate;
     private final BigDecimal latitude;
     private final BigDecimal longitude;
+    private final String category;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final List<MediaFileDto> mediaFiles;
@@ -26,9 +28,11 @@ public class MemoryDetailResponseDto {
         this.title = memory.getTitle();
         this.content = memory.getContent();
         this.placeName = memory.getPlaceName();
+        this.address = memory.getAddress();
         this.memoryDate = memory.getMemoryDate();
         this.latitude = memory.getLatitude();
         this.longitude = memory.getLongitude();
+        this.category = memory.getCategory();
         this.createdAt = memory.getCreatedAt();
         this.updatedAt = memory.getUpdatedAt();
         this.mediaFiles = mediaFiles;

@@ -94,7 +94,7 @@ class MemoryServiceImplTest {
 
         // 테스트 맵 생성
 
-        testMap = Map.from("테스트맵", "테스트 설명");
+        testMap = Map.from("테스트맵", "테스트 설명", "Solo");
         testMap = mapRepository.save(testMap);
 
         // 맵 멤버 등록 (testUser는 OWNER)
@@ -396,7 +396,7 @@ class MemoryServiceImplTest {
     @DisplayName("캘린더 추억 조회 - 여러 지도의 추억을 모두 반환")
     void getCalendarMemories_MultipleMapMemories() {
         // given - 두 번째 맵 생성
-        Map secondMap = Map.from("두번째맵", "두번째 설명");
+        Map secondMap = Map.from("두번째맵", "두번째 설명", "Friends");
         secondMap = mapRepository.save(secondMap);
         MapMember secondMapMember = MapMember.from(secondMap, testUser, MapMemberRole.OWNER);
         mapMemberRepository.save(secondMapMember);
