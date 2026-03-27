@@ -34,7 +34,7 @@ public class LoginServiceImpl implements LoginService {
     private final UserRepository userRepository;
     private final FriendCodeGenerator codeGenerator;
     private final AuthTokenService authTokenService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String kakaoUserInfoUri;
