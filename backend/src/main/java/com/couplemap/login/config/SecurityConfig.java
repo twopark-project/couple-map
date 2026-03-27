@@ -62,7 +62,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/api/login/social/**", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/", "/api/login/social/**", "/api/auth/refresh", "/api/dev/**").permitAll()
                         .anyRequest().authenticated());
 
         //STATELESS
