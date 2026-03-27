@@ -63,6 +63,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/", "/api/login/social/**", "/api/auth/refresh", "/api/dev/**").permitAll()
+                        .requestMatchers("/actuator/prometheus", "/actuator/health").permitAll()
                         .anyRequest().authenticated());
 
         //STATELESS
