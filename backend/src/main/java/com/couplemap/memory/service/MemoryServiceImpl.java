@@ -97,13 +97,18 @@ public class MemoryServiceImpl implements MemoryService {
         // 2. 해당 지도의 모든 Memory 조회
         List<Memory> memories = memoryRepository.findAllByMap_MapId(mapId);
 
-        // 3. DTO로 변환
+        // 3. 썸네일 일괄 조회
+        List<Long> memoryIds = memories.stream().map(Memory::getMemoryId).collect(Collectors.toList());
+
+        java.util.Map<Long, String> thumbnailMap = mediaFileRepository.findByMemoryIdIn(memoryIds).stream()
+                .collect(Collectors.toMap(
+                        mf -> mf.getMemory().getMemoryId(),
+                        MediaFile::getFileUrl,
+                        (existing, replacement) -> existing
+                ));
+
         return memories.stream()
-                .map(memory -> {
-                    List<MediaFile> files = mediaFileRepository.findByMemoryIdOrderByDisplayOrder(memory.getMemoryId());
-                    String thumbnailUrl = files.isEmpty() ? null : files.get(0).getFileUrl();
-                    return new MemoryListResponseDto(memory, thumbnailUrl);
-                })
+                .map(memory -> new MemoryListResponseDto(memory, thumbnailMap.get(memory.getMemoryId())))
                 .collect(Collectors.toList());
     }
 
@@ -140,7 +145,7 @@ public class MemoryServiceImpl implements MemoryService {
 
     @Transactional
     public Long updateMemory(Long mapId, Long memoryId, UpdateMemoryRequestDto request,
-                            List<MultipartFile> files, Long userId) {
+                             List<MultipartFile> files, Long userId) {
 
         Memory memory = validateAndGetMemory(mapId, memoryId, userId);
         validateMemoryOwnership(memory, userId, NO_PERMISSION_TO_UPDATE);
