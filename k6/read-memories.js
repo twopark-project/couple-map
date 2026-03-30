@@ -9,8 +9,8 @@ export const options = {
   stages: [
     { duration: '10s', target: 10 },   
     { duration: '30s', target: 10 },   
-    { duration: '10s', target: 50 },   
-    { duration: '1m', target: 50 },   
+    { duration: '10s', target: 100 },   
+    { duration: '1m', target: 100 },   
     { duration: '10s', target: 0 },    
   ],
 };
@@ -30,21 +30,5 @@ export default function () {
     '추억 목록 200': (r) => r.status === 200,
   });
 
-  // 2. 추억 상세 조회 (목록에서 첫 번째 ID로)
-  if (listRes.status === 200) {
-    const memories = JSON.parse(listRes.body).data;
-    if (memories.length > 0) {
-      const randomIdx = Math.floor(Math.random() * memories.length);
-      const memoryId = memories[randomIdx].memoryId;
-      const detailRes = http.get(
-        `${BASE_URL}/api/maps/${MAP_ID}/memories/${memoryId}`,
-        { headers, tags: { name: 'GET_memory_detail' } }
-      );
-      check(detailRes, {
-        '추억 상세 200': (r) => r.status === 200,
-      });
-    }
-  }
-
-  sleep(1);
+  sleep(0.5);
 }
