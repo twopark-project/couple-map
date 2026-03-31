@@ -22,11 +22,15 @@ import com.couplemap.memory.dto.CreateMemoryRequestDto;
 import com.couplemap.memory.dto.MediaFileDto;
 import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.MemoryListResponseDto;
+import com.couplemap.memory.dto.MemoryMarkerResponseDto;
 import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -89,13 +93,14 @@ public class MemoryServiceImpl implements MemoryService {
     }
 
     @Override
-    public List<MemoryListResponseDto> getMemoryList(Long mapId, Long userId) {
+    public Slice<MemoryListResponseDto> getMemoryList(Long mapId, Long userId, Pageable pageable) {
         // 1. 권한 검증
         mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        // 2. 해당 지도의 모든 Memory 조회
-        List<Memory> memories = memoryRepository.findAllByMap_MapId(mapId);
+        // 2. 페이징 조회
+        Slice<Memory> memorySlice = memoryRepository.findByMap_MapId(mapId, pageable);
+        List<Memory> memories = memorySlice.getContent();
 
         // 3. 썸네일 일괄 조회
         List<Long> memoryIds = memories.stream().map(Memory::getMemoryId).collect(Collectors.toList());
@@ -107,8 +112,22 @@ public class MemoryServiceImpl implements MemoryService {
                         (existing, replacement) -> existing
                 ));
 
-        return memories.stream()
+        List<MemoryListResponseDto> content = memories.stream()
                 .map(memory -> new MemoryListResponseDto(memory, thumbnailMap.get(memory.getMemoryId())))
+                .collect(Collectors.toList());
+
+        return new SliceImpl<>(content, pageable, memorySlice.hasNext());
+    }
+
+    @Override
+    public List<MemoryMarkerResponseDto> getMemoryMarkers(Long mapId, Long userId) {
+        // 1. 권한 검증
+        mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
+                .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
+
+        // 2. 좌표만 조회
+        return memoryRepository.findAllByMap_MapId(mapId).stream()
+                .map(MemoryMarkerResponseDto::new)
                 .collect(Collectors.toList());
     }
 

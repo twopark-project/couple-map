@@ -4,12 +4,15 @@ import com.couplemap.global.response.ApiResponse;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
 import com.couplemap.memory.dto.MemoryDetailResponseDto;
 import com.couplemap.memory.dto.MemoryListResponseDto;
+import com.couplemap.memory.dto.MemoryMarkerResponseDto;
 import com.couplemap.memory.dto.UpdateMemoryRequestDto;
 import com.couplemap.memory.service.MemoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,13 +42,24 @@ public class MemoryController {
                 .body(ApiResponse.success(memoryId, "추억이 성공적으로 생성되었습니다."));
     }
 
-    @Operation(summary = "추억 목록 조회", description = "특정 지도에 속한 모든 추억의 목록을 조회합니다.")
+    @Operation(summary = "추억 목록 조회", description = "특정 지도에 속한 추억 목록을 페이징으로 조회합니다.")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<MemoryListResponseDto>>> getMemoryList(
+    public ResponseEntity<ApiResponse<Slice<MemoryListResponseDto>>> getMemoryList(
+            @PathVariable Long mapId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal(expression = "userId") Long userId) {
+        Slice<MemoryListResponseDto> memoryList = memoryService.getMemoryList(mapId, userId, PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.success(memoryList, "추억 목록 조회가 완료되었습니다."));
+    }
+
+    @Operation(summary = "추억 마커 조회", description = "지도에 표시할 추억 마커 목록을 조회합니다.")
+    @GetMapping("/markers")
+    public ResponseEntity<ApiResponse<List<MemoryMarkerResponseDto>>> getMemoryMarkers(
             @PathVariable Long mapId,
             @AuthenticationPrincipal(expression = "userId") Long userId) {
-        List<MemoryListResponseDto> memoryList = memoryService.getMemoryList(mapId, userId);
-        return ResponseEntity.ok(ApiResponse.success(memoryList, "추억 목록 조회가 완료되었습니다."));
+        List<MemoryMarkerResponseDto> markers = memoryService.getMemoryMarkers(mapId, userId);
+        return ResponseEntity.ok(ApiResponse.success(markers, "추억 마커 조회가 완료되었습니다."));
     }
 
     @Operation(summary = "추억 상세 조회", description = "특정 추억의 상세 정보를 조회합니다.")
