@@ -250,12 +250,21 @@ public class MemoryServiceImpl implements MemoryService {
     public List<CalendarMemoryResponseDto> getCalendarMemories(int year, Long userId) {
         List<Memory> memories = memoryRepository.findAllByUserIdAndYear(userId, year);
 
+        List<Long> memoryIds = memories.stream().map(Memory::getMemoryId).collect(Collectors.toList());
+
+        if (memoryIds.isEmpty()) {
+            return List.of();
+        }
+
+        java.util.Map<Long, String> thumbnailMap = mediaFileRepository.findByMemoryIdIn(memoryIds).stream()
+                .collect(Collectors.toMap(
+                        mf -> mf.getMemory().getMemoryId(),
+                        MediaFile::getFileUrl,
+                        (existing, replacement) -> existing
+                ));
+
         return memories.stream()
-                .map(memory -> {
-                    List<MediaFile> files = mediaFileRepository.findByMemoryIdOrderByDisplayOrder(memory.getMemoryId());
-                    String thumbnailUrl = files.isEmpty() ? null : files.get(0).getFileUrl();
-                    return new CalendarMemoryResponseDto(memory, thumbnailUrl);
-                })
+                .map(memory -> new CalendarMemoryResponseDto(memory, thumbnailMap.get(memory.getMemoryId())))
                 .collect(Collectors.toList());
     }
 
