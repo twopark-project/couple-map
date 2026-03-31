@@ -27,6 +27,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.data.domain.PageRequest;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -196,7 +198,7 @@ class MemoryServiceImplTest {
         memoryService.createMemory(testMap.getMapId(), additionalRequest, null, testUser.getUserId());
 
         // when
-        var memoryList = memoryService.getMemoryList(testMap.getMapId(), testUser.getUserId());
+        var memoryList = memoryService.getMemoryList(testMap.getMapId(), testUser.getUserId(), PageRequest.of(0, 10));
 
         // then
         assertThat(memoryList).hasSize(2);
