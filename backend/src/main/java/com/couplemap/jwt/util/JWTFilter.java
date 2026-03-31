@@ -28,20 +28,22 @@
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
             String authorization = request.getHeader("Authorization");
+            String requestURI = request.getRequestURI();
+
 
             // Authorization 헤더 검증
             if (authorization == null || !authorization.startsWith("Bearer ")) {
-                log.warn("token null or invalid format");
+                log.warn("토큰 없음 또는 형식 오류 - URI: {}", requestURI);
                 filterChain.doFilter(request, response);
                 return;
             }
-
+    
             // "Bearer " 제거하고 토큰만 추출
             String token = authorization.substring(7);
 
             //토큰 소멸 시간 검증
             if (jwtUtil.isExpired(token)) {
-                log.warn("토큰 만료시간 만료 : {}", request.getRequestURI());
+                log.warn("토큰 만료 - URI: {}", requestURI);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -49,7 +51,7 @@
             // Access Token 확인
             String category = jwtUtil.getCategory(token);
             if (!"access".equals(category)) {
-                log.warn("Access Token이 아님 - {}", request.getRequestURI());
+                log.warn("ACCESS 토큰이 아님 - URI: {}", requestURI);
                 filterChain.doFilter(request, response);
                 return;
             }

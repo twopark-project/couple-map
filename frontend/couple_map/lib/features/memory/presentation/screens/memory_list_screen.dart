@@ -18,28 +18,70 @@ class MemoryListScreen extends ConsumerStatefulWidget {
 class _MemoryListScreenState extends ConsumerState<MemoryListScreen> {
   List<MemorySummary> _memories = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasNext = true;
+  int _currentPage = 0;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadMemories();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200
+        && !_isLoadingMore
+        && _hasNext) {
+      _loadMore();
+    }
   }
 
   Future<void> _loadMemories() async {
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     try {
-      final memories = await ref
+      final result = await ref
           .read(memoryRepositoryProvider)
-          .getMemoryList(auth.token.accessToken, widget.mapId);
+          .getMemoryList(auth.token.accessToken, widget.mapId, page: 0);
       if (mounted) {
         setState(() {
-          _memories = memories;
+          _memories = result.items;
+          _hasNext = result.hasNext;
+          _currentPage = 0;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMore() async {
+    final auth = ref.read(authProvider);
+    if (auth is! AuthSuccess) return;
+    setState(() => _isLoadingMore = true);
+    try {
+      final result = await ref
+          .read(memoryRepositoryProvider)
+          .getMemoryList(auth.token.accessToken, widget.mapId, page: _currentPage + 1);
+      if (mounted) {
+        setState(() {
+          _memories.addAll(result.items);
+          _hasNext = result.hasNext;
+          _currentPage += 1;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingMore = false);
     }
   }
 
@@ -74,11 +116,21 @@ class _MemoryListScreenState extends ConsumerState<MemoryListScreen> {
                   color: const Color(0xFFFF7A7A),
                   onRefresh: _loadMemories,
                   child: ListView.separated(
+                    controller: _scrollController,
                     padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 40),
-                    itemCount: _memories.length,
+                    itemCount: _memories.length + (_isLoadingMore ? 1 : 0),
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) =>
-                        _buildMemoryCard(_memories[index]),
+                    itemBuilder: (context, index) {
+                      if (index == _memories.length) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(color: Color(0xFFFF7A7A)),
+                          ),
+                        );
+                      }
+                      return _buildMemoryCard(_memories[index]);
+                    },
                   ),
                 ),
     );

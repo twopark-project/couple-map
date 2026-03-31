@@ -1,6 +1,8 @@
 package com.couplemap.memory.repository;
 
 import com.couplemap.memory.domain.Memory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +13,8 @@ import java.util.List;
 @Repository
 public interface MemoryRepository extends JpaRepository<Memory, Long> {
     List<Memory> findAllByMap_MapId(Long mapId);
+
+    Slice<Memory> findByMap_MapId(Long mapId, Pageable pageable);
 
     @Query("SELECT m FROM Memory m " +
             "JOIN MapMember mm ON m.map = mm.map " +

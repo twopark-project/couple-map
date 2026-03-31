@@ -57,7 +57,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
   final TextEditingController _searchController = TextEditingController();
   final Dio _dio = Dio();
   List<PlaceModel> _searchResults = [];
-  List<MemorySummary> _memories = [];
+  List<MemoryMarker> _memories = [];
   bool _isSearching = false;
   bool _showResults = false;
 
@@ -185,7 +185,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
       if (auth is! AuthSuccess) return;
       final accessToken = auth.token.accessToken;
 
-      final memories = await ref.read(memoryRepositoryProvider).getMemoryList(accessToken, widget.mapId);
+      final memories = await ref.read(memoryRepositoryProvider).getMemoryMarkers(accessToken, widget.mapId);
 
       if (!mounted) return;
 

@@ -5,17 +5,41 @@ import '../../../../core/network/dio_client.dart';
 import '../models/memory_model.dart';
 
 class MemoryRepository {
-  // 추억 목록 조회
-  Future<List<MemorySummary>> getMemoryList(String accessToken, int mapId) async {
+  // 추억 목록 조회 (페이징)
+  Future<({List<MemorySummary> items, bool hasNext})> getMemoryList(
+    String accessToken,
+    int mapId, {
+    int page = 0,
+    int size = 10,
+  }) async {
     try {
       final response = await DioClient.instance.get(
         '/api/maps/$mapId/memories',
+        queryParameters: {'page': page, 'size': size},
+        options: DioClient.authOptions(accessToken),
+      );
+      final data = response.data['data'] as Map<String, dynamic>?;
+      if (data == null) return (items: <MemorySummary>[], hasNext: false);
+      final items = (data['content'] as List)
+          .map((json) => MemorySummary.fromJson(json as Map<String, dynamic>))
+          .toList();
+      return (items: items, hasNext: data['hasNext'] as bool? ?? false);
+    } on DioException catch (e) {
+      throw DioClient.handleError(e);
+    }
+  }
+
+  // 마커 조회 (전체, 좌표만)
+  Future<List<MemoryMarker>> getMemoryMarkers(String accessToken, int mapId) async {
+    try {
+      final response = await DioClient.instance.get(
+        '/api/maps/$mapId/memories/markers',
         options: DioClient.authOptions(accessToken),
       );
       final data = response.data['data'];
       if (data == null) return [];
       return (data as List)
-          .map((json) => MemorySummary.fromJson(json as Map<String, dynamic>))
+          .map((json) => MemoryMarker.fromJson(json as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
       throw DioClient.handleError(e);
