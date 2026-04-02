@@ -16,6 +16,7 @@ import com.couplemap.map.repository.MapRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -157,7 +158,13 @@ public class MapServiceImpl implements MapService {
 
         Map map = invitingMember.getMap();
         MapMember newMember = MapMember.from(map, friendToInvite, inviter, MapMemberRole.PENDING);
-        mapMemberRepository.save(newMember);
+
+        try {
+            mapMemberRepository.save(newMember);
+            mapMemberRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new MapException(MAP_INVITATION_CONFLICT);
+        }
     }
 
     @Transactional
