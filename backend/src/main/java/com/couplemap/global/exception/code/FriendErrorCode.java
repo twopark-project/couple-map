@@ -16,7 +16,8 @@ public enum FriendErrorCode implements ErrorCode {
     INVALID_FRIENDSHIP_ID(BAD_REQUEST,"존재 하지 않는 친구 관계 ID 입니다."),
     FRIEND_REQUEST_ALREADY_RESOLVED(CONFLICT, "이미 처리(수락 또는 거절)되어 상태를 변경할 수 없습니다."),
     NOT_MATCH_RECEIVER(FORBIDDEN, "본인에게 온 요청만 수락/거절할 수 있습니다"),
-    CANNOT_FRIEND_YOURSELF(BAD_REQUEST, "자기 자신에게 친구 요청을 보낼 수 없습니다.");
+    CANNOT_FRIEND_YOURSELF(BAD_REQUEST, "자기 자신에게 친구 요청을 보낼 수 없습니다."),
+    FRIEND_REQUEST_CONFLICT(CONFLICT, "동시에 중복된 친구 요청이 발생했습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

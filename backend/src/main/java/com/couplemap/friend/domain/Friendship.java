@@ -12,7 +12,7 @@ import static com.couplemap.global.exception.code.FriendErrorCode.NOT_MATCH_RECE
 
 @Getter
 @Entity
-@Table(name = "friendships")
+@Table(name = "friendships", uniqueConstraints = @UniqueConstraint(columnNames = "friend_pair_key"))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
@@ -37,11 +37,15 @@ public class Friendship extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private FriendshipStatus status;
 
+    @Column(name = "friend_pair_key", nullable = false, length = 50, unique = true)
+    private String friendPairKey;
+
     public static Friendship createRequest(User requester, User receiver) {
         return Friendship.builder()
                 .requester(requester)
                 .receiver(receiver)
                 .status(PENDING)
+                .friendPairKey(createPairKey(requester, receiver))
                 .build();
     }
 
@@ -73,5 +77,15 @@ public class Friendship extends BaseEntity {
         if (this.status == ACCEPTED || this.status == REJECTED) {
             throw new FriendException(FRIEND_REQUEST_ALREADY_RESOLVED);
         }
+    }
+
+    private static String createPairKey(User requester, User receiver) {
+        Long requesterId = requester.getUserId();
+        Long receiverId = receiver.getUserId();
+
+        long smallerId = Math.min(requesterId, receiverId);
+        long largerId = Math.max(requesterId, receiverId);
+
+        return smallerId + ":" + largerId;
     }
 }
