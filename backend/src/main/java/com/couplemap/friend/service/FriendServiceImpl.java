@@ -11,6 +11,7 @@ import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,12 @@ public class FriendServiceImpl implements FriendService {
 
         Friendship friendship = Friendship.createRequest(requester, receiver);
 
-        friendshipRepository.save(friendship);
+        try {
+            friendshipRepository.save(friendship);
+            friendshipRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new FriendException(FRIEND_REQUEST_CONFLICT);
+        }
 
         return FriendRequestResponseDto.from(friendship);
     }
