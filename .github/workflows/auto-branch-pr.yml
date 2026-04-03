@@ -7,7 +7,7 @@ on:
 
 jobs:
   create-branch-and-pr:
-    if: contains(github.event.issue.labels.*.name, '✨feature') || contains(github.event.issue.labels.*.name, '🔧refactor')
+    if: contains(github.event.issue.labels.*.name, '✨feature') || contains(github.event.issue.labels.*.name, '🔧refactor') || contains(github.event.issue.labels.*.name, '🐛fix')  
     runs-on: ubuntu-latest
     
     steps:
@@ -23,6 +23,8 @@ jobs:
           # 라벨에 따라 브랜치 타입 결정
           if echo '${{ toJson(github.event.issue.labels.*.name) }}' | grep -q 'refactor'; then
             BRANCH_NAME="refactor/issue-${ISSUE_NUMBER}"
+          elif echo '${{ toJson(github.event.issue.labels.*.name) }}' | grep -q 'fix'; then                                                                                                                                       
+              BRANCH_NAME="fix/issue-${ISSUE_NUMBER}"  
           else
             BRANCH_NAME="feature/issue-${ISSUE_NUMBER}"
           fi
