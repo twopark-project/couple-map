@@ -10,8 +10,8 @@ import java.util.List;
 @Repository
 public interface FileCleanupTaskRepository extends JpaRepository<FileCleanupTask, Long> {
 
-    @Query("SELECT t FROM FileCleanupTask t WHERE t.status = 'PENDING' " +
+    @Query("SELECT t.id FROM FileCleanupTask t WHERE t.status = 'PENDING' " +
             "AND t.retryCount < :maxRetry " +
             "AND t.nextRetryAt <= :now")
-    List<FileCleanupTask> findPendingTasks(int maxRetry, LocalDateTime now);
+    List<Long> findPendingTaskIds(int maxRetry, LocalDateTime now);
 }

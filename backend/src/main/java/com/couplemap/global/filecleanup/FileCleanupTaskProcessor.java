@@ -13,9 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class FileCleanupTaskProcessor {
 
     private final S3Service s3Service;
+    private final FileCleanupTaskRepository fileCleanupTaskRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void process(FileCleanupTask task, int maxRetry) {
+    public void process(Long taskId, int maxRetry) {
+        FileCleanupTask task = fileCleanupTaskRepository.findById(taskId).orElse(null);
+        if (task == null) {
+            return;
+        }
+
         try {
             s3Service.deleteFile(task.getFileKey());
             task.markDone();

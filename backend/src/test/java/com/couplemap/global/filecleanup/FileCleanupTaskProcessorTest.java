@@ -9,6 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -18,15 +20,20 @@ class FileCleanupTaskProcessorTest {
     @Mock
     private S3Service s3Service;
 
+    @Mock
+    private FileCleanupTaskRepository fileCleanupTaskRepository;
+
     @InjectMocks
     private FileCleanupTaskProcessor processor;
 
     private FileCleanupTask task;
+    private final Long taskId = 1L;
     private final int maxRetry = 3;
 
     @BeforeEach
     void setUp() {
         task = FileCleanupTask.of("memory/test-file.jpg");
+        when(fileCleanupTaskRepository.findById(taskId)).thenReturn(Optional.of(task));
     }
 
     @Test
@@ -34,7 +41,7 @@ class FileCleanupTaskProcessorTest {
     void process_success() {
         doNothing().when(s3Service).deleteFile("memory/test-file.jpg");
 
-        processor.process(task, maxRetry);
+        processor.process(taskId, maxRetry);
 
         assertThat(task.getStatus()).isEqualTo(FileCleanupStatus.DONE);
         verify(s3Service, times(1)).deleteFile("memory/test-file.jpg");
@@ -45,7 +52,7 @@ class FileCleanupTaskProcessorTest {
     void process_fail_retryIncrement() {
         doThrow(new RuntimeException("Connection timeout")).when(s3Service).deleteFile("memory/test-file.jpg");
 
-        processor.process(task, maxRetry);
+        processor.process(taskId, maxRetry);
 
         assertThat(task.getStatus()).isEqualTo(FileCleanupStatus.PENDING);
         assertThat(task.getRetryCount()).isEqualTo(1);
@@ -57,9 +64,9 @@ class FileCleanupTaskProcessorTest {
     void process_fail_maxRetry() {
         doThrow(new RuntimeException("Connection timeout")).when(s3Service).deleteFile("memory/test-file.jpg");
 
-        processor.process(task, maxRetry);
-        processor.process(task, maxRetry);
-        processor.process(task, maxRetry);
+        processor.process(taskId, maxRetry);
+        processor.process(taskId, maxRetry);
+        processor.process(taskId, maxRetry);
 
         assertThat(task.getStatus()).isEqualTo(FileCleanupStatus.FAILED);
         assertThat(task.getRetryCount()).isEqualTo(3);

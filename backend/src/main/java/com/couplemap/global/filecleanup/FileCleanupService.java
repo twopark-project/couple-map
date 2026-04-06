@@ -35,12 +35,12 @@ public class FileCleanupService {
 
     @Scheduled(cron = "${file-cleanup.cron}")
     public void processPendingTasks() {
-        List<FileCleanupTask> tasks = fileCleanupTaskRepository.findPendingTasks(maxRetry, LocalDateTime.now());
+        List<Long> taskIds = fileCleanupTaskRepository.findPendingTaskIds(maxRetry, LocalDateTime.now());
 
-        log.info("파일 정리 배치 시작: {}건", tasks.size());
+        log.info("파일 정리 배치 시작: {}건", taskIds.size());
 
-        for (FileCleanupTask task : tasks) {
-            fileCleanupTaskProcessor.process(task, maxRetry);
+        for (Long taskId : taskIds) {
+            fileCleanupTaskProcessor.process(taskId, maxRetry);
         }
 
         log.info("파일 정리 배치 완료");
