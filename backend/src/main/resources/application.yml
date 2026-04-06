@@ -93,6 +93,11 @@ spring:
       max-request-size: 110MB
 
 
+# File Cleanup
+file-cleanup:
+  cron: "0 0 3 * * *"
+  max-retry: 2
+
 # Server
 server:
   address: 0.0.0.0

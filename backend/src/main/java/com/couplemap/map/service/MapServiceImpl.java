@@ -5,8 +5,11 @@ import com.couplemap.friend.repository.FriendshipRepository;
 import com.couplemap.global.exception.exceptions.FriendException;
 import com.couplemap.global.exception.exceptions.MapException;
 import com.couplemap.global.exception.exceptions.UserException;
+import com.couplemap.global.filecleanup.FileCleanupService;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
+import com.couplemap.mediaFile.repository.MediaFileRepository;
+import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
@@ -38,6 +41,9 @@ public class MapServiceImpl implements MapService {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
     private final S3Service s3Service;
+    private final FileCleanupService fileCleanupService;
+    private final MemoryRepository memoryRepository;
+    private final MediaFileRepository mediaFileRepository;
 
     @Transactional
     @Override
@@ -75,6 +81,21 @@ public class MapServiceImpl implements MapService {
         }
 
         Map dMap = mapMember.getMap();
+
+        // 지도에 속한 추억의 미디어 파일 S3 삭제 예약
+        fileCleanupService.scheduleDeleteAll(mediaFileRepository.findFileKeysByMapId(mapId));
+
+        // 미디어 파일 DB 삭제
+        mediaFileRepository.deleteAllByMapId(mapId);
+
+        // 추억 삭제
+        memoryRepository.deleteAllByMap_MapId(mapId);
+
+        // 배경 이미지 S3 삭제 예약
+        if (dMap.getBackgroundKey() != null) {
+            fileCleanupService.scheduleDelete(dMap.getBackgroundKey());
+        }
+
         mapMemberRepository.deleteAllByMap(dMap);
         mapRepository.delete(dMap);
     }
@@ -103,7 +124,7 @@ public class MapServiceImpl implements MapService {
             S3UploadDto uploadResult = s3Service.uploadImageFile(backgroundImage);
             map.updateBackground(uploadResult.getUrl(), uploadResult.getKey());
             if (oldBackgroundKey != null) {
-                s3Service.deleteFile(oldBackgroundKey);
+                fileCleanupService.scheduleDelete(oldBackgroundKey);
             }
         }
     }
