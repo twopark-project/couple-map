@@ -168,7 +168,11 @@ public class MemoryServiceImpl implements MemoryService {
 
         // 기존 파일 삭제
         if (request.getDeleteFileIds() != null && !request.getDeleteFileIds().isEmpty()) {
-            List<MediaFile> filesToDelete = mediaFileRepository.findAllById(request.getDeleteFileIds());
+            List<MediaFile> filesToDelete = mediaFileRepository.findAllByIdsAndMemoryId(request.getDeleteFileIds(), memoryId);
+
+            if (filesToDelete.size() != request.getDeleteFileIds().size()) {
+                throw new MemoryException(INVALID_MEDIA_FILE);
+            }
 
             fileCleanupService.scheduleDeleteAll(filesToDelete.stream().map(MediaFile::getFileKey).toList());
 
