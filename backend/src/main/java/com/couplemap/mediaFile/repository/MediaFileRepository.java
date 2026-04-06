@@ -19,4 +19,10 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
     @Query("SELECT mf FROM MediaFile mf WHERE mf.memory.memoryId IN :memoryIds ORDER BY mf.displayOrder ASC")
     List<MediaFile> findByMemoryIdIn(@Param("memoryIds") List<Long> memoryIds);
+
+    @Query("SELECT mf.fileKey FROM MediaFile mf WHERE mf.memory.user.userId = :userId")
+    List<String> findFileKeysByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT mf.fileKey FROM MediaFile mf WHERE mf.memory.map.mapId = :mapId")
+    List<String> findFileKeysByMapId(@Param("mapId") Long mapId);
 }

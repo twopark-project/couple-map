@@ -6,6 +6,7 @@ import com.couplemap.global.exception.exceptions.MapException;
 import com.couplemap.global.exception.exceptions.MemoryException;
 import com.couplemap.global.exception.exceptions.S3Exception;
 import com.couplemap.global.exception.exceptions.UserException;
+import com.couplemap.global.filecleanup.FileCleanupService;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
 import com.couplemap.map.domain.Map;
@@ -42,7 +43,6 @@ import java.util.stream.Collectors;
 
 import static com.couplemap.global.exception.code.MapErrorCode.*;
 import static com.couplemap.global.exception.code.MemoryErrorCode.*;
-import static com.couplemap.global.exception.code.S3ErrorCode.S3_DELETE_FAILED;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 
 @Service
@@ -55,6 +55,7 @@ public class MemoryServiceImpl implements MemoryService {
     private final UserRepository userRepository;
     private final MapMemberRepository mapMemberRepository;
     private final S3Service s3Service;
+    private final FileCleanupService fileCleanupService;
     private final MediaFileRepository mediaFileRepository;
 
     @Transactional
@@ -149,13 +150,7 @@ public class MemoryServiceImpl implements MemoryService {
 
         // 파일 삭제
         List<MediaFile> filesToDelete = mediaFileRepository.findByMemoryId(memoryId);
-        filesToDelete.forEach(file -> {
-            try {
-                s3Service.deleteFile(file.getFileKey());
-            } catch (Exception e) {
-                throw new S3Exception(S3_DELETE_FAILED);
-            }
-        });
+        fileCleanupService.scheduleDeleteAll(filesToDelete.stream().map(MediaFile::getFileKey).toList());
         mediaFileRepository.deleteAll(filesToDelete);
 
         // Memory 삭제
@@ -165,7 +160,7 @@ public class MemoryServiceImpl implements MemoryService {
     @Transactional
     public Long updateMemory(Long mapId, Long memoryId, UpdateMemoryRequestDto request,
                              List<MultipartFile> files, Long userId) {
-
+        
         Memory memory = validateAndGetMemory(mapId, memoryId, userId);
         validateMemoryOwnership(memory, userId, NO_PERMISSION_TO_UPDATE);
 
@@ -175,13 +170,7 @@ public class MemoryServiceImpl implements MemoryService {
         if (request.getDeleteFileIds() != null && !request.getDeleteFileIds().isEmpty()) {
             List<MediaFile> filesToDelete = mediaFileRepository.findAllById(request.getDeleteFileIds());
 
-            filesToDelete.forEach(file -> {
-                try {
-                    s3Service.deleteFile(file.getFileKey());
-                } catch (Exception e) {
-                    throw new S3Exception(S3_DELETE_FAILED);
-                }
-            });
+            fileCleanupService.scheduleDeleteAll(filesToDelete.stream().map(MediaFile::getFileKey).toList());
 
             mediaFileRepository.deleteAll(filesToDelete);
         }
