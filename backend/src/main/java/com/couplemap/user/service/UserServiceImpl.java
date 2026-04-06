@@ -21,8 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.couplemap.global.exception.code.UserErrorCode.DUPLICATE_NICKNAME;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
@@ -104,8 +103,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
-        // 1. 유저가 작성한 추억의 미디어 파일 S3 삭제 예약
-        fileCleanupService.scheduleDeleteAll(mediaFileRepository.findFileKeysByUserId(userId));
+        // S3 삭제 예약할 파일 키 수집
+        Set<String> fileKeysToDelete = new HashSet<>(mediaFileRepository.findFileKeysByUserId(userId));
+
+        // 1. 유저가 작성한 미디어 파일 DB 삭제
+        mediaFileRepository.deleteAllByUserId(userId);
 
         // 2. 유저가 작성한 추억 삭제
         memoryRepository.deleteAllByUser_UserId(userId);
@@ -113,31 +115,34 @@ public class UserServiceImpl implements UserService {
         // 3. OWNER인 지도 → 해당 지도의 추억, 멤버, 지도 삭제
         List<Map> ownedMaps = mapMemberRepository.findOwnedMapsByUserId(userId);
         for (Map map : ownedMaps) {
-            // 지도에 속한 추억의 미디어 파일 S3 삭제 예약
-            fileCleanupService.scheduleDeleteAll(mediaFileRepository.findFileKeysByMapId(map.getMapId()));
+            fileKeysToDelete.addAll(mediaFileRepository.findFileKeysByMapId(map.getMapId()));
+            mediaFileRepository.deleteAllByMapId(map.getMapId());
             memoryRepository.deleteAllByMap_MapId(map.getMapId());
             mapMemberRepository.deleteAllByMap(map);
             if (map.getBackgroundKey() != null) {
-                fileCleanupService.scheduleDelete(map.getBackgroundKey());
+                fileKeysToDelete.add(map.getBackgroundKey());
             }
             mapRepository.delete(map);
         }
 
-        // 3. 참여 중인 지도 멤버 삭제
+        // 4. 참여 중인 지도 멤버 삭제
         mapMemberRepository.deleteAllByUserId(userId);
 
-        // 4. 친구 관계 삭제
+        // 5. 친구 관계 삭제
         friendshipRepository.deleteAllByUserId(userId);
 
-        // 5. 리프레시 토큰 삭제
+        // 6. 리프레시 토큰 삭제
         refreshTokenRepository.deleteById(String.valueOf(userId));
 
-        // 6. 프로필 이미지 S3 삭제
+        // 7. 프로필 이미지 S3 삭제
         if (user.getProfileImageKey() != null) {
-            fileCleanupService.scheduleDelete(user.getProfileImageKey());
+            fileKeysToDelete.add(user.getProfileImageKey());
         }
 
-        // 7. 유저 삭제
+        // 8. S3 파일 삭제 일괄 예약
+        fileCleanupService.scheduleDeleteAll(new ArrayList<>(fileKeysToDelete));
+
+        // 9. 유저 삭제
         userRepository.delete(user);
     }
 }

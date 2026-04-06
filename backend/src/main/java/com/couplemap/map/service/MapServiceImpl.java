@@ -85,6 +85,9 @@ public class MapServiceImpl implements MapService {
         // 지도에 속한 추억의 미디어 파일 S3 삭제 예약
         fileCleanupService.scheduleDeleteAll(mediaFileRepository.findFileKeysByMapId(mapId));
 
+        // 미디어 파일 DB 삭제
+        mediaFileRepository.deleteAllByMapId(mapId);
+
         // 추억 삭제
         memoryRepository.deleteAllByMap_MapId(mapId);
 

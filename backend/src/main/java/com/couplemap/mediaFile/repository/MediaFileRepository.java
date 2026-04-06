@@ -2,6 +2,7 @@ package com.couplemap.mediaFile.repository;
 
 import com.couplemap.mediaFile.domain.MediaFile;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,4 +26,15 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
     @Query("SELECT mf.fileKey FROM MediaFile mf WHERE mf.memory.map.mapId = :mapId")
     List<String> findFileKeysByMapId(@Param("mapId") Long mapId);
+
+    @Query("SELECT mf FROM MediaFile mf WHERE mf.mediaFileId IN :ids AND mf.memory.memoryId = :memoryId")
+    List<MediaFile> findAllByIdsAndMemoryId(@Param("ids") List<Long> ids, @Param("memoryId") Long memoryId);
+
+    @Modifying
+    @Query("DELETE FROM MediaFile mf WHERE mf.memory.user.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM MediaFile mf WHERE mf.memory.map.mapId = :mapId")
+    void deleteAllByMapId(@Param("mapId") Long mapId);
 }
