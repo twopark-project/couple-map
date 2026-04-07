@@ -8,7 +8,7 @@ import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.filecleanup.FileCleanupService;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
-import com.couplemap.mediaFile.repository.MediaFileRepository;
+import com.couplemap.mediafile.repository.MediaFileRepository;
 import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.domain.MapMember;

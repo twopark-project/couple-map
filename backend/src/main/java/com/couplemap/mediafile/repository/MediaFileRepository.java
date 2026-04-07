@@ -1,6 +1,6 @@
-package com.couplemap.mediaFile.repository;
+package com.couplemap.mediafile.repository;
 
-import com.couplemap.mediaFile.domain.MediaFile;
+import com.couplemap.mediafile.domain.MediaFile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

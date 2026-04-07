@@ -9,7 +9,7 @@ import com.couplemap.jwt.repository.RefreshTokenRepository;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
-import com.couplemap.mediaFile.repository.MediaFileRepository;
+import com.couplemap.mediafile.repository.MediaFileRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.dto.NicknameResponseDto;

@@ -8,7 +8,7 @@ import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
-import com.couplemap.mediaFile.repository.MediaFileRepository;
+import com.couplemap.mediafile.repository.MediaFileRepository;
 import com.couplemap.memory.domain.Memory;
 import com.couplemap.memory.dto.CalendarMemoryResponseDto;
 import com.couplemap.memory.dto.CreateMemoryRequestDto;
