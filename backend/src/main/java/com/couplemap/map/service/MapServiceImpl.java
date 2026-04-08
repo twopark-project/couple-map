@@ -8,11 +8,10 @@ import com.couplemap.global.exception.exceptions.UserException;
 import com.couplemap.global.filecleanup.FileCleanupService;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
-import com.couplemap.mediaFile.repository.MediaFileRepository;
+import com.couplemap.mediafile.repository.MediaFileRepository;
 import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.domain.MapMember;
-import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.map.dto.*;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
@@ -24,12 +23,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.couplemap.global.exception.code.FriendErrorCode.INVALID_FRIENDSHIP_ID;
 import static com.couplemap.global.exception.code.MapErrorCode.*;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
+import static com.couplemap.map.domain.MapMemberRole.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,13 +46,13 @@ public class MapServiceImpl implements MapService {
     private final MemoryRepository memoryRepository;
     private final MediaFileRepository mediaFileRepository;
 
-    @Transactional
     @Override
+    @Transactional
     public Long createMap(CreateMapRequestDto request, MultipartFile backgroundImage, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
-        if (mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName())) {
+        if (mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName(), PENDING)) {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
@@ -64,7 +65,7 @@ public class MapServiceImpl implements MapService {
 
         mapRepository.save(newMap);
 
-        MapMember mapMember = MapMember.from(newMap, user, MapMemberRole.OWNER);
+        MapMember mapMember = MapMember.from(newMap, user, OWNER);
         mapMemberRepository.save(mapMember);
 
         return newMap.getMapId();
@@ -76,7 +77,7 @@ public class MapServiceImpl implements MapService {
         MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        if (mapMember.getMapMemberRole() != MapMemberRole.OWNER) {
+        if (mapMember.getMapMemberRole() != OWNER) {
             throw new MapException(NO_DELETE_PERMISSION);
         }
 
@@ -109,11 +110,11 @@ public class MapServiceImpl implements MapService {
         MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        if (mapMember.getMapMemberRole() != MapMemberRole.OWNER) {
+        if (mapMember.getMapMemberRole() != OWNER) {
             throw new MapException(NO_UPDATE_PERMISSION);
         }
 
-        if (mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId)) {
+        if (mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId, PENDING)) {
             throw new MapException(MAP_NAME_DUPLICATED);
         }
 
@@ -133,28 +134,36 @@ public class MapServiceImpl implements MapService {
     public List<MapInfoDto> getMapList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
-        return mapMemberRepository.findAllByUser(user).stream()
-                .filter(mapMember -> mapMember.getMapMemberRole() != MapMemberRole.PENDING)
-                .map(mapMember -> {
-                    long memberCount = mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(
-                            mapMember.getMap().getMapId(), MapMemberRole.PENDING);
-                    return MapInfoDto.from(mapMember, memberCount);
-                })
-                .collect(Collectors.toList());
+
+        List<MapMember> mapMembers = mapMemberRepository.findAllByUserWithMap(user).stream()
+                .filter(mm -> mm.getMapMemberRole() != PENDING)
+                .toList();
+
+        List<Long> mapIds = mapMembers.stream()
+                .map(mm -> mm.getMap().getMapId())
+                .toList();
+
+        java.util.Map<Long, Long> countMap = new HashMap<>();
+        mapMemberRepository.countMembersByMapIds(mapIds, PENDING)
+                .forEach(row -> countMap.put((Long) row[0], (Long) row[1]));
+
+        return mapMembers.stream()
+                .map(mm -> MapInfoDto.from(mm, countMap.getOrDefault(mm.getMap().getMapId(), 0L)))
+                .toList();
     }
 
     @Override
     public MapInfoDto getMapDetail(Long mapId, Long userId) {
         MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
-                .filter(m -> m.getMapMemberRole() != MapMemberRole.PENDING)
+                .filter(m -> m.getMapMemberRole() != PENDING)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        long memberCount = mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(mapId, MapMemberRole.PENDING);
+        long memberCount = mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(mapId, PENDING);
         return MapInfoDto.from(mapMember, memberCount);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void inviteFriend(Long mapId, InviteFriendRequestDto request, Long userId) {
         User inviter = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
@@ -162,7 +171,7 @@ public class MapServiceImpl implements MapService {
         MapMember invitingMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, inviter.getUserId())
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        if (invitingMember.getMapMemberRole() != MapMemberRole.OWNER && invitingMember.getMapMemberRole() != MapMemberRole.EDITOR) {
+        if (invitingMember.getMapMemberRole() != OWNER && invitingMember.getMapMemberRole() != EDITOR) {
             throw new MapException(NO_INVITE_PERMISSION);
         }
 
@@ -178,7 +187,7 @@ public class MapServiceImpl implements MapService {
         });
 
         Map map = invitingMember.getMap();
-        MapMember newMember = MapMember.from(map, friendToInvite, inviter, MapMemberRole.PENDING);
+        MapMember newMember = MapMember.from(map, friendToInvite, inviter, PENDING);
 
         try {
             mapMemberRepository.save(newMember);
@@ -188,8 +197,8 @@ public class MapServiceImpl implements MapService {
         }
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void acceptInvitation(Long mapMemberId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
@@ -208,8 +217,8 @@ public class MapServiceImpl implements MapService {
         mapMember.accept();
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void rejectInvitation(Long mapMemberId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
@@ -231,19 +240,19 @@ public class MapServiceImpl implements MapService {
     @Override
     public List<MapMemberDto> getMapMembers(Long mapId, Long userId) {
         mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
-                .filter(m -> m.getMapMemberRole() != MapMemberRole.PENDING)
+                .filter(m -> m.getMapMemberRole() != PENDING)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        return mapMemberRepository.findAllByMap_MapIdAndMapMemberRoleNot(mapId, MapMemberRole.PENDING).stream()
+        return mapMemberRepository.findAllByMap_MapIdAndMapMemberRoleNot(mapId, PENDING).stream()
                 .map(MapMemberDto::from)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<MapInvitationDto> getInvitationList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
-        return mapMemberRepository.findAllByUserAndMapMemberRole(user, MapMemberRole.PENDING).stream()
+        return mapMemberRepository.findAllByUserAndMapMemberRole(user, PENDING).stream()
                 .map(MapInvitationDto::from)
                 .collect(Collectors.toList());
     }

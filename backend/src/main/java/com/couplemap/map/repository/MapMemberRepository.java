@@ -5,6 +5,7 @@ import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,20 +29,30 @@ public interface MapMemberRepository extends JpaRepository<MapMember, Long> {
 
     @Query("SELECT COUNT(mm) > 0 FROM MapMember mm " +
             "WHERE mm.user.userId = :userId AND mm.map.mapName = :mapName " +
-            "AND mm.mapMemberRole != 'PENDING'")
-    boolean existsByUserIdAndMapName(@Param("userId") Long userId, @Param("mapName") String mapName);
+            "AND mm.mapMemberRole != :role")
+    boolean existsByUserIdAndMapName(@Param("userId") Long userId, @Param("mapName") String mapName,
+                                     @Param("role") MapMemberRole role);
 
     @Query("SELECT COUNT(mm) > 0 FROM MapMember mm " +
             "WHERE mm.user.userId = :userId AND mm.map.mapName = :mapName " +
-            "AND mm.map.mapId != :excludeMapId AND mm.mapMemberRole != 'PENDING'")
+            "AND mm.map.mapId != :excludeMapId AND mm.mapMemberRole != :role")
     boolean existsByUserIdAndMapNameExcludingMapId(@Param("userId") Long userId,
                                                      @Param("mapName") String mapName,
-                                                     @Param("excludeMapId") Long excludeMapId);
+                                                     @Param("excludeMapId") Long excludeMapId,
+                                                     @Param("role") MapMemberRole role);
 
-    @Query("SELECT mm.map FROM MapMember mm WHERE mm.user.userId = :userId AND mm.mapMemberRole = 'OWNER'")
-    List<Map> findOwnedMapsByUserId(@Param("userId") Long userId);
+    @Query("SELECT mm.map FROM MapMember mm WHERE mm.user.userId = :userId AND mm.mapMemberRole = :role")
+    List<Map> findOwnedMapsByUserId(@Param("userId") Long userId, @Param("role") MapMemberRole role);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Query("SELECT mm FROM MapMember mm JOIN FETCH mm.map WHERE mm.user = :user")
+    List<MapMember> findAllByUserWithMap(@Param("user") User user);
+
+    @Query("SELECT mm.map.mapId, COUNT(mm) FROM MapMember mm " +
+            "WHERE mm.map.mapId IN :mapIds AND mm.mapMemberRole != :role " +
+            "GROUP BY mm.map.mapId")
+    List<Object[]> countMembersByMapIds(@Param("mapIds") List<Long> mapIds, @Param("role") MapMemberRole role);
+
+    @Modifying
     @Query("DELETE FROM MapMember mm WHERE mm.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 }

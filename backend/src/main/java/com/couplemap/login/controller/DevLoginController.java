@@ -4,7 +4,6 @@ import com.couplemap.global.response.ApiResponse;
 import com.couplemap.jwt.dto.LoginTokenResponseDto;
 import com.couplemap.jwt.service.AuthTokenService;
 import com.couplemap.user.domain.User;
-import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +27,7 @@ public class MapController {
     @Operation(summary = "지도 생성")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Long>> createMap(
-            @RequestPart("request") CreateMapRequestDto request,
+            @Valid @RequestPart("request") CreateMapRequestDto request,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage,
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         Long mapId = mapService.createMap(request, backgroundImage, userId);
@@ -53,7 +54,7 @@ public class MapController {
     @PutMapping(value = "/{mapId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Void>> updateMap(
             @PathVariable Long mapId,
-            @RequestPart("request") UpdateMapRequestDto request,
+            @Valid @RequestPart("request") UpdateMapRequestDto request,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage,
             @AuthenticationPrincipal(expression = "userId") Long userId) {
         mapService.updateMap(mapId, request, backgroundImage, userId);
@@ -78,7 +79,7 @@ public class MapController {
     @Operation(summary = "지도에 친구 초대")
     @PostMapping("/{mapId}/invite")
     public ResponseEntity<ApiResponse<Void>> inviteFriend(@PathVariable Long mapId,
-                                                        @RequestBody InviteFriendRequestDto request,
+                                                        @Valid @RequestBody InviteFriendRequestDto request,
                                                         @AuthenticationPrincipal(expression = "userId") Long userId) {
         mapService.inviteFriend(mapId, request, userId);
         return ResponseEntity.ok(ApiResponse.success("지도에 친구를 초대했습니다."));

@@ -9,7 +9,7 @@ import com.couplemap.jwt.repository.RefreshTokenRepository;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
-import com.couplemap.mediaFile.repository.MediaFileRepository;
+import com.couplemap.mediafile.repository.MediaFileRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.dto.ProfileImageResponseDto;
 import com.couplemap.user.dto.NicknameResponseDto;
@@ -25,9 +25,12 @@ import java.util.*;
 
 import static com.couplemap.global.exception.code.UserErrorCode.DUPLICATE_NICKNAME;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
+import static com.couplemap.map.domain.MapMemberRole.EDITOR;
+import static com.couplemap.map.domain.MapMemberRole.OWNER;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -89,12 +92,11 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
     public UserInfoResponseDto getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
-        long memoryCount = memoryRepository.countByUserMaps(userId);
+        long memoryCount = memoryRepository.countByUserMaps(userId, List.of(OWNER, EDITOR));
         return UserInfoResponseDto.from(user, memoryCount);
     }
 
@@ -113,7 +115,7 @@ public class UserServiceImpl implements UserService {
         memoryRepository.deleteAllByUser_UserId(userId);
 
         // 3. OWNER인 지도 → 해당 지도의 추억, 멤버, 지도 삭제
-        List<Map> ownedMaps = mapMemberRepository.findOwnedMapsByUserId(userId);
+        List<Map> ownedMaps = mapMemberRepository.findOwnedMapsByUserId(userId, OWNER);
         for (Map map : ownedMaps) {
             fileKeysToDelete.addAll(mediaFileRepository.findFileKeysByMapId(map.getMapId()));
             mediaFileRepository.deleteAllByMapId(map.getMapId());

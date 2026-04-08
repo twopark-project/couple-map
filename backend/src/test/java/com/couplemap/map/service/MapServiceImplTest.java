@@ -2,8 +2,10 @@ package com.couplemap.map.service;
 
 import com.couplemap.friend.domain.FriendshipStatus;
 import com.couplemap.friend.repository.FriendshipRepository;
+import com.couplemap.global.exception.exceptions.FriendException;
 import com.couplemap.global.exception.exceptions.MapException;
 import com.couplemap.global.exception.exceptions.UserException;
+import com.couplemap.global.filecleanup.FileCleanupService;
 import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
 import com.couplemap.map.domain.Map;
@@ -12,6 +14,8 @@ import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.map.dto.*;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
+import com.couplemap.mediafile.repository.MediaFileRepository;
+import com.couplemap.memory.repository.MemoryRepository;
 import com.couplemap.user.domain.User;
 import com.couplemap.user.domain.UserRole;
 import com.couplemap.user.repository.UserRepository;
@@ -27,9 +31,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.couplemap.global.exception.code.FriendErrorCode.INVALID_FRIENDSHIP_ID;
 import static com.couplemap.global.exception.code.MapErrorCode.*;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +61,15 @@ public class MapServiceImplTest {
 
     @Mock
     private S3Service s3Service;
+
+    @Mock
+    private FileCleanupService fileCleanupService;
+
+    @Mock
+    private MemoryRepository memoryRepository;
+
+    @Mock
+    private MediaFileRepository mediaFileRepository;
 
     @InjectMocks
     private MapServiceImpl mapService;
@@ -100,7 +115,7 @@ public class MapServiceImplTest {
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName())).thenReturn(false);
+        when(mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName(), MapMemberRole.PENDING)).thenReturn(false);
         when(mapRepository.save(any(Map.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -108,7 +123,7 @@ public class MapServiceImplTest {
 
         // then
         verify(userRepository).findById(userId);
-        verify(mapMemberRepository).existsByUserIdAndMapName(userId, request.getMapName());
+        verify(mapMemberRepository).existsByUserIdAndMapName(userId, request.getMapName(), MapMemberRole.PENDING);
         verify(mapRepository).save(any(Map.class));
         verify(mapMemberRepository).save(any(MapMember.class));
     }
@@ -121,7 +136,7 @@ public class MapServiceImplTest {
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName())).thenReturn(true);
+        when(mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName(), MapMemberRole.PENDING)).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> mapService.createMap(request, null, userId))
@@ -137,12 +152,14 @@ public class MapServiceImplTest {
         Long userId = 1L;
 
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(mediaFileRepository.findFileKeysByMapId(mapId)).thenReturn(List.of());
 
         // when
         mapService.deleteMap(mapId, userId);
 
         // then
         verify(mapMemberRepository).findByMap_MapIdAndUser_UserId(mapId, userId);
+        verify(mediaFileRepository).findFileKeysByMapId(mapId);
         verify(mapMemberRepository).deleteAllByMap(testMap);
         verify(mapRepository).delete(testMap);
     }
@@ -173,7 +190,7 @@ public class MapServiceImplTest {
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
-        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId)).thenReturn(false);
+        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId, MapMemberRole.PENDING)).thenReturn(false);
 
         // when
         mapService.updateMap(mapId, request, null, userId);
@@ -181,7 +198,7 @@ public class MapServiceImplTest {
         // then
         verify(mapRepository).findById(mapId);
         verify(mapMemberRepository).findByMap_MapIdAndUser_UserId(mapId, userId);
-        verify(mapMemberRepository).existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId);
+        verify(mapMemberRepository).existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId, MapMemberRole.PENDING);
         assertThat(testMap.getMapName()).isEqualTo("Updated Map");
         assertThat(testMap.getDescription()).isEqualTo("Updated Description");
     }
@@ -214,7 +231,7 @@ public class MapServiceImplTest {
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
-        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId)).thenReturn(true);
+        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId, MapMemberRole.PENDING)).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> mapService.updateMap(mapId, request, null, userId))
@@ -235,8 +252,9 @@ public class MapServiceImplTest {
         MapMember pendingMember = MapMember.from(map2, testUser, testUser, MapMemberRole.PENDING);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(mapMemberRepository.findAllByUser(testUser)).thenReturn(Arrays.asList(ownerMember, pendingMember));
-        when(mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(10L, MapMemberRole.PENDING)).thenReturn(1L);
+        when(mapMemberRepository.findAllByUserWithMap(testUser)).thenReturn(Arrays.asList(ownerMember, pendingMember));
+        List<Object[]> countResult = Collections.singletonList(new Object[]{10L, 1L});
+        when(mapMemberRepository.countMembersByMapIds(List.of(10L), MapMemberRole.PENDING)).thenReturn(countResult);
 
         // when
         List<MapInfoDto> result = mapService.getMapList(userId);
@@ -432,7 +450,7 @@ public class MapServiceImplTest {
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName())).thenReturn(false);
+        when(mapMemberRepository.existsByUserIdAndMapName(userId, request.getMapName(), MapMemberRole.PENDING)).thenReturn(false);
         when(s3Service.uploadImageFile(backgroundImage)).thenReturn(uploadResult);
         when(mapRepository.save(any(Map.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -469,14 +487,14 @@ public class MapServiceImplTest {
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
-        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId)).thenReturn(false);
+        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId, MapMemberRole.PENDING)).thenReturn(false);
         when(s3Service.uploadImageFile(newBackgroundImage)).thenReturn(uploadResult);
 
         // when
         mapService.updateMap(mapId, request, newBackgroundImage, userId);
 
         // then
-        verify(s3Service).deleteFile("old_test.jpg");
+        verify(fileCleanupService).scheduleDelete("old_test.jpg");
         verify(s3Service).uploadImageFile(newBackgroundImage);
         assertThat(testMap.getBackgroundUrl()).isEqualTo("https://s3.amazonaws.com/bucket/new_test.jpg");
         assertThat(testMap.getBackgroundKey()).isEqualTo("new_test.jpg");
@@ -502,7 +520,7 @@ public class MapServiceImplTest {
 
         when(mapRepository.findById(mapId)).thenReturn(Optional.of(testMap));
         when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
-        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId)).thenReturn(false);
+        when(mapMemberRepository.existsByUserIdAndMapNameExcludingMapId(userId, request.getMapName(), mapId, MapMemberRole.PENDING)).thenReturn(false);
         when(s3Service.uploadImageFile(newBackgroundImage)).thenReturn(uploadResult);
 
         // when
@@ -513,5 +531,211 @@ public class MapServiceImplTest {
         verify(s3Service).uploadImageFile(newBackgroundImage);
         assertThat(testMap.getBackgroundUrl()).isEqualTo("https://s3.amazonaws.com/bucket/new_test.jpg");
         assertThat(testMap.getBackgroundKey()).isEqualTo("new_test.jpg");
+    }
+
+    @Test
+    @DisplayName("지도 생성 실패 - 사용자 없음")
+    void createMap_UserNotFound() {
+        CreateMapRequestDto request = new CreateMapRequestDto("Map", "Desc", "Solo");
+
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mapService.createMap(request, null, 99L))
+                .isInstanceOf(UserException.class)
+                .hasMessage(USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("지도 삭제 실패 - 맵 멤버 아님")
+    void deleteMap_NotMapMember() {
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(1L, 99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mapService.deleteMap(1L, 99L))
+                .isInstanceOf(MapException.class)
+                .hasMessage(NOT_MAP_MEMBER.getMessage());
+    }
+
+    @Test
+    @DisplayName("지도 삭제 성공 - 전체 삭제 흐름 검증")
+    void deleteMap_Success_FullFlow() {
+        Long mapId = 1L;
+        Long userId = 1L;
+        ReflectionTestUtils.setField(testMap, "backgroundKey", "bg/old.jpg");
+
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(mediaFileRepository.findFileKeysByMapId(mapId)).thenReturn(List.of("media/k1", "media/k2"));
+
+        mapService.deleteMap(mapId, userId);
+
+        verify(fileCleanupService).scheduleDeleteAll(List.of("media/k1", "media/k2"));
+        verify(mediaFileRepository).deleteAllByMapId(mapId);
+        verify(memoryRepository).deleteAllByMap_MapId(mapId);
+        verify(fileCleanupService).scheduleDelete("bg/old.jpg");
+        verify(mapMemberRepository).deleteAllByMap(testMap);
+        verify(mapRepository).delete(testMap);
+    }
+
+    @Test
+    @DisplayName("지도 수정 실패 - 맵 없음")
+    void updateMap_MapNotFound() {
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated", "Desc", "Solo");
+
+        when(mapRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mapService.updateMap(99L, request, null, 1L))
+                .isInstanceOf(MapException.class)
+                .hasMessage(MAP_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("지도 수정 실패 - 맵 멤버 아님")
+    void updateMap_NotMapMember() {
+        UpdateMapRequestDto request = new UpdateMapRequestDto("Updated", "Desc", "Solo");
+
+        when(mapRepository.findById(1L)).thenReturn(Optional.of(testMap));
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(1L, 99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mapService.updateMap(1L, request, null, 99L))
+                .isInstanceOf(MapException.class)
+                .hasMessage(NOT_MAP_MEMBER.getMessage());
+    }
+
+    @Test
+    @DisplayName("친구 초대 실패 - 친구 아님")
+    void inviteFriend_NotFriend() {
+        Long mapId = 1L;
+        Long userId = 1L;
+        InviteFriendRequestDto request = new InviteFriendRequestDto(2L);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(friendUser));
+        when(friendshipRepository.existsFriendship(testUser, friendUser, FriendshipStatus.ACCEPTED)).thenReturn(false);
+
+        assertThatThrownBy(() -> mapService.inviteFriend(mapId, request, userId))
+                .isInstanceOf(FriendException.class)
+                .hasMessage(INVALID_FRIENDSHIP_ID.getMessage());
+    }
+
+    @Test
+    @DisplayName("친구 초대 실패 - 초대 대상 유저 없음")
+    void inviteFriend_FriendUserNotFound() {
+        Long mapId = 1L;
+        Long userId = 1L;
+        InviteFriendRequestDto request = new InviteFriendRequestDto(99L);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mapService.inviteFriend(mapId, request, userId))
+                .isInstanceOf(UserException.class)
+                .hasMessage(USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("친구 초대 실패 - DB 충돌 시 MAP_INVITATION_CONFLICT")
+    void inviteFriend_ConflictOnSave() {
+        Long mapId = 1L;
+        Long userId = 1L;
+        InviteFriendRequestDto request = new InviteFriendRequestDto(2L);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(friendUser));
+        when(friendshipRepository.existsFriendship(testUser, friendUser, FriendshipStatus.ACCEPTED)).thenReturn(true);
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, 2L)).thenReturn(Optional.empty());
+        doThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate"))
+                .when(mapMemberRepository).flush();
+
+        assertThatThrownBy(() -> mapService.inviteFriend(mapId, request, userId))
+                .isInstanceOf(MapException.class)
+                .hasMessage(MAP_INVITATION_CONFLICT.getMessage());
+    }
+
+    @Test
+    @DisplayName("초대 수락 실패 - 이미 PENDING이 아닌 초대")
+    void acceptInvitation_NotPending() {
+        Long mapMemberId = 1L;
+        Long userId = 1L;
+        MapMember acceptedMember = MapMember.from(testMap, testUser, friendUser, MapMemberRole.EDITOR);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(mapMemberRepository.findById(mapMemberId)).thenReturn(Optional.of(acceptedMember));
+
+        assertThatThrownBy(() -> mapService.acceptInvitation(mapMemberId, userId))
+                .isInstanceOf(MapException.class)
+                .hasMessage(INVITATION_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("초대 거절 실패 - 이미 PENDING이 아닌 초대")
+    void rejectInvitation_NotPending() {
+        Long mapMemberId = 1L;
+        Long userId = 1L;
+        MapMember acceptedMember = MapMember.from(testMap, testUser, friendUser, MapMemberRole.EDITOR);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(mapMemberRepository.findById(mapMemberId)).thenReturn(Optional.of(acceptedMember));
+
+        assertThatThrownBy(() -> mapService.rejectInvitation(mapMemberId, userId))
+                .isInstanceOf(MapException.class)
+                .hasMessage(INVITATION_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("지도 상세 조회 성공")
+    void getMapDetail_Success() {
+        Long mapId = 1L;
+        Long userId = 1L;
+
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(mapMemberRepository.countByMap_MapIdAndMapMemberRoleNot(mapId, MapMemberRole.PENDING)).thenReturn(2L);
+
+        MapInfoDto result = mapService.getMapDetail(mapId, userId);
+
+        assertThat(result.getMapName()).isEqualTo("Test Map");
+        assertThat(result.getMyRole()).isEqualTo(MapMemberRole.OWNER);
+        assertThat(result.getMemberCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("지도 상세 조회 실패 - PENDING 멤버")
+    void getMapDetail_PendingMember() {
+        Long mapId = 1L;
+        Long userId = 1L;
+        MapMember pendingMember = MapMember.from(testMap, testUser, friendUser, MapMemberRole.PENDING);
+
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(pendingMember));
+
+        assertThatThrownBy(() -> mapService.getMapDetail(mapId, userId))
+                .isInstanceOf(MapException.class)
+                .hasMessage(NOT_MAP_MEMBER.getMessage());
+    }
+
+    @Test
+    @DisplayName("지도 멤버 목록 조회 성공")
+    void getMapMembers_Success() {
+        Long mapId = 1L;
+        Long userId = 1L;
+        MapMember editorMember = MapMember.from(testMap, friendUser, MapMemberRole.EDITOR);
+
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)).thenReturn(Optional.of(testMapMember));
+        when(mapMemberRepository.findAllByMap_MapIdAndMapMemberRoleNot(mapId, MapMemberRole.PENDING))
+                .thenReturn(List.of(testMapMember, editorMember));
+
+        List<MapMemberDto> result = mapService.getMapMembers(mapId, userId);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("지도 멤버 목록 조회 실패 - 맵 멤버 아님")
+    void getMapMembers_NotMapMember() {
+        when(mapMemberRepository.findByMap_MapIdAndUser_UserId(1L, 99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> mapService.getMapMembers(1L, 99L))
+                .isInstanceOf(MapException.class)
+                .hasMessage(NOT_MAP_MEMBER.getMessage());
     }
 }

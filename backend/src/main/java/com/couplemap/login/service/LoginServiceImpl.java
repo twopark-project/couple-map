@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -46,6 +47,7 @@ public class LoginServiceImpl implements LoginService {
     private String googleUserInfoUri;
 
     @Override
+    @Transactional
     public LoginTokenResponseDto socialLogin(String provider, String accessToken) {
         // 1. 사용자 정보 요청
         Map<String, Object> userAttributes = getUserAttributes(provider, accessToken);

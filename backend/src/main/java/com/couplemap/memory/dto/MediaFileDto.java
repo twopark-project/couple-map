@@ -1,7 +1,7 @@
 package com.couplemap.memory.dto;
 
-import com.couplemap.mediaFile.domain.MediaFile;
-import com.couplemap.mediaFile.domain.MediaFileType;
+import com.couplemap.mediafile.domain.MediaFile;
+import com.couplemap.mediafile.domain.MediaFileType;
 import lombok.Getter;
 
 @Getter

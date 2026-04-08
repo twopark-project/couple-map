@@ -1,5 +1,6 @@
 package com.couplemap.memory.repository;
 
+import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.memory.domain.Memory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -19,16 +20,17 @@ public interface MemoryRepository extends JpaRepository<Memory, Long> {
     @Query("SELECT m FROM Memory m " +
             "JOIN MapMember mm ON m.map = mm.map " +
             "WHERE mm.user.userId = :userId " +
-            "AND mm.mapMemberRole IN (com.couplemap.map.domain.MapMemberRole.OWNER, com.couplemap.map.domain.MapMemberRole.EDITOR) " +
+            "AND mm.mapMemberRole IN :roles " +
             "AND YEAR(m.memoryDate) = :year " +
             "ORDER BY m.memoryDate ASC")
-    List<Memory> findAllByUserIdAndYear(@Param("userId") Long userId, @Param("year") int year);
+    List<Memory> findAllByUserIdAndYear(@Param("userId") Long userId, @Param("year") int year,
+                                        @Param("roles") List<MapMemberRole> roles);
 
     @Query("SELECT COUNT(m) FROM Memory m " +
             "JOIN MapMember mm ON m.map = mm.map " +
             "WHERE mm.user.userId = :userId " +
-            "AND mm.mapMemberRole IN (com.couplemap.map.domain.MapMemberRole.OWNER, com.couplemap.map.domain.MapMemberRole.EDITOR)")
-    long countByUserMaps(@Param("userId") Long userId);
+            "AND mm.mapMemberRole IN :roles")
+    long countByUserMaps(@Param("userId") Long userId, @Param("roles") List<MapMemberRole> roles);
 
     void deleteAllByUser_UserId(Long userId);
 

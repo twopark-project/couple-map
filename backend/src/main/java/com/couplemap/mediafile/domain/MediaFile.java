@@ -1,4 +1,4 @@
-package com.couplemap.mediaFile.domain;
+package com.couplemap.mediafile.domain;
 
 import com.couplemap.global.common.BaseEntity;
 import com.couplemap.global.s3.S3UploadDto;

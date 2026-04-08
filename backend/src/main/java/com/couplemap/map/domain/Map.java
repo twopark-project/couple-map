@@ -18,10 +18,10 @@ public class Map extends BaseEntity {
     @Column(name = "map_id")
     private Long mapId;
 
-    @Column(name = "map_name", nullable = false, length = 100)
+    @Column(name = "map_name", nullable = false, length = 20)
     private String mapName;
 
-    @Column(name = "description", length = 500)
+    @Column(name = "description", length = 20)
     private String description;
 
     @Column(name = "background_url")
@@ -30,7 +30,7 @@ public class Map extends BaseEntity {
     @Column(name = "background_key")
     private String backgroundKey;
 
-    @Column(name = "category", length = 10)
+    @Column(name = "category", nullable = false)
     private String category;
 
     public static Map from(String mapName, String description, String category) {

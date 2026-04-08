@@ -1,4 +1,4 @@
-package com.couplemap.mediaFile.domain;
+package com.couplemap.mediafile.domain;
 import lombok.Getter;
 
 @Getter
