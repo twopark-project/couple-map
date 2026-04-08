@@ -11,7 +11,6 @@ import com.couplemap.global.s3.S3Service;
 import com.couplemap.global.s3.S3UploadDto;
 import com.couplemap.map.domain.Map;
 import com.couplemap.map.domain.MapMember;
-import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.map.repository.MapMemberRepository;
 import com.couplemap.map.repository.MapRepository;
 import com.couplemap.mediafile.domain.MediaFile;
@@ -44,6 +43,8 @@ import java.util.stream.Collectors;
 import static com.couplemap.global.exception.code.MapErrorCode.*;
 import static com.couplemap.global.exception.code.MemoryErrorCode.*;
 import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
+import static com.couplemap.map.domain.MapMemberRole.EDITOR;
+import static com.couplemap.map.domain.MapMemberRole.OWNER;
 
 @Service
 @RequiredArgsConstructor
@@ -58,8 +59,8 @@ public class MemoryServiceImpl implements MemoryService {
     private final FileCleanupService fileCleanupService;
     private final MediaFileRepository mediaFileRepository;
 
-    @Transactional
     @Override
+    @Transactional
     public Long createMemory(Long mapId, CreateMemoryRequestDto request, List<MultipartFile> files, Long userId) {
         // 1. 사용자 및 지도 멤버 정보 조회, 권한 확인
         User user = userRepository.findById(userId)
@@ -68,7 +69,7 @@ public class MemoryServiceImpl implements MemoryService {
         MapMember mapMember = mapMemberRepository.findByMap_MapIdAndUser_UserId(mapId, userId)
                 .orElseThrow(() -> new MapException(NOT_MAP_MEMBER));
 
-        if (mapMember.getMapMemberRole() != MapMemberRole.OWNER && mapMember.getMapMemberRole() != MapMemberRole.EDITOR) {
+        if (mapMember.getMapMemberRole() != OWNER && mapMember.getMapMemberRole() != EDITOR) {
             throw new MapException(NOT_MAP_MEMBER);
         }
 
@@ -143,6 +144,7 @@ public class MemoryServiceImpl implements MemoryService {
         return new MemoryDetailResponseDto(memory, mediaFiles);
     }
 
+    @Override
     @Transactional
     public void deleteMemory(Long mapId, Long memoryId, Long userId) {
         Memory memory = validateAndGetMemory(mapId, memoryId, userId);
@@ -157,6 +159,7 @@ public class MemoryServiceImpl implements MemoryService {
         memoryRepository.delete(memory);
     }
 
+    @Override
     @Transactional
     public Long updateMemory(Long mapId, Long memoryId, UpdateMemoryRequestDto request,
                              List<MultipartFile> files, Long userId) {
@@ -241,7 +244,7 @@ public class MemoryServiceImpl implements MemoryService {
 
     @Override
     public List<CalendarMemoryResponseDto> getCalendarMemories(int year, Long userId) {
-        List<Memory> memories = memoryRepository.findAllByUserIdAndYear(userId, year);
+        List<Memory> memories = memoryRepository.findAllByUserIdAndYear(userId, year, List.of(OWNER, EDITOR));
 
         List<Long> memoryIds = memories.stream().map(Memory::getMemoryId).collect(Collectors.toList());
 
