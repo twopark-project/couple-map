@@ -4,6 +4,7 @@ import com.couplemap.friend.domain.Friendship;
 import com.couplemap.friend.domain.FriendshipStatus;
 import com.couplemap.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -42,7 +43,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     List<Friendship> findFriendshipsWhereReceiver(@Param("userId") Long userId,
                                                   @Param("status") FriendshipStatus status);
 
+    @Modifying
     @Query("DELETE FROM Friendship f WHERE f.requester.userId = :userId OR f.receiver.userId = :userId")
-    @org.springframework.data.jpa.repository.Modifying
     void deleteAllByUserId(@Param("userId") Long userId);
 }

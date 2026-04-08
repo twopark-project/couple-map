@@ -5,6 +5,7 @@ import com.couplemap.map.domain.MapMember;
 import com.couplemap.map.domain.MapMemberRole;
 import com.couplemap.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -41,7 +42,7 @@ public interface MapMemberRepository extends JpaRepository<MapMember, Long> {
     @Query("SELECT mm.map FROM MapMember mm WHERE mm.user.userId = :userId AND mm.mapMemberRole = 'OWNER'")
     List<Map> findOwnedMapsByUserId(@Param("userId") Long userId);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Modifying
     @Query("DELETE FROM MapMember mm WHERE mm.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 }
