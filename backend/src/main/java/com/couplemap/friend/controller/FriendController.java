@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Friend", description = "친구 관리 API")
@@ -23,7 +24,7 @@ public class FriendController {
 
     @Operation(summary = "친구 요청 전송")
     @PostMapping("/request")
-    public ResponseEntity<ApiResponse<FriendRequestResponseDto>> request(@RequestBody SendFriendRequestDto requestDto,
+    public ResponseEntity<ApiResponse<FriendRequestResponseDto>> request(@Valid @RequestBody SendFriendRequestDto requestDto,
                                                                          @AuthenticationPrincipal(expression = "userId") Long userId) {
         FriendRequestResponseDto responseDto = friendService.sendFriendRequest(requestDto, userId);
         return ResponseEntity.ok(ApiResponse.success(responseDto, "친구 요청이 전송되었습니다."));

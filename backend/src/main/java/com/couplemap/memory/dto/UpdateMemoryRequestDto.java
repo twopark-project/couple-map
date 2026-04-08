@@ -19,6 +19,7 @@ public class UpdateMemoryRequestDto {
     @Size(max = 50, message = "제목은 최대 50자까지 입력 가능합니다.")
     private String title;
 
+    @Size(max = 1000, message = "내용은 최대 1000자까지 입력 가능합니다.")
     private String content;
 
     @NotBlank(message = "장소명은 필수입니다.")

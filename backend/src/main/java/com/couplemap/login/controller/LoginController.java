@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Login", description = "로그인 관리 API")
@@ -26,7 +27,7 @@ public class LoginController {
     @PostMapping("/social/{provider}")
     public ResponseEntity<ApiResponse<LoginTokenResponseDto>> socialLogin(
             @PathVariable String provider,
-            @RequestBody SocialLoginRequestDto request) {
+            @Valid @RequestBody SocialLoginRequestDto request) {
         LoginTokenResponseDto logintokenResponseDto = loginService.socialLogin(provider, request.getAccessToken());
         return ResponseEntity.ok(ApiResponse.success(logintokenResponseDto, "소셜 로그인이 완료되었습니다."));
     }
