@@ -1,11 +1,7 @@
 package com.couplemap.memory.controller;
 
 import com.couplemap.global.response.ApiResponse;
-import com.couplemap.memory.dto.CreateMemoryRequestDto;
-import com.couplemap.memory.dto.MemoryDetailResponseDto;
-import com.couplemap.memory.dto.MemoryListResponseDto;
-import com.couplemap.memory.dto.MemoryMarkerResponseDto;
-import com.couplemap.memory.dto.UpdateMemoryRequestDto;
+import com.couplemap.memory.dto.*;
 import com.couplemap.memory.service.MemoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

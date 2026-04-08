@@ -33,28 +33,28 @@ public class Memory extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "title", nullable = false, length = 50)
     private String title;
 
-    @Column(name = "content",length = 1000)
+    @Column(name = "content", length = 100)
     private String content;
 
-    @Column(name = "place_name", nullable = false, length = 100)
+    @Column(name = "place_name", nullable = false)
     private String placeName;
 
-    @Column(name = "address", length = 200)
+    @Column(name = "address")
     private String address;
 
-    @Column(name = "memory_date")
+    @Column(name = "memory_date", nullable = false)
     private LocalDate memoryDate;
 
-    @Column(name = "latitude", precision = 10, scale = 8)
+    @Column(name = "latitude", nullable = false, precision = 10, scale = 8)
     private BigDecimal latitude;
 
-    @Column(name = "longitude", precision = 11, scale = 8)
+    @Column(name = "longitude", nullable = false, precision = 11, scale = 8)
     private BigDecimal longitude;
 
-    @Column(name = "category", length = 20)
+    @Column(name = "category")
     private String category;
 
     @Builder
