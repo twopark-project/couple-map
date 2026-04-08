@@ -25,6 +25,7 @@ import static com.couplemap.global.exception.code.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FriendServiceImpl implements FriendService {
 
     private final FriendshipRepository friendshipRepository;
@@ -55,7 +56,6 @@ public class FriendServiceImpl implements FriendService {
         return FriendRequestResponseDto.from(friendship);
     }
 
-    @Transactional(readOnly = true)
     public FriendListResponseDto getFriendList(Long userId) {
         List<User> friendList = new ArrayList<>();
         friendList.addAll(friendshipRepository.findFriendsWhereReceiver(userId, ACCEPTED));
@@ -64,7 +64,6 @@ public class FriendServiceImpl implements FriendService {
         return FriendListResponseDto.from(friendList);
     }
 
-    @Transactional(readOnly = true)
     public FriendPendingListResponseDto getFriendPendingList(Long userId) {
         List<Friendship> friendList = new ArrayList<>();
         friendList.addAll(friendshipRepository.findFriendshipsWhereReceiver(userId, PENDING));
@@ -74,8 +73,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Transactional
     public void reject(Long friendshipId, Long receiverId) {
-        Friendship friendship = friendshipRepository.findById(friendshipId)
-                .orElseThrow(() -> new FriendException(INVALID_FRIENDSHIP_ID));
+        Friendship friendship = getFriendshipOrThrow(friendshipId);
 
         friendship.reject(receiverId);
 
@@ -84,8 +82,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Transactional
     public void accept (Long friendshipId, Long receiverId) {
-        Friendship friendship = friendshipRepository.findById(friendshipId)
-                .orElseThrow(() -> new FriendException(INVALID_FRIENDSHIP_ID));
+        Friendship friendship = getFriendshipOrThrow(friendshipId);
 
         friendship.accept(receiverId);
 
@@ -104,5 +101,10 @@ public class FriendServiceImpl implements FriendService {
         if (friendshipRepository.existsFriendship(requester, receiver, PENDING)) {
             throw new FriendException(FRIEND_PENDING_EXISTS);
         }
+    }
+
+    private Friendship getFriendshipOrThrow(Long friendshipId) {
+        return friendshipRepository.findById(friendshipId)
+                .orElseThrow(() -> new FriendException(INVALID_FRIENDSHIP_ID));
     }
 }
