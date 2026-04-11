@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../domain/providers/friend_provider.dart';
@@ -26,7 +25,7 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
   static final _friendCodeRegex = RegExp(r'^[A-Z0-9]{5}$');
 
   Future<void> _sendRequest() async {
-    final code = _codeController.text.trim().toUpperCase();
+    final code = _codeController.text.trim();
     if (code.isEmpty) return;
     if (!_friendCodeRegex.hasMatch(code)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,9 +101,6 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
             textCapitalization: TextCapitalization.characters,
             textAlign: TextAlign.center,
             maxLength: 5,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
-            ],
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
