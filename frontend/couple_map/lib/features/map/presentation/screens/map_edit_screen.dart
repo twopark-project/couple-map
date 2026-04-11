@@ -420,7 +420,7 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
             ),
           ),
 
-          if (hasAnyCover)
+          if (hasNewImage || hasDefaultCover)
             Positioned(
               top: 12,
               right: 12,
@@ -428,7 +428,6 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
                 onTap: () => setState(() {
                   _newCoverImage = null;
                   _selectedDefaultCover = null;
-                  _backgroundImageUrl = null;
                 }),
                 child: Container(
                   padding: const EdgeInsets.all(6),
