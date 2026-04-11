@@ -188,7 +188,12 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
       setState(() {});
 
     } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('추억 목록을 불러오지 못했어요')),
+        );
       }
+    }
   }
 
   List<MemoryMarker> get _filteredMemories {
