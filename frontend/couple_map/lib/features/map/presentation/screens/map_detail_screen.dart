@@ -147,13 +147,6 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
     final lat = double.parse(place.y);
     final lng = double.parse(place.x);
 
-    debugPrint('=== 선택한 장소 정보 ===');
-    debugPrint('장소명: ${place.placeName}');
-    debugPrint('주소: ${place.addressName}');
-    debugPrint('위도(latitude): $lat');
-    debugPrint('경도(longitude): $lng');
-    debugPrint('=====================');
-
     mapController?.setCenter(LatLng(lat, lng));
     mapController?.setLevel(3);
 
@@ -194,13 +187,11 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
       if (!mounted) return;
       setState(() {});
 
-      debugPrint('추억 목록 로드 완료: ${memories.length}개');
     } catch (e) {
-      debugPrint('추억 목록 로드 실패: $e');
-    }
+      }
   }
 
-  List<MemorySummary> get _filteredMemories {
+  List<MemoryMarker> get _filteredMemories {
     return _memories.where((m) {
       if (_filterCategory != null && m.category != _filterCategory) return false;
       if (m.memoryDate != null) {
@@ -260,7 +251,6 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
       ));
     }
 
-    debugPrint('클러스터러 생성: 마커 ${markers.length}개');
 
     _cachedClusterer = Clusterer(
       markers: markers,
@@ -281,7 +271,6 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
   }
 
   Future<void> _onMarkerTap(String markerId, LatLng latLng, int zoomLevel) async {
-    debugPrint('마커 클릭: $markerId at $latLng (zoom: $zoomLevel)');
 
     mapController?.setCenter(latLng);
     mapController?.setLevel(3);
@@ -294,7 +283,6 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
   }
 
   void _onClustererTap(LatLng latLng, int zoomLevel, List<Marker> clusterMarkers) {
-    debugPrint('클러스터 클릭: ${clusterMarkers.length}개 마커 at $latLng (zoom: $zoomLevel)');
 
     mapController?.setCenter(latLng);
     mapController?.setLevel((zoomLevel - 2).clamp(1, 14));
