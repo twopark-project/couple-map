@@ -22,6 +22,8 @@ class MapEditScreen extends ConsumerStatefulWidget {
 }
 
 class _MapEditScreenState extends ConsumerState<MapEditScreen> {
+  static const int _mapNameMaxLength = 20;
+  static const int _descriptionMaxLength = 20;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -44,6 +46,17 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
     'Couple': '연인과',
     'Family': '가족',
   };
+
+  String _categoryLabel(String key) => _categories[key] ?? _categories['Solo']!;
+
+  String _categoryKeyFromServer(String? category) {
+    if (category == null || category.isEmpty) return 'Solo';
+    if (_categories.containsKey(category)) return category;
+    for (final entry in _categories.entries) {
+      if (entry.value == category) return entry.key;
+    }
+    return 'Solo';
+  }
 
   static const List<String> _defaultCovers = [
     'assets/images/covers/cover_1.jpg',
@@ -73,7 +86,7 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
         setState(() {
           _nameController.text = map.mapName;
           _descController.text = map.description ?? '';
-          _selectedCategory = map.category ?? 'Solo';
+          _selectedCategory = _categoryKeyFromServer(map.category);
           _backgroundImageUrl = map.backgroundUrl;
           _initialName = map.mapName;
           _initialDesc = map.description ?? '';
@@ -139,9 +152,22 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
 
   Future<void> _save() async {
     final name = _nameController.text.trim();
+    final description = _descController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('지도 이름을 입력해주세요')),
+      );
+      return;
+    }
+    if (name.length > _mapNameMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('지도 이름은 20자 이하로 입력해주세요')),
+      );
+      return;
+    }
+    if (description.length > _descriptionMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('설명은 20자 이하로 입력해주세요')),
       );
       return;
     }
@@ -159,10 +185,8 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
         auth.token.accessToken,
         widget.mapId,
         name,
-        _descController.text.trim().isNotEmpty
-            ? _descController.text.trim()
-            : null,
-        _selectedCategory,
+        description.isNotEmpty ? description : null,
+        _categoryLabel(_selectedCategory),
         coverFile,
       );
       if (mounted) {
@@ -226,6 +250,7 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
                         _buildTextField(
                           controller: _nameController,
                           hintText: '지도 이름을 입력해주세요',
+                          maxLength: _mapNameMaxLength,
                         ),
                         const SizedBox(height: 20),
 
@@ -235,6 +260,7 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
                           controller: _descController,
                           hintText: '짧은 설명 (선택)',
                           maxLines: 3,
+                          maxLength: _descriptionMaxLength,
                         ),
                         const SizedBox(height: 20),
 
@@ -402,6 +428,7 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
                 onTap: () => setState(() {
                   _newCoverImage = null;
                   _selectedDefaultCover = null;
+                  _backgroundImageUrl = null;
                 }),
                 child: Container(
                   padding: const EdgeInsets.all(6),
@@ -505,10 +532,12 @@ class _MapEditScreenState extends ConsumerState<MapEditScreen> {
     required TextEditingController controller,
     required String hintText,
     int maxLines = 1,
+    int? maxLength,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      maxLength: maxLength,
       style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
       decoration: InputDecoration(
         hintText: hintText,

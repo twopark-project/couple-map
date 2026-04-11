@@ -24,6 +24,8 @@ class MemoryEditScreen extends ConsumerStatefulWidget {
 }
 
 class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
+  static const int _titleMaxLength = 50;
+  static const int _contentMaxLength = 100;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -157,9 +159,22 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
 
   Future<void> _save() async {
     final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('제목을 입력해주세요')));
+      return;
+    }
+    if (title.length > _titleMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('제목은 50자 이하로 입력해주세요')),
+      );
+      return;
+    }
+    if (content.length > _contentMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('내용은 100자 이하로 입력해주세요')),
+      );
       return;
     }
     final auth = ref.read(authProvider);
@@ -169,7 +184,7 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
     try {
       final requestData = {
         'title': title,
-        'content': _contentController.text.trim(),
+        'content': content,
         if (_placeName != null) 'placeName': _placeName,
         if (_selectedCategory != null) 'category': _selectedCategory,
         'memoryDate': _selectedDate.toIso8601String().split('T').first,
@@ -272,6 +287,7 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
                           controller: _titleController,
                           hintText: '추억의 제목을 적어주세요',
                           maxLines: 1,
+                          maxLength: _titleMaxLength,
                         ),
                         const SizedBox(height: 24),
 
@@ -282,6 +298,7 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
                           controller: _contentController,
                           hintText: '어떤 하루였나요?',
                           maxLines: 4,
+                          maxLength: _contentMaxLength,
                         ),
                         const SizedBox(height: 24),
 
@@ -466,6 +483,7 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
     required TextEditingController controller,
     required String hintText,
     int maxLines = 1,
+    int? maxLength,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -476,6 +494,7 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        maxLength: maxLength,
         style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
         decoration: InputDecoration(
           hintText: hintText,
@@ -905,7 +924,11 @@ class _MemoryEditScreenState extends ConsumerState<MemoryEditScreen> {
             elevation: 0,
           ),
           child: _isSaving
-              ? const CircularProgressIndicator(color: Colors.white)
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                )
               : const Text(
                   '추억 수정',
                   style: TextStyle(
