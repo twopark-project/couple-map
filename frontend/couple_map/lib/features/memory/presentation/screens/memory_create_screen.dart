@@ -28,6 +28,8 @@ class MemoryCreateScreen extends ConsumerStatefulWidget {
 }
 
 class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
+  static const int _titleMaxLength = 50;
+  static const int _contentMaxLength = 100;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -58,6 +60,12 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
     _contentController.dispose();
     super.dispose();
   }
+
+  bool get _hasRequiredPlaceInfo =>
+      widget.placeName != null &&
+      widget.placeName!.trim().isNotEmpty &&
+      widget.latitude != null &&
+      widget.longitude != null;
 
   Future<void> _pickDate() async {
     final date = await showDatePicker(
@@ -203,9 +211,28 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
 
   Future<void> _save() async {
     final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('제목을 입력해주세요')));
+      return;
+    }
+    if (!_hasRequiredPlaceInfo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('장소를 다시 선택한 뒤 저장해주세요')),
+      );
+      return;
+    }
+    if (title.length > _titleMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('제목은 50자 이하로 입력해주세요')),
+      );
+      return;
+    }
+    if (content.length > _contentMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('내용은 100자 이하로 입력해주세요')),
+      );
       return;
     }
     final auth = ref.read(authProvider);
@@ -215,11 +242,11 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
     try {
       final requestData = {
         'title': title,
-        'content': _contentController.text.trim(),
-        if (widget.placeName != null) 'placeName': widget.placeName,
+        'content': content,
+        'placeName': widget.placeName,
         if (widget.address != null) 'address': widget.address,
-        if (widget.latitude != null) 'latitude': widget.latitude,
-        if (widget.longitude != null) 'longitude': widget.longitude,
+        'latitude': widget.latitude,
+        'longitude': widget.longitude,
         if (_selectedCategory.isNotEmpty) 'category': _selectedCategory,
         'memoryDate': _memoryDate.toIso8601String().split('T').first,
       };
@@ -294,6 +321,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
                     controller: _titleController,
                     hintText: '추억의 제목을 적어주세요',
                     maxLines: 1,
+                    maxLength: _titleMaxLength,
                   ),
                   const SizedBox(height: 24),
 
@@ -304,6 +332,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
                     controller: _contentController,
                     hintText: '어떤 하루였나요?',
                     maxLines: 4,
+                    maxLength: _contentMaxLength,
                   ),
                   const SizedBox(height: 24),
 
@@ -446,6 +475,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
     required TextEditingController controller,
     required String hintText,
     int maxLines = 1,
+    int? maxLength,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -456,6 +486,7 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        maxLength: maxLength,
         style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
         decoration: InputDecoration(
           hintText: hintText,
@@ -692,7 +723,11 @@ class _MemoryCreateScreenState extends ConsumerState<MemoryCreateScreen> {
             elevation: 0,
           ),
           child: _isSaving
-              ? const CircularProgressIndicator(color: Colors.white)
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                )
               : const Text(
                   '완료',
                   style: TextStyle(

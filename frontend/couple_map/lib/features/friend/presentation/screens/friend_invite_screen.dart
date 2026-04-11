@@ -22,9 +22,17 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
     super.dispose();
   }
 
+  static final _friendCodeRegex = RegExp(r'^[A-Z0-9]{5}$');
+
   Future<void> _sendRequest() async {
     final code = _codeController.text.trim();
     if (code.isEmpty) return;
+    if (!_friendCodeRegex.hasMatch(code)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('친구 코드는 영문 대문자와 숫자 5자리입니다')),
+      );
+      return;
+    }
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     setState(() => _isSending = true);
@@ -92,13 +100,14 @@ class _FriendInviteSheetState extends ConsumerState<FriendInviteSheet> {
             controller: _codeController,
             textCapitalization: TextCapitalization.characters,
             textAlign: TextAlign.center,
+            maxLength: 5,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: Color(0xFF191919),
             ),
             decoration: InputDecoration(
-              hintText: '예: FRIEND',
+              hintText: '예: AB3C5',
               hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
               filled: true,
               fillColor: const Color(0xFFF2F0EC),

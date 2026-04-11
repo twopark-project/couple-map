@@ -59,11 +59,13 @@ class MapInvitation {
   final int mapMemberId;
   final String mapName;
   final String inviterNickname;
+  final String? createdAt;
 
   const MapInvitation({
     required this.mapMemberId,
     required this.mapName,
     required this.inviterNickname,
+    this.createdAt,
   });
 
   factory MapInvitation.fromJson(Map<String, dynamic> json) {
@@ -71,6 +73,7 @@ class MapInvitation {
       mapMemberId: json['mapMemberId'] as int,
       mapName: json['mapName'] as String,
       inviterNickname: json['inviterNickname'] as String,
+      createdAt: json['createdAt'] as String?,
     );
   }
 }

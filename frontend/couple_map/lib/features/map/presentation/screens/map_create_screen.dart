@@ -16,6 +16,8 @@ class MapCreateScreen extends ConsumerStatefulWidget {
 }
 
 class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
+  static const int _mapNameMaxLength = 20;
+  static const int _descriptionMaxLength = 20;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -31,6 +33,8 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
     'Couple': '연인과',
     'Family': '가족',
   };
+
+  String _categoryLabel(String key) => _categories[key] ?? _categories['Solo']!;
 
   static const List<String> _defaultCovers = [
     'assets/images/covers/cover_1.jpg',
@@ -87,7 +91,20 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
 
   Future<void> _create() async {
     final name = _nameController.text.trim();
+    final description = _descController.text.trim();
     if (name.isEmpty) return;
+    if (name.length > _mapNameMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('지도 이름은 20자 이하로 입력해주세요')),
+      );
+      return;
+    }
+    if (description.length > _descriptionMaxLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('설명은 20자 이하로 입력해주세요')),
+      );
+      return;
+    }
     final auth = ref.read(authProvider);
     if (auth is! AuthSuccess) return;
     setState(() => _isCreating = true);
@@ -100,8 +117,8 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
       final mapId = await ref.read(homeRepositoryProvider).createMap(
         auth.token.accessToken,
         name,
-        _descController.text.trim().isNotEmpty ? _descController.text.trim() : null,
-        _categories[_selectedCategory] ?? '나 혼자',
+        description.isNotEmpty ? description : null,
+        _categoryLabel(_selectedCategory),
         coverFile,
       );
       if (mounted) context.pop(mapId);
@@ -157,6 +174,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                         _buildTextField(
                           controller: _nameController,
                           hintText: '우정 여행 아카이브',
+                          maxLength: _mapNameMaxLength,
                         ),
                         const SizedBox(height: 20),
 
@@ -166,6 +184,7 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
                           controller: _descController,
                           hintText: '짧은 설명 (예: 맛집 도장깨기)',
                           maxLines: 3,
+                          maxLength: _descriptionMaxLength,
                         ),
                         const SizedBox(height: 20),
 
@@ -432,10 +451,12 @@ class _MapCreateScreenState extends ConsumerState<MapCreateScreen> {
     required TextEditingController controller,
     required String hintText,
     int maxLines = 1,
+    int? maxLength,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      maxLength: maxLength,
       style: const TextStyle(fontSize: 15, color: Color(0xFF191919)),
       decoration: InputDecoration(
         hintText: hintText,

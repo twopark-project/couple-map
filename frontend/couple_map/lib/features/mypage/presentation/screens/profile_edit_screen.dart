@@ -339,6 +339,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _nicknameController,
+              maxLength: 10,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[가-힣a-zA-Z0-9]')),
+              ],
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFFF2F2F2),
@@ -361,7 +365,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              '2~10지의 한글, 영문, 숫자를 사용해요.',
+              '2~10자의 한글, 영문, 숫자를 사용해요.',
               style: TextStyle(fontSize: 12, color: Color(0xFF9E9E9E)),
             ),
             const SizedBox(height: 28),
