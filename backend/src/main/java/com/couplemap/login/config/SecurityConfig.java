@@ -1,10 +1,13 @@
 package com.couplemap.login.config;
 
+import com.couplemap.global.config.AppCorsProperties;
 import com.couplemap.jwt.util.JWTFilter;
 import com.couplemap.jwt.util.JWTUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -15,16 +18,21 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final JWTUtil jwtUtil;
+    private final AppCorsProperties corsProperties;
+    private final Environment environment;
 
-    public SecurityConfig(JWTUtil jwtUtil) {
+    public SecurityConfig(JWTUtil jwtUtil, AppCorsProperties corsProperties, Environment environment) {
         this.jwtUtil = jwtUtil;
+        this.corsProperties = corsProperties;
+        this.environment = environment;
     }
 
     @Bean
@@ -44,7 +52,13 @@ public class SecurityConfig {
         http
                 .securityMatcher("/actuator/**")
                 .csrf(auth -> auth.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/actuator/health", "/actuator/health/**").permitAll();
+                    if (isDevProfileActive()) {
+                        auth.requestMatchers("/actuator/prometheus").permitAll();
+                    }
+                    auth.anyRequest().denyAll();
+                });
         return http.build();
     }
 
@@ -72,9 +86,19 @@ public class SecurityConfig {
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         //경로별 인가 작업
+        List<String> publicEndpoints = new ArrayList<>(List.of(
+                "/",
+                "/api/login/social/**",
+                "/api/auth/refresh"
+        ));
+
+        if (isDevProfileActive()) {
+            publicEndpoints.add("/api/dev/**");
+        }
+
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/api/login/social/**", "/api/auth/refresh", "/api/dev/**").permitAll()
+                        .requestMatchers(publicEndpoints.toArray(String[]::new)).permitAll()
                         .anyRequest().authenticated());
 
         //STATELESS
@@ -90,9 +114,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8081"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
@@ -100,5 +124,9 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    private boolean isDevProfileActive() {
+        return environment.acceptsProfiles(Profiles.of("dev"));
     }
 }
