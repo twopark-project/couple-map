@@ -82,10 +82,10 @@ public class LoginServiceImpl implements LoginService {
 
         try {
             ResponseEntity<Map> response = restTemplate.exchange(userInfoUri, HttpMethod.GET, request, Map.class);
-            log.info("Social User Attributes: {}", response.getBody());
+            log.debug("소셜 로그인 사용자 정보 조회 완료: provider={}", provider);
             return response.getBody();
         } catch (HttpClientErrorException e) {
-            log.error("Social login failed: {}", e.getMessage());
+            log.warn("소셜 로그인 실패: provider={}, status={}", provider, e.getStatusCode());
             throw new LoginException(LoginErrorCode.INVALID_ACCESS_TOKEN);
         }
     }

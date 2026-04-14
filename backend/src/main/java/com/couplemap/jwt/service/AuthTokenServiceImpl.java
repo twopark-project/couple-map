@@ -42,7 +42,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
         RefreshToken token = RefreshToken.of(userId, refreshToken, REFRESH_TOKEN_EXPIRATION);
         refreshTokenRepository.save(token);
 
-        log.info("[userId : {}] 토큰 생성 완료 - accessToken: {}, refreshToken: {}", userId, accessToken, refreshToken);
+        log.info("[userId : {}] 토큰 생성 완료", userId);
 
         return LoginTokenResponseDto.builder()
                 .accessToken(accessToken)
