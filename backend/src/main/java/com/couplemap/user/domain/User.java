@@ -44,10 +44,10 @@ public class User extends BaseEntity {
     private String loginType;  // GOOGLE, NAVER, KAKAO
 
     // OAuth 제공 ID
-    @Column(name = "provider_id", nullable = false, length = 200)
+    @Column(name = "provider_id", nullable = false, length = 200, unique = true)
     private String providerId;
 
-    @Column(name = "friend_code", nullable = false)
+    @Column(name = "friend_code", nullable = false, unique = true)
     private String friendCode;
 
     @Builder

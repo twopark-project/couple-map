@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
@@ -15,7 +16,7 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public Map<String, Object> getAttributes() {
-        return null;
+        return Map.of();
     }
 
     @Override
@@ -32,7 +33,7 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
-        return userDTO.getOauthId();
+        return Objects.requireNonNull(userDTO.getUserId(), "userId는 null일 수 없습니다.").toString();
     }
 
     public Long getUserId() { return userDTO.getUserId();}

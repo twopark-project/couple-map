@@ -23,9 +23,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+
+import static com.couplemap.global.exception.code.LoginErrorCode.*;
 
 @Slf4j
 @Service
@@ -82,11 +86,17 @@ public class LoginServiceImpl implements LoginService {
 
         try {
             ResponseEntity<Map> response = restTemplate.exchange(userInfoUri, HttpMethod.GET, request, Map.class);
-            log.info("Social User Attributes: {}", response.getBody());
+            log.debug("소셜 로그인 사용자 정보 조회 완료: provider={}", provider);
             return response.getBody();
         } catch (HttpClientErrorException e) {
-            log.error("Social login failed: {}", e.getMessage());
-            throw new LoginException(LoginErrorCode.INVALID_ACCESS_TOKEN);
+            log.warn("소셜 로그인 실패(클라이언트 오류): provider={}, status={}", provider, e.getStatusCode());
+            throw new LoginException(INVALID_ACCESS_TOKEN);
+        } catch (HttpServerErrorException e) {
+            log.error("소셜 로그인 실패(제공자 서버 오류): provider={}, status={}", provider, e.getStatusCode());
+            throw new LoginException(SOCIAL_PROVIDER_ERROR);
+        } catch (ResourceAccessException e) {
+            log.error("소셜 로그인 실패(네트워크 오류): provider={}", provider, e);
+            throw new LoginException(SOCIAL_PROVIDER_UNAVAILABLE);
         }
     }
 
