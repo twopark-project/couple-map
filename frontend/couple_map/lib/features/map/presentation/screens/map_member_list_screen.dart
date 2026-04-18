@@ -62,7 +62,7 @@ class _MapMemberListScreenState extends ConsumerState<MapMemberListScreen> {
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          'Member',
+          '참여 멤버',
           style: TextStyle(
             color: Color(0xFF191919),
             fontSize: 18,
