@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/place_model.dart';
+import '../../../../config/app_config.dart';
 
 class PlaceSearchScreen extends StatefulWidget {
   const PlaceSearchScreen({super.key});
@@ -39,7 +39,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
   Future<void> _search(String query) async {
     setState(() => _isSearching = true);
     try {
-      final key = dotenv.env['KAKAO_REST_API_KEY'] ?? '';
+      final key = AppConfig.kakaoRestApiKey;
       final response = await _dio.get(
         'https://dapi.kakao.com/v2/local/search/keyword.json',
         queryParameters: {'query': query},

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../config/app_config.dart';
 
 class DioClient {
   DioClient._();
@@ -37,7 +37,7 @@ class DioClient {
     if (refreshToken == null) return null;
 
     final refreshResponse = await Dio().post(
-      '${dotenv.env['BASE_URL'] ?? 'http://localhost:8080'}/api/auth/refresh',
+      '${AppConfig.baseUrl}/api/auth/refresh',
       options: Options(headers: {
         'Authorization': 'Bearer $refreshToken',
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ class DioClient {
 
   static final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: dotenv.env['BASE_URL'] ?? 'http://localhost:8080',
+      baseUrl: AppConfig.baseUrl,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {'Content-Type': 'application/json'},

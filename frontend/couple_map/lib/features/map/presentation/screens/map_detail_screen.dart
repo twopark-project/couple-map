@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../config/app_config.dart';
 import 'dart:async';
 import '../../../auth/domain/providers/auth_provider.dart';
 import '../../data/models/place_model.dart';
@@ -114,7 +114,7 @@ class _MapDetailScreenState extends ConsumerState<MapDetailScreen> {
     });
 
     try {
-      final restApiKey = dotenv.env['KAKAO_REST_API_KEY'] ?? '';
+      final restApiKey = AppConfig.kakaoRestApiKey;
       final response = await _dio.get(
         'https://dapi.kakao.com/v2/local/search/keyword.json',
         queryParameters: {'query': query},
