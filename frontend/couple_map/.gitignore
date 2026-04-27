@@ -46,6 +46,12 @@ app.*.map.json
 
 # Environment variables
 .env
+.env.*
+
+# Release signing
+*.keystore
+*.jks
+release-signing*.properties
 
 # Firebase & Google Services
 android/app/google-services.json
