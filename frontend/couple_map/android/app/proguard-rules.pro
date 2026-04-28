@@ -26,8 +26,6 @@
 -dontwarn com.google.android.gms.**
 
 # Gson / reflection based JSON
--keepattributes Signature
--keepattributes *Annotation*
 -keep class com.google.gson.** { *; }
 -keepclassmembers,allowobfuscation class * {
     @com.google.gson.annotations.SerializedName <fields>;
