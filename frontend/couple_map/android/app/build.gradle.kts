@@ -47,7 +47,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        manifestPlaceholders["KAKAO_NATIVE_APP_KEY"] = readKey("KAKAO_NATIVE_APP_KEY")
+        manifestPlaceholders["KAKAO_NATIVE_APP_KEY"] = requireKey("KAKAO_NATIVE_APP_KEY")
         manifestPlaceholders["NAVER_CLIENT_ID"] = readKey("NAVER_CLIENT_ID")
         manifestPlaceholders["NAVER_CLIENT_SECRET"] = readKey("NAVER_CLIENT_SECRET")
         manifestPlaceholders["NAVER_CLIENT_NAME"] = readKey("NAVER_CLIENT_NAME")
@@ -74,21 +74,6 @@ android {
             manifestPlaceholders["networkSecurityConfig"] = "network_security_config_dev"
         }
         release {
-            val storeFilePath = requireKey("RELEASE_STORE_FILE")
-            requireKey("RELEASE_STORE_PASSWORD")
-            requireKey("RELEASE_KEY_ALIAS")
-            requireKey("RELEASE_KEY_PASSWORD")
-
-            val keystoreFile = file(storeFilePath)
-            if (!keystoreFile.exists()) {
-                throw GradleException("Keystore file not found: $storeFilePath")
-            }
-
-            requireKey("KAKAO_NATIVE_APP_KEY")
-            requireKey("NAVER_CLIENT_ID")
-            requireKey("NAVER_CLIENT_SECRET")
-            requireKey("NAVER_CLIENT_NAME")
-
             signingConfig = signingConfigs.getByName("release")
 
             isMinifyEnabled = true
@@ -101,6 +86,29 @@ android {
             manifestPlaceholders["networkSecurityConfig"] = "network_security_config"
         }
     }
+}
+
+val validateReleaseSecrets by tasks.registering {
+    doLast {
+        val storeFilePath = requireKey("RELEASE_STORE_FILE")
+        requireKey("RELEASE_STORE_PASSWORD")
+        requireKey("RELEASE_KEY_ALIAS")
+        requireKey("RELEASE_KEY_PASSWORD")
+        requireKey("NAVER_CLIENT_ID")
+        requireKey("NAVER_CLIENT_SECRET")
+        requireKey("NAVER_CLIENT_NAME")
+
+        if (!file(storeFilePath).exists()) {
+            throw GradleException("Keystore file not found: $storeFilePath")
+        }
+    }
+}
+
+tasks.matching {
+    (it.name.startsWith("assemble") || it.name.startsWith("bundle")) &&
+        it.name.endsWith("Release")
+}.configureEach {
+    dependsOn(validateReleaseSecrets)
 }
 
 flutter {
