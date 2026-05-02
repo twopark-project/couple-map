@@ -52,6 +52,6 @@ class UserModel {
     if (createdAt == null) return 0;
     final dt = DateTime.tryParse(createdAt!);
     if (dt == null) return 0;
-    return DateTime.now().difference(dt).inDays;
+    return DateTime.now().difference(dt).inDays + 1;
   }
 }

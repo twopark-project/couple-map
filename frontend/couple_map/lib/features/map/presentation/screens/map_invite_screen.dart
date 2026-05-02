@@ -85,6 +85,7 @@ class _MapInviteScreenState extends ConsumerState<MapInviteScreen> {
               fontWeight: FontWeight.w700,
               letterSpacing: -0.5),
         ),
+        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
