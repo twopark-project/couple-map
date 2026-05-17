@@ -1,45 +1,49 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class SocialLoginButton extends StatelessWidget {
+  final VoidCallback onTap;
   final String label;
   final Color backgroundColor;
   final Color textColor;
-  final VoidCallback onTap;
   final BoxBorder? border;
+  final String iconAsset;
 
-  const SocialLoginButton({
+  const SocialLoginButton._({
     super.key,
+    required this.onTap,
     required this.label,
     required this.backgroundColor,
     required this.textColor,
-    required this.onTap,
+    required this.iconAsset,
     this.border,
   });
 
   factory SocialLoginButton.kakao({required VoidCallback onTap}) =>
-      SocialLoginButton(
-        label: '카카오로 시작하기',
-        backgroundColor: AppColors.kakao,
-        textColor: AppColors.kakaoText,
+      SocialLoginButton._(
         onTap: onTap,
+        label: '카카오 로그인',
+        backgroundColor: const Color(0xFFFEE500),
+        textColor: const Color.fromRGBO(0, 0, 0, 0.85),
+        iconAsset: 'assets/icons/kakao_symbol.png',
       );
 
   factory SocialLoginButton.naver({required VoidCallback onTap}) =>
-      SocialLoginButton(
-        label: '네이버로 시작하기',
-        backgroundColor: AppColors.naver,
-        textColor: Colors.white,
+      SocialLoginButton._(
         onTap: onTap,
+        label: '네이버 로그인',
+        backgroundColor: const Color(0xFF03A94D),
+        textColor: Colors.white,
+        iconAsset: 'assets/icons/naver_logo.png',
       );
 
   factory SocialLoginButton.google({required VoidCallback onTap}) =>
-      SocialLoginButton(
-        label: 'Google로 계속하기',
-        backgroundColor: Colors.white,
-        textColor: const Color(0xFF333333),
+      SocialLoginButton._(
         onTap: onTap,
-        border: Border.all(color: AppColors.borderDisabled),
+        label: '구글 로그인',
+        backgroundColor: Colors.white,
+        textColor: const Color(0xFF1F1F1F),
+        border: Border.all(color: const Color(0xFF747775)),
+        iconAsset: 'assets/icons/google_symbol.png',
       );
 
   @override
@@ -51,17 +55,27 @@ class SocialLoginButton extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: border,
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            Image.asset(iconAsset, width: 20, height: 20),
+            Expanded(
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 36),
+          ],
         ),
       ),
     );
