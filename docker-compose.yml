@@ -1,8 +1,19 @@
 services:
+  app:
+    image: ${DOCKER_USERNAME}/couple-map-backend:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:latest
@@ -12,8 +23,9 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'  
-      - '--web.enable-remote-write-receiver'             
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-remote-write-receiver'
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -25,6 +37,7 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+    restart: unless-stopped
 
 volumes:
   prometheus-data:
