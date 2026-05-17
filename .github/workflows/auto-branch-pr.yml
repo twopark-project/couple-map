@@ -1,0 +1,132 @@
+name: 이슈 생성시 브랜치 & Draft PR 생성 자동화
+
+on:
+  issues:
+   # opened : 이슈 생성시
+    types: [opened]
+
+jobs:
+  create-branch-and-pr:
+    if: contains(github.event.issue.labels.*.name, '✨feature') || contains(github.event.issue.labels.*.name, '🔧refactor') || contains(github.event.issue.labels.*.name, '🐛fix')  
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: 브랜치 생성
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          
+          # 라벨에 따라 브랜치 타입 결정
+          if echo '${{ toJson(github.event.issue.labels.*.name) }}' | grep -q 'refactor'; then
+            BRANCH_NAME="refactor/issue-${ISSUE_NUMBER}"
+          elif echo '${{ toJson(github.event.issue.labels.*.name) }}' | grep -q 'fix'; then                                                                                                                                       
+              BRANCH_NAME="fix/issue-${ISSUE_NUMBER}"  
+          else
+            BRANCH_NAME="feature/issue-${ISSUE_NUMBER}"
+          fi
+          
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b $BRANCH_NAME
+          # 빈 커밋 생성 -> DRAFT PR을 위해
+          git commit --allow-empty -m "chore: 이슈 #${ISSUE_NUMBER}에 대한 브랜치 생성"
+          git push origin $BRANCH_NAME
+        id: create-branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Draft PR 생성
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const issueNumber = context.issue.number;
+            const branchName = '${{ steps.create-branch.outputs.BRANCH_NAME }}';
+            const issue = context.payload.issue;
+            
+            // PR 템플릿 읽기
+            let prTemplate = '';
+            try {
+              prTemplate = fs.readFileSync('.github/pull_request_template.md', 'utf8');
+              prTemplate = prTemplate.replace('Closes #', `Closes #${issueNumber}`);
+            } catch (error) {
+                  prTemplate = '⚠️ **PR 템플릿 파일을 찾을 수 없습니다.**\n\n' +
+                '.github/pull_request_template.md 파일에서 직접 템플릿을 가져와서 사용해주세요.\n\n' +
+                '## 관련 이슈\n' +
+                'Closes #' + issueNumber;
+            }
+
+            // 이슈 본문에서 작업목록만 추출
+            const issueBody = issue.body || '';
+            const checklistRegex = /## ✔️ 작업목록[\s\S]*?(?=##|$)/;
+            const checklistMatch = issueBody.match(checklistRegex);
+            const checklist = checklistMatch ? checklistMatch[0] : '작업목록이 없습니다.';
+            
+            // 안내사항 + 템플릿
+            const prBody = '## ⚠️ 안내사항\n' +
+              '> ⚠️ **작성 완료 후 이 섹션(안내사항)을 삭제해주세요!**\n\n' +
+              '이 PR은 자동으로 생성되었습니다.\n\n' +
+              '**작업 순서:**\n' +
+              '1. 로컬에서 브랜치 체크아웃\n' +
+              '   ```bash\n' +
+              '   git fetch origin\n' +
+              '   git checkout ' + branchName + '\n' +
+              '   ```\n' +
+              '2. 코드 작성 및 커밋\n' +
+              '3. 아래 PR 본문 작성\n' +
+              '4. Reviewer 지정\n' +
+              '5. **이 안내사항 섹션 삭제**\n' +
+              '6. "Ready for review"로 전환\n\n' +
+              '---\n\n' +
+              '## 📋 이슈 작업목록 (참고 후 삭제)\n\n' +
+              checklist + '\n\n' +
+              '---\n\n' +
+              prTemplate;
+            
+            // Draft PR 생성
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `${issue.title}`,
+              head: branchName,
+              base: 'develop',
+              body: prBody,
+              draft: true
+            });
+            
+            // Assignee 복사
+            if (issue.assignees && issue.assignees.length > 0) {
+              const assignees = issue.assignees.map(a => a.login);
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                assignees: assignees
+              });
+            }
+            
+            // Label 복사
+            if (issue.labels && issue.labels.length > 0) {
+              const labels = issue.labels.map(l => l.name);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: labels
+              });
+            }
+            
+            // 이슈에 댓글
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `🚀 브랜치와 Draft PR이 자동으로 생성되었습니다!\n\n- Branch: \`${branchName}\`\n- PR: #${pr.number}`
+            });

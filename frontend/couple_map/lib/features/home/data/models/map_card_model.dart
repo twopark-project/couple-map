@@ -1,0 +1,36 @@
+// 기존 lib/models/map/map_list.dart에서 이식
+
+class MapCardModel {
+  final int mapId;
+  final String mapName;
+  final String? description;
+  final String myRole; // OWNER, EDITOR, VIEWER, PENDING
+  final String? backgroundUrl;
+  final int memberCount;
+  final String? category;
+  final String? createdAt;
+
+  const MapCardModel({
+    required this.mapId,
+    required this.mapName,
+    this.description,
+    required this.myRole,
+    this.backgroundUrl,
+    this.memberCount = 1,
+    this.category,
+    this.createdAt,
+  });
+
+  factory MapCardModel.fromJson(Map<String, dynamic> json) {
+    return MapCardModel(
+      mapId: json['mapId'] as int,
+      mapName: json['mapName'] as String,
+      description: json['description'] as String?,
+      myRole: json['myRole'] as String,
+      backgroundUrl: json['backgroundUrl'] as String?,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 1,
+      category: json['category'] as String?,
+      createdAt: json['createdAt'] as String?,
+    );
+  }
+}
