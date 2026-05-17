@@ -91,7 +91,7 @@ class LoginScreen extends ConsumerWidget {
             // 소셜 로그인 버튼
             Padding(
               padding: const EdgeInsets.only(
-                  left: 24, right: 24, bottom: 34, top: 16),
+                  left: 50, right: 50, bottom: 34, top: 16),
               child: isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
@@ -105,7 +105,13 @@ class LoginScreen extends ConsumerWidget {
                             onTap: notifier.loginWithKakao),
                         const SizedBox(height: 12),
                         SocialLoginButton.naver(
-                            onTap: notifier.loginWithNaver),
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('네이버 로그인은 아직 지원하지 않습니다.'),
+                                ),
+                              );
+                            }),
                         const SizedBox(height: 12),
                         SocialLoginButton.google(
                             onTap: notifier.loginWithGoogle),
