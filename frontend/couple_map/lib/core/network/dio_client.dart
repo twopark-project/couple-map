@@ -95,13 +95,23 @@ class DioClient {
           return handler.next(error);
         }
 
+        // 재시도한 요청이 또 401 나면 무한 루프 방지
+        if (error.requestOptions.extra['_retried'] == true) {
+          await _storage.delete(key: 'accessToken');
+          await _storage.delete(key: 'refreshToken');
+          onUnauthorized?.call();
+          return handler.next(error);
+        }
+
         try {
           final newToken = await _refreshGate();
           error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+          error.requestOptions.extra['_retried'] = true;
           final retryResponse = await _dio.fetch(error.requestOptions);
           return handler.resolve(retryResponse);
         } catch (_) {
-          await _storage.deleteAll();
+          await _storage.delete(key: 'accessToken');
+          await _storage.delete(key: 'refreshToken');
           onUnauthorized?.call();
           return handler.next(error);
         }
