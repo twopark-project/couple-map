@@ -2,7 +2,7 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
     paths:
       - 'backend/**'
 
@@ -43,7 +43,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/couple-map-backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/vestige-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -54,7 +54,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/couple-map
+            cd ~/vestige
             docker compose pull app
             docker compose up -d --no-deps app
             docker image prune -f
+            for i in $(seq 1 10); do
+              curl -sf http://localhost:8080/actuator/health && break
+              sleep 5
+            done
