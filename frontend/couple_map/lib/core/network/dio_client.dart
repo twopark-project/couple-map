@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -9,8 +8,7 @@ class DioClient {
   DioClient._();
 
   static VoidCallback? onUnauthorized;
-  static bool _isRefreshing = false;
-  static final List<Completer<String>> _queue = [];
+  static Future<String>? _refreshFuture;
   static const _storage = FlutterSecureStorage();
 
   static Dio get instance => _dio;
@@ -55,6 +53,17 @@ class DioClient {
     return newAccessToken;
   }
 
+  // onRequest, onError 어디서 호출해도 재발급은 딱 한 번만
+  static Future<String> _refreshGate() {
+    _refreshFuture ??= _doRefresh().then((token) {
+      if (token == null) throw Exception('refresh_failed');
+      return token;
+    }).whenComplete(() {
+      _refreshFuture = null;
+    });
+    return _refreshFuture!;
+  }
+
   static final Dio _dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.baseUrl,
@@ -73,29 +82,10 @@ class DioClient {
         final token = authHeader.substring(7);
         if (!_isExpiringSoon(token)) return handler.next(options);
 
-        if (_isRefreshing) {
-          final completer = Completer<String>();
-          _queue.add(completer);
-          try {
-            final newToken = await completer.future;
-            options.headers['Authorization'] = 'Bearer $newToken';
-          } catch (_) {}
-          return handler.next(options);
-        }
-
-        _isRefreshing = true;
         try {
-          final newToken = await _doRefresh();
-          if (newToken != null) {
-            _resolveQueue(newToken);
-            options.headers['Authorization'] = 'Bearer $newToken';
-          }
-        } catch (_) {
-          _clearQueue();
-        } finally {
-          _isRefreshing = false;
-        }
-
+          final newToken = await _refreshGate();
+          options.headers['Authorization'] = 'Bearer $newToken';
+        } catch (_) {}
         return handler.next(options);
       },
 
@@ -105,70 +95,28 @@ class DioClient {
           return handler.next(error);
         }
 
-        if (_isRefreshing) {
-          final completer = Completer<String>();
-          _queue.add(completer);
-          try {
-            final newToken = await completer.future;
-            error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-            final retryResponse = await _dio.fetch(error.requestOptions);
-            return handler.resolve(retryResponse);
-          } catch (_) {
-            return handler.next(error);
-          }
+        // 재시도한 요청이 또 401 나면 무한 루프 방지
+        if (error.requestOptions.extra['_retried'] == true) {
+          await _storage.delete(key: 'accessToken');
+          await _storage.delete(key: 'refreshToken');
+          onUnauthorized?.call();
+          return handler.next(error);
         }
 
-        _isRefreshing = true;
-
         try {
-          final refreshToken = await _storage.read(key: 'refreshToken');
-
-          if (refreshToken == null) {
-            _rejectQueue(error);
-            onUnauthorized?.call();
-            return handler.next(error);
-          }
-
-          final newAccessToken = await _doRefresh();
-          if (newAccessToken == null) throw Exception();
-
-          _resolveQueue(newAccessToken);
-
-          error.requestOptions.headers['Authorization'] =
-              'Bearer $newAccessToken';
+          final newToken = await _refreshGate();
+          error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+          error.requestOptions.extra['_retried'] = true;
           final retryResponse = await _dio.fetch(error.requestOptions);
           return handler.resolve(retryResponse);
         } catch (_) {
-          _rejectQueue(error);
-          await _storage.deleteAll();
+          await _storage.delete(key: 'accessToken');
+          await _storage.delete(key: 'refreshToken');
           onUnauthorized?.call();
           return handler.next(error);
-        } finally {
-          _isRefreshing = false;
         }
       },
     ));
-
-  static void _resolveQueue(String token) {
-    for (final c in _queue) {
-      c.complete(token);
-    }
-    _queue.clear();
-  }
-
-  static void _rejectQueue(DioException error) {
-    for (final c in _queue) {
-      c.completeError(error);
-    }
-    _queue.clear();
-  }
-
-  static void _clearQueue() {
-    for (final c in _queue) {
-      c.completeError('refresh_failed');
-    }
-    _queue.clear();
-  }
 
   static String handleError(DioException e) {
     if (e.response != null) {
